@@ -1,0 +1,15 @@
+../../csprogs.dat
+
+defs.qc
+constants.qc
+../shared.qc
+../shared_menu.qc
+../shared_menu_csqc.qc
+wrathdefs.qc
+draw.qc
+frik_file.qc
+radial.qc
+hud_messages.qc
+main.qc
+journal.qc
+hud.qc

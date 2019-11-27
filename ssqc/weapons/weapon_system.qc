@@ -1,0 +1,1731 @@
+.float fvgeartime;
+.float pickup_spitter;
+.float multi_damage;
+.float bomb_velocityfactor;
+.float bombunreleased;
+.float timefrik;
+.float preloadcyst;
+.float noammobutton;
+.float noammobutton2;
+.float nexteffects;
+.float noltime;
+void() wsfire_shotgun;
+void() wfire_shotgun;
+void() wfire_coachgun;
+void() wsfire_coachgun;
+void() wfire_cannon;
+void() wsfire_cannon;
+void() wfire_spitter;
+void() wsfire_spitter;
+void() wfire_retcher;
+void() wsfire_retcher;
+.float realoding;
+void() pick_up_retcher;
+void() pick_up_spitter;
+void() pick_up_cannon;
+void() pick_up_coachgun;
+void() pick_up_shotgun;
+void() raise_melee;
+void() lower_melee;
+void() raise_shotgun;
+void() raise_coachgun;
+void() raise_cannon;
+void() raise_spitter;
+void() raise_retcher;
+void() raise_vmodel;
+void() lower_coachgun;
+void() lower_cannon;
+void() lower_spitter;
+void() lower_retcher;
+void() lower_vmodel;
+void() lower_shotgun;
+void() reload_retcher;
+//void()reloadcoachgun;
+void() Use_Func;
+
+void(vector org) SpawnGib = { local entity gib;
+	gib = spawn();
+	gib.movetype = MOVETYPE_NOCLIP;
+	setmodel(gib, "models/fx/tether.spr");
+	gib.alpha = -1;
+	gib.traileffectnum = particleeffectnum("bloodtrail");
+	gib.owner = self;
+	makevectors(self.v_angle);
+	gib.velocity = v_forward *10 + v_right *-200 + v_up * 50;
+	gib.velocity = gib.velocity *2.5;
+	setorigin(gib, org + (v_right *25));
+	gib.nextthink = time + 0.125;
+	gib.think = SUB_Remove;
+};
+
+void(vector org, vector vel, float damage, float type, float pcount) SpawnBlood = { local float bparticle;
+	if (type == 2)
+		bparticle = particleeffectnum("GREEN_BLOOD");
+	else if (type == 3)
+		bparticle = particleeffectnum("NORMAL_BLOOD2");
+	else if (type == 4)
+		bparticle = particleeffectnum("BLUE_BLOOD");
+	else
+		bparticle = particleeffectnum("NORMAL_BLOOD");
+	while (pcount >= 0)
+	{
+		pointparticles(bparticle, org, vel *0.1, 1);
+		pcount -= 1;
+	}
+};
+
+void() ApplyMultiDamage = { local entity e;
+	e = nextent(world);
+	while (e)
+	{
+		if (e.multi_damage)
+		{
+			T_Damage(e, self, self, e.multi_damage);
+			e.multi_damage = 0;
+		}
+
+		e = nextent(e);
+	}
+};
+
+void(vector start, vector end) te_tei_g3 = { WriteByte(MSG_BROADCAST, SVC_TEMPENTITY);
+	WriteByte(MSG_BROADCAST, 76);
+	WriteCoord(MSG_BROADCAST, start_x);
+	WriteCoord(MSG_BROADCAST, start_y);
+	WriteCoord(MSG_BROADCAST, start_z);
+	WriteCoord(MSG_BROADCAST, end_x);
+	WriteCoord(MSG_BROADCAST, end_y);
+	WriteCoord(MSG_BROADCAST, end_z);
+	WriteCoord(MSG_BROADCAST, 0);
+	WriteCoord(MSG_BROADCAST, 0);
+	WriteCoord(MSG_BROADCAST, 0);
+};
+
+void(float damage, vector dir) TraceAttack = { local vector vel, org;
+	vel = normalize(dir + v_up* crandom() + v_right* crandom());
+	vel = vel + 2 * trace_plane_normal;
+	vel = vel * 200;
+	org = trace_endpos;	// - dir*4;
+	local float rlooplimit, dam;
+	local vector dorg, orgen;
+	local entity tempen;
+	rlooplimit = 3;	// only allow 3 hits
+	dorg = org - dir * 4;
+	if (trace_ent.takedamage)
+	{
+		while (rlooplimit > 0)
+		{
+			if (trace_ent.takedamage && trace_ent != world)
+			{
+				orgen = org + dir * 4;
+				dorg = org - dir * 4;
+				dam = 1;
+				local vector tracentorg;
+				tracentorg = rorigin(trace_ent);
+
+				if (trace_ent.flags &FL_MONSTER)
+				{
+					if (trace_endpos_z > (tracentorg_z + 24))
+						trace_ent.dmg_h += 1;
+					else
+						trace_ent.dmg_t += 1;
+					if (trace_ent.classname == "afflicted")
+						SpawnBlood(dorg, vel *0.2, damage, 2, 0);
+					else if (trace_ent.classname == "wraith")
+						SpawnBlood(dorg, vel *0.2, damage, 4, 0);
+					else
+						SpawnBlood(dorg, vel *0.2, damage, 1, 0);
+					local float r;
+
+					if (self.weapon == IT_SHOTGUN)
+					{
+						r = random();
+						if (r < 1)
+						{
+							if (trace_ent.classname == "afflicted")
+								explo_blood_sprite(3, org);
+							else if (trace_ent.classname == "wraith")
+								explo_blood_sprite(4, org);
+							else
+							{
+								if (r < 0.5)
+									explo_blood_sprite(1, org);
+								else
+									explo_blood_sprite(2, org);
+							}
+						}
+					}
+					else
+					{
+						r = random();
+						if (r < 1)
+						{
+							if (trace_ent.classname == "afflicted")
+								explo_blood_sprite(3, org);
+							else if ((trace_ent.classname == "wraith"))
+							{
+								if (trace_ent.health > 10)
+									explo_blood_sprite(0, org);
+							}
+							else
+							{
+								if (r < 0.5)
+									explo_blood_sprite(1, org);
+								else
+									explo_blood_sprite(2, org);
+							}
+						}
+					}
+				}
+
+				trace_ent.multi_damage = trace_ent.multi_damage + damage * dam;
+				if (trace_ent.solid == SOLID_BSP)
+					rlooplimit = 0;
+			}
+			else
+			{
+				dorg = org - dir * 4;
+				rlooplimit = 0;
+			}
+
+			tempen = self;
+			self = trace_ent;
+			wbtraceline(orgen, orgen + dir *2048, FALSE, self);
+			self = tempen;
+			rlooplimit = rlooplimit - 1;
+		}
+	}
+	else
+	{
+		WriteByte(MSG_BROADCAST, SVC_TEMPENTITY);
+		WriteByte(MSG_BROADCAST, TE_GUNSHOT);
+		WriteCoord(MSG_BROADCAST, org_x);
+		WriteCoord(MSG_BROADCAST, org_y);
+		WriteCoord(MSG_BROADCAST, org_z);
+	}
+};
+
+void(float shotcount, vector dir, vector spread, float dmge, float spreadm) FireBullets = { local vector direction;
+	local vector src;
+	local float sv;
+	makevectors(self.v_angle);
+	spread_x = spread_x *self.charge_shotgun;
+	spread_y = spread_y *self.charge_shotgun;
+	spreadm = spreadm *self.charge_shotgun;
+
+	src = self.origin + v_forward * 10;
+	src_z = self.absmin_z + self.size_z *0.7 + 8;
+	while (shotcount > 0)
+	{
+		sv += 0.0075 * spreadm;
+		if (self.weapon == IT_SHOTGUN)
+		{
+			sv += 0.0005 * spreadm;
+			spread_x = spread_x *(spreadm);
+			spread_y = spread_y *(spreadm);
+		}
+
+		direction = dir + crandom() *(spread_x + sv + sv) *v_right + crandom() *(spread_y + sv) *v_up;
+
+		if (self.classname == "player")
+			wbtraceline(src, src + direction *4096, FALSE, self);
+		else
+			wbtraceline(src, src + direction *4096, FALSE, self);
+		if (trace_fraction != 1.0)
+			TraceAttack(dmge, direction);
+		//te_tei_g3 (self.origin, trace_endpos);	
+		shotcount = shotcount - 1;
+	}
+
+	ApplyMultiDamage();
+};
+
+void() s_explode1 =[0, s_explode2]
+{
+	self.effects = EF_ADDITIVE;
+	self.nextthink = time + 0.05;
+};
+void() s_explode2 =[1, s_explode3]
+{
+	if (self.nexteffects)
+		self.effects = self.nexteffects;
+	self.nextthink = time + 0.05;
+};
+void() w_melee_slash;
+
+void() s_explode3 =[2, s_explode4]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode4 =[3, s_explode5]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode5 =[4, s_explode6]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode6 =[5, s_explode7]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode7 =[6, s_explode8]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode8 =[7, s_explode9]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode9 =[8, s_explode10]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode10 =[9, s_explode11]
+{
+	self.nextthink = time + 0.05;
+};
+void() s_explode11 =[10, SUB_Remove]
+{
+	self.nextthink = time + 0.05;
+};
+void() w_vmodel_slash;
+.float lastweapontime;
+//.float semi;
+//.float ssemi;
+void() Weapon_Fire = { if (self.weapon == IT_MELEE)
+	{
+		w_melee_slash();
+		self.attack_finished = time + 0.5;
+	}
+
+	if (self.weapon == IT_VIEWMODEL)
+	{
+		w_vmodel_slash();
+		self.attack_finished = time + 0.5;
+	}
+	else if (self.weapon == IT_COACHGUN)
+	{
+		//		if(!self.semi)
+		//		{
+		//		self.semi = 1;
+		if (self.ammo_coachgun <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/coachgun/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			//			self.attack_finished = time +  0.2;
+			self.noammobutton = 1;
+			return;
+		}
+
+		wfire_coachgun();
+		//self.attack_finished = time +  0.25;
+		self.attack_finished = time + 0.35;
+		//		}
+	}
+	else if (self.weapon == IT_SHOTGUN)
+	{
+		if (self.ammo_shotgun < 2)
+		{
+			sound(self, CHAN_AUTO, "weapons/coachgun/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton = 1;
+			return;
+		}
+
+		wfire_shotgun();
+	}
+	else if (self.weapon == IT_CANNON)
+	{
+		if (self.ammo_cannon <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/cannon/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton = 1;
+			return;
+		}
+
+		wfire_cannon();
+	}
+	else if (self.weapon == IT_RETCHER)
+	{
+		if (self.ammo_retcher <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/retcher/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton = 1;
+			return;
+		}
+
+		wfire_retcher();
+	}
+	else if (self.weapon == IT_SPITTER)
+	{
+		self.vgearrelease = 1;
+		if (self.ammo_spitter <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/spitter/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton = 1;
+			return;
+		}
+
+		self.fvgeartime = 0;
+		wfire_spitter();
+		self.attack_finished = time + self.flamethrower_time1;
+	}
+
+	if (time > 2)
+		self.show_hostile = time + 1;
+
+};
+void() w_melee_charge;
+.float shotgun_fire1;
+
+void() Weapon_Sfire = { if (self.weapon == IT_MELEE)
+	{
+		w_melee_charge();
+		self.attack_finished = time + 0.05;
+	}
+	else if (self.weapon == IT_COACHGUN)
+	{
+		//if(!self.ssemi)
+		//{
+		//self.ssemi = 1;		
+		if (self.ammo_coachgun == 1)
+		{
+			wfire_coachgun();
+			//self.attack_finished = time +  0.35;
+			self.attack_finished = time + 0.1;	// 0.25
+			return;
+		}
+
+		if (self.ammo_coachgun <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/coachgun/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.1;	//0.25
+			self.noammobutton2 = 1;
+			return;
+		}
+
+		wsfire_coachgun();
+
+		//}
+	}
+	else if (self.weapon == IT_RETCHER)
+	{
+		if (self.ammo_retcher <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/retcher/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton2 = 1;
+			return;
+		}
+
+		wsfire_retcher();
+	}
+	else if (self.weapon == IT_SHOTGUN)
+	{
+		if (self.shotgun_fire1 == 1)
+			return;
+
+		if (self.ammo_shotgun < 2)
+		{
+			sound(self, CHAN_AUTO, "weapons/coachgun/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton2 = 1;
+			return;
+		}
+
+		wsfire_shotgun();
+		self.attack_finished = time + self.shotgun_time1;
+	}
+	else if (self.weapon == IT_CANNON)
+	{
+		if (self.ammo_cannon <= 5)
+		{
+			sound(self, CHAN_AUTO, "weapons/cannon/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton2 = 1;
+			return;
+		}
+
+		wsfire_cannon();
+		self.attack_finished = time + self.slagcannon_time2;
+	}
+	else if (self.weapon == IT_SPITTER)
+	{
+		self.vgearrelease = 1;
+		if (self.ammo_spitter <= 0)
+		{
+			sound(self, CHAN_AUTO, "weapons/spitter/dryfire.ogg", 1, ATTN_NORM);
+			self.attack_finished = time + 0.25;
+			self.noammobutton2 = 1;
+			return;
+		}
+
+		self.fvgeartime = 0;
+		wsfire_spitter();
+	}
+
+	self.show_hostile = time + 1;
+};
+
+void() Think_Vweapon = { self.frame = self.owner.vweaponframe;
+	self.skin = self.owner.vweaponskin;
+	self.glowmod = self.owner.vweaponglowmod;
+	if (self.owner.wlightning == 1)
+		self.effects = EF_NOGUNBOB;
+	else
+		self.effects = 0;
+	self.think = Think_Vweapon;
+	self.nextthink = time;
+};
+.float rweapon;
+void() W_SetWeapon = { local string fwmodel;
+
+	if (self.weapon == IT_MELEE)
+		fwmodel = "models/weapons/melee/v_gauntlet.md3";
+	else if (self.weapon == IT_COACHGUN)
+		fwmodel = "models/weapons/coachgun/v_coachgun.md3";
+	else if (self.weapon == IT_SHOTGUN)
+		fwmodel = "models/weapons/shotgun/v_shotgun.md3";
+	else if (self.weapon == IT_RETCHER)
+		fwmodel = "models/weapons/retcher/v_retcher.md3";
+	else if (self.weapon == IT_SPITTER)
+		fwmodel = "models/weapons/spitter/v_spitter.md3";
+	else if (self.weapon == IT_CANNON)
+		fwmodel = "models/weapons/cannon/v_cannon.md3";
+	else if (self.weapon == IT_VIEWMODEL)
+		fwmodel = self.dvweapon_model;
+	self.weaponmodel = "";
+
+	if (self.weapon == IT_VIEWMODEL)
+	{
+		self.vweapon.scale = self.dvweapon_scale;
+		self.vweapon.origin_x = self.dvweapon_x;
+		self.vweapon.origin_y = self.dvweapon_y;
+		self.vweapon.origin_z = self.dvweapon_z;
+		self.vweapon.angles = self.vweaponangles;
+	}
+
+	if (self.weapon == IT_MELEE)
+	{
+		self.vweapon.scale = self.dvweapon_scale;
+		self.vweapon.origin_x = self.dvweapon_x;
+		self.vweapon.origin_y = self.dvweapon_y;
+		self.vweapon.origin_z = self.dvweapon_z;
+		self.vweapon.angles = self.vweaponangles;
+	}
+
+	if (self.weapon == IT_COACHGUN)
+	{
+		self.vweapon.scale = self.cgvweapon_scale;
+		self.vweapon.origin_x = self.cgvweapon_x;
+		self.vweapon.origin_y = self.cgvweapon_y;
+		self.vweapon.origin_z = self.cgvweapon_z;
+		self.vweapon.angles = self.cgweaponangles;
+	}
+
+	if (self.weapon == IT_SHOTGUN)
+	{
+		self.vweapon.scale = self.svweapon_scale;
+		self.vweapon.origin_x = self.svweapon_x;
+		self.vweapon.origin_y = self.svweapon_y;
+		self.vweapon.origin_z = self.svweapon_z;
+		self.vweapon.angles = self.sweaponangles;
+	}
+
+	if (self.weapon == IT_SPITTER)
+	{
+		self.vweapon.scale = self.pvweapon_scale;
+		self.vweapon.origin_x = self.pvweapon_x;
+		self.vweapon.origin_y = self.pvweapon_y;
+		self.vweapon.origin_z = self.pvweapon_z;
+		self.vweapon.angles = self.pweaponangles;
+	}
+
+	if (self.weapon == IT_RETCHER)
+	{
+		self.vweapon.scale = self.rvweapon_scale;
+		self.vweapon.origin_x = self.rvweapon_x;
+		self.vweapon.origin_y = self.rvweapon_y;
+		self.vweapon.origin_z = self.rvweapon_z;
+		self.vweapon.angles = self.rweaponangles;
+	}
+
+	if (self.weapon == IT_CANNON)
+	{
+		self.vweapon.scale = self.cvweapon_scale;
+		self.vweapon.origin_x = self.cvweapon_x;
+		self.vweapon.origin_y = self.cvweapon_y;
+		self.vweapon.origin_z = self.cvweapon_z;
+		self.vweapon.angles = self.cweaponangles;
+	}
+
+	setmodel(self.vweapon, fwmodel);
+};
+.float rlastweapon;
+void() raise_weapon = { W_SetWeapon();
+	self.attack_finished = time + 0.5;
+
+	self.lastweapon = self.weapon;
+	if (self.weapon != IT_COACHGUN)
+		self.vweaponglowmod = '0 0 0';
+	if (self.weapon == IT_MELEE)
+	{
+		raise_melee();
+	}
+
+	if (self.weapon == IT_SHOTGUN)
+	{
+		//		self.vweaponskin = self.coachgunclip;
+		//		self.vweaponglowmod = '-0.1 -0.1 -0.1';
+		if (self.timefrik > time)
+			pick_up_shotgun();
+		else
+			raise_shotgun();
+
+	}
+
+	if (self.weapon == IT_COACHGUN)
+	{
+		self.vweaponskin = self.coachgunclip;
+		self.vweaponglowmod = '-0.1 -0.1 -0.1';
+		if (self.timefrik > time)
+			pick_up_coachgun();
+		else
+			raise_coachgun();
+
+	}
+
+	if (self.weapon == IT_CANNON)
+	{
+		self.vweaponskin = 0;
+		if (self.timefrik > time)
+			pick_up_cannon();
+		else
+			raise_cannon();
+	}
+
+	if (self.weapon == IT_RETCHER)
+	{
+		self.vweaponskin = 0;
+		if (self.timefrik > time)
+			pick_up_retcher();
+		else
+			raise_retcher();
+	}
+
+	if (self.weapon == IT_SPITTER)
+	{
+		self.vweaponskin = 0;
+		if (self.timefrik > time)
+			pick_up_spitter();
+		else
+			raise_spitter();
+	}
+
+	if (self.weapon == IT_VIEWMODEL)
+	{
+		self.vweaponskin = 0;
+		raise_vmodel();
+	}
+};
+void() pick_up_melee;
+void() W_ChangeWeapon = { Check_FrikFile();
+	self.realoding = 0;
+	self.randomattack = 0;
+	if (self.draw_w != 0)
+		return;
+	local float fl, oldweapon;
+	if ((time < self.timesound))
+	{
+		sound(self, CHAN_WEAPON2, "weapons/spitter/fire1_release.wav", 1, ATTN_NORM);
+		self.timesound = 0;
+		return;
+	}
+
+	//	self.lspeedtime = time + 0.05;
+	if (self.impulse == 1)
+	{
+		fl = IT_MELEE;
+		if ((self.timefrik > time))
+		{
+			self.weapon = fl;
+			W_SetWeapon();
+			pick_up_melee();
+			return;
+		}
+	}
+	else if (self.impulse == 2)
+		fl = IT_COACHGUN;
+	else if (self.impulse == 3)
+		fl = IT_SHOTGUN;
+	else if (self.impulse == 4)
+		fl = IT_SPITTER;
+	else if (self.impulse == 5)
+		fl = IT_RETCHER;
+	else if (self.impulse == 6)
+		fl = IT_CANNON;
+	else if (self.impulse == 9)
+		fl = IT_VIEWMODEL;
+	self.impulse = 0;
+	if (!(self.items &fl))
+	{
+		// don't have the weapon or the ammo
+		sprint(self, "no weapon.\n");
+		return;
+	}
+
+	oldweapon = self.weapon;
+	if (self.weapon == fl)
+		return;
+	//		if(self.lspeedtime > time)// nice option to speedruns
+	//	self.lspeedtime = time + 0.05;
+
+	self.weapon = fl;
+	self.lastweapon = oldweapon;
+	self.rlastweapon = oldweapon;
+
+	if (oldweapon == IT_MELEE)
+		lower_melee();
+	if (oldweapon == IT_SHOTGUN)
+		lower_shotgun();
+	if (oldweapon == IT_COACHGUN)
+		lower_coachgun();
+	if (oldweapon == IT_RETCHER)
+		lower_retcher();
+	if (oldweapon == IT_CANNON)
+		lower_cannon();
+	if (oldweapon == IT_SPITTER)
+		lower_spitter();
+	if (oldweapon == IT_VIEWMODEL)
+		lower_vmodel();
+	self.lastweapontime = time + 0.05;
+};
+
+void() select_lastweapon
+{
+	local float timpulse;
+	if (self.rlastweapon == IT_MELEE)
+		timpulse = 1;
+	if (self.rlastweapon == IT_COACHGUN)
+		timpulse = 2;
+	if (self.rlastweapon == IT_SHOTGUN)
+		timpulse = 3;
+	if (self.rlastweapon == IT_SPITTER)
+		timpulse = 4;
+	if (self.rlastweapon == IT_RETCHER)
+		timpulse = 5;
+	if (self.rlastweapon == IT_CANNON)
+		timpulse = 6;
+	self.impulse = timpulse;
+	W_ChangeWeapon();
+
+}
+
+void() prevweapon = { local float timpulse;
+	if (self.weapon == IT_MELEE)
+	{
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+	}
+
+	if (self.weapon == IT_COACHGUN)
+	{
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+	}
+
+	if (self.weapon == IT_SHOTGUN)
+	{
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+	}
+
+	if (self.weapon == IT_SPITTER)
+	{
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+	}
+
+	if (self.weapon == IT_RETCHER)
+	{
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+	}
+
+	if (self.weapon == IT_CANNON)	//retcher
+	{
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+
+	}
+
+	self.impulse = timpulse;
+	W_ChangeWeapon();
+	self.attack_finished = time + 0.1;
+
+};
+void() nextweapon = { local float timpulse;
+	if (self.weapon == IT_MELEE)
+	{
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+	}
+
+	if (self.weapon == IT_COACHGUN)
+	{
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+	}
+
+	if (self.weapon == IT_SHOTGUN)
+	{
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+	}
+
+	if (self.weapon == IT_SPITTER)
+	{
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+	}
+
+	if (self.weapon == IT_RETCHER)
+	{
+		if ((self.items &IT_SPITTER) && (self.ammo_spitter))
+			timpulse = 4;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+		if ((self.items &IT_CANNON) && (self.ammo_cannon))
+			timpulse = 6;
+	}
+
+	if (self.weapon == IT_CANNON)	//retcher
+	{
+		if ((self.items &IT_RETCHER) && (self.ammo_retcher))
+			timpulse = 5;
+		if (self.items &IT_SPITTER)
+			timpulse = 4;
+		if ((self.items &IT_SHOTGUN) && (self.ammo_shotgun))
+			timpulse = 3;
+		if ((self.items &IT_COACHGUN) && (self.ammo_coachgun))
+			timpulse = 2;
+		if (self.items &IT_MELEE)
+			timpulse = 1;
+	}
+
+	self.impulse = timpulse;
+	W_ChangeWeapon();
+	self.attack_finished = time + 0.127;
+
+};
+
+void() Rinventory = { if (self.radial_time > time)
+	{
+		sprint(self, "time to artifact\n");
+		self.rmenu = 0;
+		self.attack_finished = time + 0.11;
+		return;
+	}
+
+	/*if ((!self.LifeSiphon) && (!self.Aegis) && (!self.TrinketofRespite) && (!self.SoulTether) && (!self.DrownerApp))
+	{
+		sprint(self, "No artifacts\n");
+		self.rmenu = 0;
+		self.attack_finished = time + 0.1;
+		return;
+	}
+
+	*/
+	if (self.rmenu == 0)
+		self.rmenu = 1;
+	else
+		self.rmenu = 0;
+};
+
+void() flash_update = { setorigin(self, self.owner.cursor_trace_endpos);
+	self.nextthink = time + 0.001;
+};
+
+void() flash_on = { local entity myflash;
+
+	myflash = spawn();
+	myflash.movetype = MOVETYPE_NONE;
+	myflash.solid = SOLID_NOT;
+	setmodel(myflash, "models/dev/gizmo.md3");
+	setsize(myflash, '0 0 0', '0 0 0');
+	myflash.owner = self;
+	myflash.alpha = 1;
+	self.flash = myflash;
+	myflash.classname = "flash";
+	setorigin(myflash, self.cursor_trace_endpos);
+	myflash.think = flash_update;
+	myflash.nextthink = time + 0.01;
+};
+
+void() flash_toggle = { if (self.flash_flag == FALSE)
+	{
+		self.flash_flag = TRUE;
+		devscreen = TRUE;
+		flash_on();
+	}
+	else
+	{
+		self.flash_flag = FALSE;
+		devscreen = FALSE;
+		self.flash.think = SUB_Remove;
+		self.flash.nextthink = time + 0.01;
+	}
+};
+
+void() fmck_maker_touch = { if ((other.flags &FL_MONSTER) && (other.friendly_monster != 1))
+	{
+		other.friendly_monster = 1;
+		other.pflags = 131;
+		other.color = '0.2 0.5 1';
+		other.light_lev = 128;
+		other.enemy = world;
+		other.think = other.th_stand;
+		other.nextthink = time + 0.1;
+	}
+
+	remove(self);
+};
+
+void() W_FireFmonster = { local vector dir, rorg;
+	newmis = spawn();
+	newmis.owner = self;
+	newmis.movetype = MOVETYPE_FLY;
+	newmis.solid = SOLID_BBOX;
+	newmis.classname = "friendlymaker";
+	dir = aim(self, 1000);
+	rorg = self.view_ofs - '0 0 19';
+	setorigin(newmis, self.origin + '0 0 32');
+	setmodel(newmis, "models/projectiles/proj_slag1.md3");
+	setsizeitem(newmis, '0 0 0');
+	newmis.velocity = normalize(self.cursor_trace_endpos - newmis.origin) *1024;
+	newmis.angles = vectoangles(newmis.velocity);
+	newmis.touch = fmck_maker_touch;
+	newmis.effects = EF_NOSHADOW;
+	self.punchangle_x = -2;
+	self.vweaponframe = 3;
+};
+
+void() Exit_Game = { localcmd("wmenu\n");
+	localcmd("menu_cmd backtomainmenu\n");
+};
+void() Toggle_Journal = { if (self.journal == 1)
+		self.journal = 0;
+	else
+		self.journal = 1;
+	if (self.journal == 1)
+	{
+		centerprint(self, "");
+		sound(self, CHAN_AUTO, "ui/journal/journal_open.ogg", 1, 0);
+		stuffcmd(self, "scratch3 1\n");
+	}
+
+	if (self.journal == 0)
+	{
+		sound(self, CHAN_AUTO, "ui/journal/journal_close.ogg", 1, 0);
+		stuffcmd(self, "scratch3 0\n");
+	}
+};
+void() empty_reload_shotgun;
+void() Toggle_HUD = { if (self.vhud == 1)
+		self.vhud = 0;
+	else
+		self.vhud = 1;
+};
+//void()check_transformation;
+.float spitterloop;
+void() killemall = { local entity monster;
+
+	monster = findradius(self.origin, 1000000);
+	while (monster)	//Loops through everything put in the missile entity
+	{
+		if (monster.flags &FL_MONSTER)
+		{
+			if (monster.target)
+				T_Damage(monster, self, self, 100000);
+			else
+				remove(monster);
+		}
+
+		monster = monster.chain;	//links every monstergram found so they all go BOOM!
+	}
+};
+
+void() ImpulseCommands = { if (self.lspeedtime > time)
+		return;
+	if (self.impulse == 155)
+	{
+		rmtree("profiles");
+		//copy_save_maps (0);
+	}
+
+	if (self.impulse == 199)
+		killemall();
+	if (self.impulse == 20)
+		Toggle_Mode();
+	if ((time < self.attack_finished) | (self.button3) | (self.button0))
+	{
+		if (self.modeeditor != 1)
+		{
+			self.impulse = 0;
+			return;
+		}
+	}
+
+	//	if (self.impulse >= 1 && self.impulse <= 9)
+	//		W_ChangeWeapon (0);
+	/*	if (self.impulse == 10)
+		{
+			if (globalfake_illumination == 1)
+				{globalfake_illumination = 0; sprint (self, "fake illumination OFF.\n");}
+			else
+				{globalfake_illumination = 1; sprint (self, "fake illumination ON.\n");}
+
+			self.impulse = 0;
+		}*/
+	if (self.impulse == 99)
+	{
+		self.rarmorvalue = 100;
+		if (!(self.items &IT_COACHGUN))
+			self.items += IT_COACHGUN;
+		if (!(self.items &IT_SPITTER))
+			self.items += IT_SPITTER;
+		if (!(self.items &IT_RETCHER))
+			self.items += IT_RETCHER;
+		if (!(self.items &IT_SHOTGUN))
+			self.items += IT_SHOTGUN;
+		if (!(self.items &IT_MELEE))
+			self.items += IT_MELEE;
+		self.ammo_coachgun = 99;
+		self.ammo_shotgun = 100;
+		self.ammo_bombs = 250;
+		self.ammo_spitter = 250;
+		self.ammo_cannon = 250;
+		self.ammo_retcher = 250;
+		self.SoulTether += 1;
+		self.LifeSiphon += 1;
+		self.TrinketofRespite += 1;
+		self.Aegis += 1;
+		self.DrownerApp += 1;
+		self.coachgunclip = 3;
+		//self.tdsouls = 7;
+		//check_transformation();
+		//self.bfg = 1;
+	}
+
+	if (self.impulse == 11)
+	{
+		flash_toggle();
+		if (!self.wrath_debug_screen)
+			self.wrath_debug_screen = 1;
+		else
+			self.wrath_debug_screen = 0;
+	}
+
+	if (self.wrath_debug_screen == 1)
+	{
+		if (self.impulse == 12)
+			W_FireFmonster();
+	}
+
+	if (self.impulse == 14)
+	{
+		if (tether < 1)
+			sprint(self, "No Soul Tether spawned\n");
+		else
+			stuffcmd(self, "load quick\n");	// 	
+	}
+
+	if (self.impulse == 52)
+		Toggle_HUD();
+	if (self.impulse == 34)
+		reload_retcher();
+
+	if (self.impulse == 80)
+	{
+		if (self.spitterloop == 1)
+			self.spitterloop = 0;
+		else
+			self.spitterloop = 1;
+	}
+
+	if (self.impulse == 36)
+		empty_reload_shotgun();
+	if (self.impulse == 31)
+		self.timelightning1 = time + 2;
+	if (self.impulse == 32)
+		self.timelightning2 = time + 2;
+	if (self.impulse == 33)
+		self.timelightning3 = time + 2;
+	if (self.modeeditor == 1)
+	{
+		if (self.impulse == 27)
+			Check_Editor_Commands(1);
+		if (self.impulse == 26)
+			Check_Editor_Commands(-1);
+		if (self.impulse == 208)
+			Toggle_Mode();
+		if (self.impulse == 209)
+			Toggle_Angles();
+		if (self.impulse == 210)
+			Toggle_ShadowLights();
+		if (self.impulse == 211)
+			Toggle_NormalLights();
+	}
+
+	if ((self.rmenu != 1) && (!self.journal))
+	{
+		if (self.impulse == 55)
+			nextweapon();
+		if (self.impulse == 56)
+			prevweapon();
+	}
+
+	/*
+		if(self.impulse == 60)
+		{
+		local string sorete;
+		local float fsorete;
+		fsorete = fcopy("data.sav","datacopy.sav");
+		sorete = ftos (fsorete);
+		sprint (self,sorete);
+		bprint (sorete);
+		}
+
+		if(self.impulse == 58)
+		frename("data.sav","datacopyname.sav");
+		if(self.impulse == 59)
+		fremove("data2.sav");
+	*/
+	self.impulse = 0;
+};
+.float itemtime;
+
+void() WeaponSounds = { if (self.weapon == IT_SPITTER)
+	{
+		if (self.spitterloop == 1)
+			return;
+		if (self.pickup_spitter)
+			return;
+
+		if ((self.button0) && (self.ammo_spitter > 0))
+		{
+			if (self.timesound < time)
+			{
+				sound(self, CHAN_WEAPON2, "weapons/spitter/fire1_loop.wav", 1, ATTN_NORM);
+				self.timesound = time + (soundlength("weapons/spitter/fire1_loop.wav"));
+
+			}
+		}
+		else
+		{
+			if ((time < self.timesound))	//&& (self.attack_finished < time))
+			{
+				//sound (self, CHAN_WEAPON, "weapons/spitter/fire1_loop.wav", 0,ATTN_NORM);
+				sound(self, CHAN_WEAPON2, "weapons/spitter/fire1_release.wav", 1, ATTN_NORM);
+				self.timesound = 0;
+				return;
+			}
+		}
+	}
+
+	/*
+	if (self.weapon == IT_CANNON)
+	{
+		if((!self.button3) |(!self.ammo_cannon))
+			{
+				if (time < self.timesound)
+					{
+						sound (self, CHAN_WEAPON, "weapons/spitter/fire1_loop.wav", 0, ATTN_NORM);
+						self.timesound = 0;
+						return;
+					}
+			}
+
+		if((self.button3) && (self.ammo_cannon > 0))
+			{	
+				if	(self.timesound < time)
+				{
+					if(self.holdcannon == 1)
+						{
+							sound (self, CHAN_WEAPON, "weapons/slagcannon/secondary_charged_loop.ogg", 1, ATTN_NORM);
+							self.timesound = time + (soundlength ("weapons/slagcannon/secondary_charged_loop.ogg"));
+						}
+				}
+			}
+	}*/
+};
+.float melee_ammount;
+void() w_melee_prerelease;
+void() vgearframes = { if (self.vgearframetime > time)
+		return;
+
+	if (self.vgearframe >= 15)
+		self.vgearframe = 0;
+	else
+		self.vgearframe += 1;
+
+	self.fvgeartime += 0.05;
+
+	self.vgearframetime = time + self.fvgeartime;
+};
+
+.float flightimesnd;
+.float flightflag;
+void() flight_sound = { if (self.timefly > time)
+	{
+		if (self.flightimesnd < time)
+		{
+			//sound (self, CHAN_FOOT, "sound/misc/Sigil_Flight_InUse.wav", 1, ATTN_NORM);
+			//self.flightimesnd = time + (soundlength ("sound/misc/Sigil_Flight_InUse.wav"));
+			self.flightimesnd = time + 5;
+		}
+	}
+	else
+	{
+		//sound (self, CHAN_FOOT, "sound/misc/Sigil_Flight_Expire.wav", 1, ATTN_NORM);
+		self.flightflag = 0;
+	}
+};
+.float melee_lunge;
+
+.float impulsetime;
+
+//void() check_stunned_monsters;
+
+void() glow_melee = { local float gd;
+	if (!(self.melee_kills))
+	{
+		self.vweaponglowmod = '-1 -1 -1';
+		return;
+	}
+
+	if (self.melee_kills == 1)
+		gd = 0.002;
+	if (self.melee_kills == 2)
+		gd = 0.004;
+	if (self.melee_kills == 3)
+		gd = 0.008;
+	if (self.melee_kills == 4)
+		gd = 0.016;
+	self.vweaponglowmod_x -= gd;
+	self.vweaponglowmod_y -= gd;
+	self.vweaponglowmod_z -= gd;
+	self.tdsouls_time = time + 0.05;
+};
+
+void() glow_melee_uber = { local float gd;
+	gd = 0.007142857;
+	self.vweaponglowmod_x -= gd;
+	self.vweaponglowmod_y -= gd;
+	self.vweaponglowmod_z -= gd;
+	self.tdsouls_time = time + 0.05;
+};
+.float timezoom;
+.float melee_skin_time;
+.float timezoomframe;
+.float timezoomframesec;
+
+.float oldimpulse;
+void() zoom_shotgun;
+
+void() WeaponFrames = { WeaponSounds();
+	if (self.impulse == 190)
+		Exit_Game();
+
+	if ((!self.button6) && (self.rmenu == 1))
+		self.rmenu = 0;
+
+	if ((self.lspeedtime > time) && ((self.button0) || (self.button3)))
+	{
+		quickmovement();
+		if (self.weapon == IT_SHOTGUN)
+			sound(self, CHAN_WEAPON, "misc/null.wav", 0, ATTN_NORM);
+		self.lspeedtime = 0;
+	}
+
+	if (self.impulse == 200)
+	{
+		if (self.pulseicons &1)
+		{
+			self.pulseicons -= 1;
+			self.healthpulsetime = 0;
+		}
+
+		if (self.pulseicons &2)
+			self.pulseicons -= 2;
+
+		self.impulse = 0;
+	}
+
+	if (self.lspeedtime > time)
+		return;
+
+	if (self.itemtime > time)
+	{
+		if (self.oldimpulse == 0)
+			return;
+		if (self.impulse)
+			self.impulse = 0;
+		self.maxspeed = 1;
+		if (self.gravity < 0)
+			self.gravity = 1;
+
+		if (self.melee_ammount > 0)
+			self.melee_ammount = 0;
+		self.melee_lunge = 0;
+		if (self.noshake == 1)
+			self.noshake = 2;
+
+		if (self.oldimpulse == 2)
+			self.impulse = 2;
+		if (self.oldimpulse == 3)
+			self.impulse = 3;
+
+		if (self.oldimpulse == 4)
+			self.impulse = 4;
+
+		if (self.oldimpulse == 5)
+			self.impulse = 5;
+
+		if (self.oldimpulse == 6)
+			self.impulse = 6;
+		self.oldimpulse = 0;
+		W_ChangeWeapon();
+		return;
+	}
+
+	if (self.itemtime > time)
+		return;
+	if ((self.impulse == 57) && (self.lastweapontime < time))
+	{
+		self.melee_lunge = 0;
+		if ((self.rmenu != 1) && (!self.journal))
+			select_lastweapon();
+	}
+
+	//	if(self.radial_time <= 0.1)
+	//	self.radialactive = 0;
+	if (self.radial_time > time)
+	{
+		if (self.Aegis_time > time)
+			self.artifacttime = 142 - (floor(((self.radial_time) - time) *9.466));
+		else
+			self.artifacttime = 142 - (floor(((self.radial_time) - time) *6.8));
+	}
+	else
+	{
+		if (self.artifacttime != 0)
+		{
+			if (self.radialactive == 1)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactA_end.ogg", 1, 0.25);
+			if (self.radialactive == 2)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactB_end.ogg", 1, 0.25);
+			if (self.radialactive == 3)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactC_end.ogg", 1, 0.25);
+			if (self.radialactive == 4)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactD_end.ogg", 1, 0.25);
+			if (self.radialactive == 6)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactF_end.ogg", 1, 0.25);
+			if (self.radialactive == 7)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactG_end.ogg", 1, 0.25);
+			if (self.radialactive == 8)
+				sound(self, CHAN_AUTO, "items/artifacts/artifactH_end.ogg", 1, 0.25);
+			self.radialactive = 0;
+			self.artifacttime = 0;
+		}
+	}
+
+	if (self.weapon == IT_SHOTGUN)
+	{
+		if ((time > self.timezoomframe) && (self.shotgun_fire1 != 1) && (self.ammo_shotgun >= 1))
+		{
+			if ((self.button3) && (time > self.timezoom))
+			{
+				if (self.charge_shotgun > self.charge_shotgun_count)
+					self.charge_shotgun -= 0.004;
+				if (self.charge_shotgun < self.charge_shotgun_count)
+					self.charge_shotgun = self.charge_shotgun_count;
+				if (self.vweaponglowmod_x <= 0)
+				{
+					self.vweaponglowmod_x = 0.02;
+					self.vweaponglowmod_y = 0.02;
+					self.vweaponglowmod_z = 0.02;
+				}
+
+				if ((self.vweaponglowmod_x <= 1) && (self.vweaponglowmod_x >= 0))
+				{
+					self.vweaponglowmod_x += 0.01;
+					self.vweaponglowmod_y += 0.01;
+					self.vweaponglowmod_z += 0.01;
+				}
+			}
+			else
+			{
+				if (self.charge_shotgun < 1)
+					self.charge_shotgun += 0.05;
+				if (self.charge_shotgun > 1)
+					self.charge_shotgun = 1;
+
+				if (self.vweaponglowmod_x >= 0.01)
+				{
+					self.vweaponglowmod_x -= 0.025;
+					self.vweaponglowmod_y -= 0.025;
+					self.vweaponglowmod_z -= 0.025;
+				}
+				else
+				{
+					self.vweaponglowmod_x = -0.1;
+					self.vweaponglowmod_y = -0.1;
+					self.vweaponglowmod_z = -0.1;
+				}
+			}
+
+			self.timezoomframe = time + 0.01;
+		}
+	}
+
+	if ((self.weapon != IT_SHOTGUN) && (self.timezoom != 1))
+		self.timezoom = 1;
+	if (self.weapon != IT_MELEE)
+	{
+		if ((time > self.melee_skin_time) && (self.melee_skin))
+			self.melee_skin = 0;
+
+	}
+
+	if ((time > self.tdsouls_time) && (self.weapon == IT_MELEE) && (!self.melee_charging) && (!self.melee_kill_uber))
+		glow_melee();
+	if ((self.melee_kill_uber) && (time > self.tdsouls_time) && (self.weapon == IT_MELEE))
+		glow_melee_uber();
+	if (self.weapon == IT_MELEE)
+	{
+		if ((self.melee_kills) && (self.melee_kill_time < time))
+		{
+			self.melee_kills = 0;
+			self.melee_kill_uber = 0;
+			self.vweaponskin = 0;
+		}
+	}
+
+	if (self.modeeditor == 1)
+		ImpulseCommands();
+
+	if (self.fall_state == TRUE)
+		return;
+	if (self.impulse >= 1 && self.impulse <= 9)
+	{
+		self.maxspeed = 1;
+		if (self.gravity < 0)
+			self.gravity = 1;
+		if (time < self.lastweapontime)
+		{
+			self.impulse = 0;
+			return;
+		}
+
+		//(self.lastweapontime < time)
+
+		if (time < self.impulsetime)
+		{
+			self.impulse = 0;
+			return;
+		}
+
+		if (self.melee_ammount > 0)
+			self.melee_ammount = 0;
+		self.melee_lunge = 0;
+		W_ChangeWeapon();
+		self.impulsetime = time + 0.25;
+		if (self.noshake == 1)
+			self.noshake = 2;
+
+	}
+
+	/*
+	if(self.impulse == 77)
+	{
+		self.melee_ammount = 0;
+		self.maxspeed = 1;
+		if(self.gravity < 0)
+		self.gravity = 1;
+		if(self.execution == 2)
+		return;
+		if(time < self.impulsetime)
+		return;
+		if(self.weapon != IT_MELEE)
+		{
+		self.impulse = 1;
+		W_ChangeWeapon();
+		}
+		else
+		{
+		self.impulse = self.oldweaponn;
+		W_ChangeWeapon();
+		}
+
+		self.impulsetime = time + 0.25;
+	}
+
+	*/
+
+	if (self.flightflag > 0)
+		flight_sound();
+	if (self.vgeartime > time)
+		vgearframes();
+
+	if ((self.bfg == 1) && (self.weapon == IT_MELEE) && (self.tdsouls <= 0))
+	{
+		//	check_transformation ();
+		//return;	
+	}
+
+	if (time > self.use_finished)
+	{
+		if (self.button5)
+		{
+			if (self.luse)
+				return;
+			Use_Func();
+			self.luse = 1;
+		}
+		else
+		{
+			if (self.luse)
+				self.luse = 0;
+		}
+	}
+
+	if (self.impulse == 35)
+		Toggle_Journal();
+
+	if ((self.realoding == 1) || (time > self.attack_finished) && (self.radial_time < time))
+	{
+		if (self.modeeditor != 1)
+		{
+			if ((self.button6) && (self.rmenu != 1) && (self.journal == 0))
+				Rinventory();
+
+		}
+
+		if (self.impulse == 15)
+		{
+			if (self.artifact_model_client <= 0)
+			{
+				if (self.radialactive == 2)
+					Drowner_selected();
+				if (self.radialactive == 5)
+				{
+					tether_org = self.origin;
+					write_tether();
+				}
+
+				if (self.radialactive == 6)
+					LifeSiphon_selected();
+				//		if(self.radialactive == 3)
+				//		TrinketofRespite_selected();
+				if (self.radialactive == 8)
+					Aegis_selected();
+			}
+		}
+
+		if ((self.rmenu == 0) && (self.radial_time < time))
+		{
+			if (self.impulse == 21)
+				self.radialactive = 1;
+			if (self.impulse == 22)
+				self.radialactive = 2;
+			if (self.impulse == 23)
+				self.radialactive = 3;
+			if (self.impulse == 24)
+				self.radialactive = 4;
+			if (self.impulse == 25)
+				self.radialactive = 5;
+			if (self.impulse == 26)
+				self.radialactive = 6;
+			if (self.impulse == 27)
+				self.radialactive = 7;
+			if (self.impulse == 28)
+				self.radialactive = 8;
+			if (self.impulse == 29)
+				self.radialactive = 9;
+			if (self.impulse == 30)
+				self.radialactive = 10;
+
+			if ((!(self.centerprint_messages &2)) && (self.radialactive > 0))
+			{
+				Hud_message(257, self.origin, self);
+				self.centerprint_messages += 2;
+			}
+		}
+	}
+
+	if ((time < self.attack_finished) || (self.button6))
+	{
+		if (self.impulse)
+			self.impulse = 0;
+		return;
+	}
+
+	if (self.deadflag)
+		return;
+
+	if (self.rmenu == 1)
+		return;
+	if (self.modeeditor == 1)
+		return;
+
+	if (self.button3)
+	{
+		if (self.button0)
+			return;
+		if (self.noammobutton2 == 1)
+			return;
+		Weapon_Sfire();
+	}
+	else
+	{
+		if (self.noammobutton2 == 1)
+			self.noammobutton2 = 0;
+		self.wlightning = 0;
+		if ((self.weapon == IT_MELEE) && (self.melee_lunge > 0))
+		{
+			self.attack_finished = time + 0.5;
+			w_melee_prerelease();
+			return;
+		}
+
+		//self.ssemi = 0;			
+	}
+
+	if (self.button0)
+	{
+		if (time < self.attack_finished)
+			return;
+		if (self.button3)
+			return;
+		if (self.draw_w != 0)
+			return;
+		if (self.noammobutton == 1)
+			return;
+		Weapon_Fire();
+	}
+	else
+	{
+		if (self.noammobutton == 1)
+			self.noammobutton = 0;
+		if ((self.vgearrelease == 1))
+		{
+			self.vgeartime = time + 0.35;
+			self.vgearrelease = 0;
+		}
+
+		//if (time > self.attack_finished)
+		//self.semi = 0;		
+	}
+
+	if ((self.impulse) && (!self.button3) && (!self.button0) && (!self.bomb_velocityfactor))
+	{
+		if (self.modeeditor != 1)
+		{
+			if (!self.button3)
+				ImpulseCommands();
+		}
+		else
+			ImpulseCommands();
+	}
+};
+
+///////////////////////////////////end of qc file
