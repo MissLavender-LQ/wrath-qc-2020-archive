@@ -232,7 +232,7 @@ void() walkmonster_start = {	// delay drop to floor to make sure all doors have 
 	else
 		self.think = walkmonster_start_go;
 	self.bloody = 1;
-	//indicator(self);
+	indicator(self);
 	if ((self.rise == 1) || (self.spawned == 1) || (self.warped))
 		self.nextthink = time + 0.05;
 	else

@@ -236,7 +236,7 @@ void() heretic_run;
 void() heretic_attack;
 void() heretic_srun;
 void() heretic_endchase;
-.float movingz;
+
 .float chasing;
 
 void() heretic_subattack = { local entity head;
@@ -256,76 +256,36 @@ void() heretic_subattack = { local entity head;
 	}
 };
 
-void(void() thinkst) heretic_checkchase = { enemy_range = range(self.enemy);
+void(void() thinkst) heretic_checkchase = { 
 
+	local vector	dir, vtemp;
+	
+	local entity pl;
+	pl = find (world,classname, "player");
+	if (self.enemy != pl)
+	self.enemy = pl;	
+	enemy_range = range(self.enemy);
+	vtemp = self.enemy.origin + '0 0 38';
+	
+	if(self.flags & FL_ONGROUND)
+		self.flags -= FL_ONGROUND;
 	if (self.chasing == 1)
 	{
 		ai_face();
 		local float heretic_runvel;
 		heretic_runvel = heretic_rsr;
-		if (self.origin_z > self.enemy.origin_z)
-		{
-			if ((self.origin_z - self.enemy.origin_z) > 96)
-			{
-				if ((self.movingz != 1) && ((enemy_range == RANGE_MID) || (enemy_range == RANGE_MELEE)) && (visible(self.enemy)))
-				{
-					self.movetype = MOVETYPE_WALK;
-					self.gravity = 0;
-					self.velocity_z = -256;
-					self.movingz = 1;
-				}
-			}
-			else
-			{
-				if (self.movingz == 1)
-				{
-					self.velocity_z = 0;
-					self.gravity = 1;
-					self.movetype = self.oldmovetype;
-					heretic_runvel = heretic_runvel *0.5;
-					self.movingz = 0;
-				}
-			}
-		}
-		else
-		{
-			if ((self.enemy.origin_z - self.origin_z) > 96)
-			{
-				if ((self.movingz != 2) && ((enemy_range == RANGE_MID) || (enemy_range == RANGE_MELEE)) && (visible(self.enemy)))
-				{
-					self.movetype = MOVETYPE_WALK;
-					self.velocity_z = 256;
-					self.gravity = -1;
-					self.movingz = 2;
-				}
-			}
-			else
-			{
-				if (self.movingz == 2)
-				{
-					self.velocity_z = 0;
-					self.gravity = 1;
-					self.movetype = self.oldmovetype;
-					heretic_runvel = heretic_runvel *0.5;
-					self.movingz = 0;
-				}
-			}
-		}
-		if (!self.movingz)
-			ai_runwalk(heretic_rsr);
 	}
+	self.movingz = 1;
+	self.movetype = MOVETYPE_FLYMISSILE;
+	dir = normalize(vtemp - self.origin);
+	self.velocity = dir * heretic_rsr;
+	
 	if (visible(self.enemy))
 	{
 		if (enemy_range == RANGE_FAR)
 			self.think = heretic_endchase;
 		if ((enemy_range == RANGE_MID) || (enemy_range == RANGE_NEAR))
 		{
-			//local vector	delta;
-			//local float dist;
-			//delta = self.enemy.origin - self.origin;
-			//dist = vlen (delta);
-			//if (dist < 120)
-			//ai_charge (12);	
 			self.think = thinkst;
 		}
 		if (enemy_range == RANGE_MELEE)
@@ -386,27 +346,6 @@ void() heretic_srun
 		self.yaw_speed = 50;
 };
 
-/*
-void()	heretic_srun	=[	$her_chase1,	heretic_srun2	] 
-{	
-	self.glowmod = '-1 -1 -1';
-	self.chasing = 1;
-	ai_runwalk(heretic_rsr);
-	if(self.zigzaging != 0)
-		self.zigzaging = 0;
-	if(self.yaw_speed != 50)
-		self.yaw_speed = 50;
-	heretic_checkchase();
-heretic_subattack();
-};
-void()	heretic_srun2	=[	$her_chase2,	heretic_srun3	] {ai_runwalk(heretic_rsr);heretic_checkchase();heretic_subattack();};
-void()	heretic_srun3	=[	$her_chase3,	heretic_srun4	] {ai_runwalk(heretic_rsr);heretic_checkchase();};
-void()	heretic_srun4	=[	$her_chase4,	heretic_srun5	] {ai_runwalk(heretic_rsr);heretic_checkchase();heretic_subattack();};
-void()	heretic_srun5	=[	$her_chase5,	heretic_srun6	] {ai_runwalk(heretic_rsr);heretic_checkchase();};
-void()	heretic_srun6	=[	$her_chase6,	heretic_srun7	] {ai_runwalk(heretic_rsr);heretic_checkchase();heretic_subattack();};
-void()	heretic_srun7	=[	$her_chase7,	heretic_srun8	] {ai_runwalk(heretic_rsr);heretic_checkchase();};
-void()	heretic_srun8	=[	$her_chase8,	heretic_srun	] {ai_runwalk(heretic_rsr);heretic_checkchase();heretic_subattack();};
-*/
 void() heretic_endchase =[$her_echase1, heretic_endchase2]
 {
 	sound(self, CHAN_VOICE2, "enemies/heretic/end_chase.ogg", 1, 0.25);
@@ -744,7 +683,7 @@ void() projectile_touch_her = { local float damg;
 			self.owner.nextthink = time;
 		}
 		//self = oself;
-		other.heretic_sloweffectime = time + 1;
+		//other.heretic_sloweffectime = time + 1;
 	}
 	sound(self, CHAN_WEAPON, "misc/null.wav", 1, 1);
 	//void(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) randomsound2
@@ -861,7 +800,20 @@ void(float wdmg) heretic_melee_attack = { local vector delta;
 	}
 	else
 	{
+		
+		local vector tagorg;
+		local float tagindex;		
+		tagindex = gettagindex(self, "tag_tongues");
+		tagorg = gettaginfo(self, tagindex) + '0 0 0';
 		T_Damage(self.enemy, self, self, wdmg);
+		local vector bloodvel;
+		bloodvel_x = crandom() * 64;
+		bloodvel_y = crandom() * 64;
+		bloodvel_z = random() * 128 + 64;
+		
+		SpawnBlood(tagorg, bloodvel, 0, 0, wdmg);
+		if (random() < 0.2)
+		decal_monster2(self.enemy.origin);
 	}
 	heretic_subattack();
 };
@@ -870,6 +822,7 @@ void() heretic_sattack =[$her_batk1, heretic_sattack2]
 {
 	ai_face();
 	monstersound4("enemies/heretic/bite", 3, CHAN_BODY);
+	self.origin_z = self.enemy.origin_z + 22 + 16;
 	if (self.movingz)
 	{
 		self.velocity_z = 0;
@@ -952,6 +905,13 @@ void() heretic_paind5 =[$her_paind5, heretic_postpain]
 
 void(entity enemy, float dmg) heretic_pain = { if (dmg < heretic_dtp)
 		return;
+	if (self.movingz)
+	{
+		self.velocity_z = 0;
+		self.movingz = 0;
+		self.movetype = self.oldmovetype;
+		self.gravity = 1;
+	}		
 	self.glowmod = '-1 -1 -1';
 	local float rp;
 	rp = random() *100;

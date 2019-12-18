@@ -180,6 +180,8 @@ void() shot_projectile_think = { local vector source;
 	self.think = shot_projectile_think;
 	self.nextthink = time + 0.01;
 };
+.float waittime;
+void(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) randomsound2;
 void() shotgun_proj_touch = { local vector org;
 	//self.velocity =	self.oldvelocity;
 
@@ -204,9 +206,13 @@ void() shotgun_proj_touch = { local vector org;
 		rvel_y = crandom() *50;
 		rvel_z = crandom() *50;
 		self.angles = vectoangles(self.velocity);
+		//void(vector org, string locsound, float rnd, float vol)
 		self.count -= 1;
 	}
-
+	
+	if(time > self.waittime)
+	randomsound2  ("impact/projectiles/rico",15,0.5, CHAN_AUTO, 0, 0.25);
+//(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) 
 	if ((self.owner.classname != "player") && (other.classname != "projectile"))
 		remove(self);
 
@@ -224,25 +230,145 @@ void(vector org, vector dir, float order, entity ownerproj) launch_projectile = 
 	shotgun_proj.alreadytoucher = order;	// counter of touchs
 	shotgun_proj.touch = shotgun_proj_touch;
 	shotgun_proj.classname = "projectile";
+	shotgun_proj.waittime =  time + 0.05;
 	shotgun_proj.think = shot_projectile_think;
 	shotgun_proj.nextthink = time;
 	setmodel(shotgun_proj, "models/projectiles/proj_shrapnel.md3");
 	setsize(shotgun_proj, '0 0 0', '0 0 0');
+
 	if (ownerproj.classname == "player")
 		makevectors(ownerproj.v_angle);
 	else
 		makevectors(ownerproj.angles);
-
 	//org -=v_forward*order ;
 	setorigin(shotgun_proj, org);
 	local vector rvec;
-	rvec_x += ownerproj.shotgun_spread1 * 0.25;
-	rvec_y += ownerproj.shotgun_spread1 * 0.25;
+	rvec_x += ownerproj.shotgun_spread1;
+	rvec_y += ownerproj.shotgun_spread1;
 	rvec = crandom() *(rvec_x) *v_right + crandom() *(rvec_y) *v_up;
 	dir += rvec;
-	shotgun_proj.velocity = dir *(2000 + (25 *order));
+	shotgun_proj.velocity = dir *(1000 + (2.5 *order));
 	shotgun_proj.oldvelocity = shotgun_proj.velocity;
 };
+.float rsound_cntr;
+void()launch_projectiles_explosion =
+{
+	local vector dir;
+	local float pcount;
+	pcount = 20;
+	makevectors(self.angles);
+
+	
+	while(pcount > 0)
+	{
+		if(!self.count)
+		{
+			local float surfnum;
+			local vector s;
+			surfnum = getsurfacenearpoint(world, self.origin);
+			if (surfnum >= 0)
+			{
+				s = getsurfacenormal(world, surfnum);
+				dir = normalize (((dir + (v_up * 360 * crandom ())) + (v_right *360 * crandom ())));
+				dir = (dir + (2 * s));
+			}
+		}
+		else
+		dir = normalize (((dir + (v_up * 360 *  crandom ())) + (v_right * 360* crandom ())));
+		launch_projectile (self.origin, dir, pcount,self.owner);
+		pcount -= 1;
+	}
+	remove(self);
+}
+
+void()proj_heretic_explo;
+void(string locsound, float vol, float nchannel, float iswav, float atten) alreadyrandomsound2;
+void()shotgun_projectile_touch = 
+{
+	local vector org;
+	org = self.origin;
+	if (other == self.owner)
+		return;
+	if (other.solid == SOLID_TRIGGER)
+		return;	// trigger field, do nothing
+	if (pointcontents(self.origin) == CONTENT_SKY)
+	{
+		remove(self);
+		return;
+	}
+
+	self.classname = "shotgun_projectile_explosion";
+	if ((other.takedamage) && (other.solid != SOLID_BSP))
+	{
+			if (other.flags &FL_MONSTER)
+		{
+			if (other.classname == "afflicted")
+				spawn_touchblood2(9, 2);
+			else if (other.classname == "wraith")
+				spawn_touchblood2(9, 4);
+			else
+				spawn_touchblood2(9, 1);
+
+			local float r;
+			r = random();
+			if (r < 1)
+			{
+				if (other.classname == "afflicted")
+					explo_blood_sprite(3, org);
+				else if (other.classname == "wraith")
+					explo_blood_sprite(4, org);
+				else
+				{
+					if (r < 0.5)
+						explo_blood_sprite(1, org);
+					else
+						explo_blood_sprite(2, org);
+				}
+			}
+		}
+		
+	T_Damage(other, self, self.owner, self.owner.shotgun_proj_dmg);
+	self.count = 1;
+	}
+	alreadyrandomsound2  ("impact/projectiles/shotgun_explo",1, CHAN_AUTO, 0, 0.25);
+
+	self.movetype = 0;
+	self.velocity = '0 0 0';	
+	self.touch = SUB_Null;
+	self.solid = 0;
+	self.effects = EF_NODRAW;
+
+
+	self.think = launch_projectiles_explosion;
+	self.nextthink = time;
+	
+	
+	local entity explosion_sprite;
+	explosion_sprite = spawn();
+	explosion_sprite.origin = self.origin;
+	setmodel(explosion_sprite, "models/projectiles/proj_shotgun_explo.md3");
+	pointparticles(particleeffectnum("shotgun_explo"), self.origin, '0 0 0', 1);
+	explosion_sprite.alpha = 1;
+	explosion_sprite.nextthink = time;
+	explosion_sprite.think = proj_heretic_explo;
+	
+	
+	//BecomeExplosion(1);
+	//snd = strcat("impact/projectiles/slag1_explo", ftos(floor(random() *5) + 1), ".ogg");
+	//pointparticles(particleeffectnum("slag"), org, v_forward *(-550), 1);
+	//sound(self, CHAN_AUTO, snd, 1, 0.25);
+};
+
+
+void() shotgun_projectile_drunk = { self.explodcount += 1;
+	self.velocity = ((self.velocity + ((v_right *proj_shotgun_drunkfactorh) *crandom())) + ((v_up *proj_shotgun_drunkfactorv) *crandom()));
+	self.nextthink = time + proj_shotgun_timing;	// screw up fast
+	if (self.explodcount < 50)
+		self.think = shotgun_projectile_drunk;
+	else
+		self.think = SUB_Remove;
+};
+
 
 .float time_piston;
 
@@ -303,18 +429,66 @@ void() wsfire_shotgunempty1 = { self.empty_shells = 1;
 	if (self.vweaponframe == 113)
 	{
 		local vector dir, tagorg;
-		local float pcount, tagindex;
+		local float tagindex;
 		sound(self, CHAN_AUTO, "weapons/shotgun/firetoempty.ogg", 1, ATTN_NORM);
-		pcount = 20;
-		while (pcount > 0)
-		{
-			tagindex = gettagindex(self.vweapon, "tag_proj");
-			tagorg = gettaginfo(self.vweapon, tagindex);
-			dir = aim(self, 1000);
-			launch_projectile(tagorg, dir, pcount, self);
-			pcount -= 1;
-		}
+		
+		tagindex = gettagindex(self.vweapon, "tag_barrela");
+		tagorg = gettaginfo(self.vweapon, tagindex);
+		local entity sotgun_projectile;
+		sotgun_projectile=  spawn();
+		sotgun_projectile.movetype = MOVETYPE_FLYMISSILE;
+		sotgun_projectile.solid = SOLID_TRIGGER;
+		sotgun_projectile.owner =  self;
+		
+		dir = aim(self, 1000);
+		setorigin(sotgun_projectile, tagorg);
+		setmodel(sotgun_projectile, "models/projectiles/proj_shotgun1.md3");
+		sotgun_projectile.cnt = 1;
+		sotgun_projectile.traileffectnum = particleeffectnum("shotgun_trail");
+		sotgun_projectile.velocity = normalize(self.cursor_trace_endpos - sotgun_projectile.origin) *self.shotgun_proj_speed ;
+		//setsize(sotgun_projectile, '0 0 0', '0 0 0');
+		setsizeitem(sotgun_projectile,  proj_shotgun_bbox);
 
+		sotgun_projectile.angles = vectoangles(sotgun_projectile.velocity);
+		sotgun_projectile.touch = shotgun_projectile_touch;
+		sotgun_projectile.effects = EF_NOSHADOW;
+
+
+	
+	
+		tagindex = gettagindex(self.vweapon, "tag_barrelb");
+		tagorg = gettaginfo(self.vweapon, tagindex);
+		dir = aim(self, 1000);
+		local entity sotgun_projectileb;
+		sotgun_projectileb=  spawn();
+		sotgun_projectileb.movetype = MOVETYPE_FLYMISSILE;
+		sotgun_projectileb.solid = SOLID_TRIGGER;
+		sotgun_projectileb.owner =  self;
+		setorigin(sotgun_projectileb, tagorg);
+		setmodel(sotgun_projectileb, "models/projectiles/proj_shotgun2.md3");
+		sotgun_projectileb.cnt = 1;
+		sotgun_projectileb.traileffectnum = particleeffectnum("shotgun_trail");
+		sotgun_projectileb.velocity = normalize(self.cursor_trace_endpos - sotgun_projectile.origin) *self.shotgun_proj_speed ;
+		//setsize(sotgun_projectileb, '0 0 0', '0 0 0');
+		setsizeitem(sotgun_projectileb,  proj_shotgun_bbox);
+		sotgun_projectileb.angles = vectoangles(sotgun_projectileb.velocity);
+		sotgun_projectileb.touch = shotgun_projectile_touch;
+		sotgun_projectileb.effects = EF_NOSHADOW;
+
+		sotgun_projectileb.think  = shotgun_projectile_drunk;
+		sotgun_projectile.think  = shotgun_projectile_drunk;
+		sotgun_projectileb.nextthink =  time + 0.05;
+		sotgun_projectile.nextthink =  time + 0.05;
+		
+		local float r, r1;
+		r = floor(random() *5) + 1;
+		sotgun_projectile.rsound_cntr = r;
+		r1 = floor(random() *5) + 1;
+		if (r1 == sotgun_projectile.rsound_cntr)
+			r1 += 1;
+		sotgun_projectileb.rsound_cntr = r1;
+		
+		
 		self.attack_finished = time + self.shotgun_time2;
 		self.punchangle_x = -7;
 		makevectors(self.angles);
@@ -377,18 +551,64 @@ void() wsfire_shotgun1 = { self.vweaponframe += 1;
 	if (self.vweaponframe == 43)
 	{
 		local vector dir, tagorg;
-		local float pcount, tagindex;
+		local float tagindex;
 		playersound2("weapons/shotgun/fire2_", 2, CHAN_WEAPON);
-		pcount = 20;
-		while (pcount > 0)
-		{
-			tagindex = gettagindex(self.vweapon, "tag_proj");
-			tagorg = gettaginfo(self.vweapon, tagindex);
-			dir = aim(self, 1000);
-			launch_projectile(tagorg, dir, pcount, self);
-			pcount -= 1;
-		}
 
+
+		tagindex = gettagindex(self.vweapon, "tag_barrela");
+		tagorg = gettaginfo(self.vweapon, tagindex);
+		local entity sotgun_projectile;
+		sotgun_projectile=  spawn();
+		sotgun_projectile.movetype = MOVETYPE_FLYMISSILE;
+		sotgun_projectile.solid = SOLID_TRIGGER;
+		sotgun_projectile.owner =  self;
+		
+		dir = aim(self, 1000);
+		setorigin(sotgun_projectile, tagorg);
+		setmodel(sotgun_projectile, "models/projectiles/proj_shotgun1.md3");
+		sotgun_projectile.cnt = 1;
+		sotgun_projectile.traileffectnum = particleeffectnum("shotgun_trail");
+		sotgun_projectile.velocity = normalize(self.cursor_trace_endpos - sotgun_projectile.origin) *self.shotgun_proj_speed ;
+		//setsize(sotgun_projectile, '0 0 0', '0 0 0');
+		setsizeitem(sotgun_projectile,  proj_shotgun_bbox);
+		sotgun_projectile.angles = vectoangles(sotgun_projectile.velocity);
+		sotgun_projectile.touch = shotgun_projectile_touch;
+		sotgun_projectile.effects = EF_NOSHADOW;
+
+
+		tagindex = gettagindex(self.vweapon, "tag_barrelb");
+		tagorg = gettaginfo(self.vweapon, tagindex);
+		dir = aim(self, 1000);
+		local entity sotgun_projectileb;
+		sotgun_projectileb=  spawn();
+		sotgun_projectileb.movetype = MOVETYPE_FLYMISSILE;
+		sotgun_projectileb.solid = SOLID_TRIGGER;
+		sotgun_projectileb.owner =  self;
+		setorigin(sotgun_projectileb, tagorg);
+		setmodel(sotgun_projectileb, "models/projectiles/proj_shotgun2.md3");
+		sotgun_projectileb.cnt = 1;
+		sotgun_projectileb.traileffectnum = particleeffectnum("shotgun_trail");
+		sotgun_projectileb.velocity = normalize(self.cursor_trace_endpos - sotgun_projectile.origin) *self.shotgun_proj_speed ;
+		setsizeitem(sotgun_projectileb,  proj_shotgun_bbox);
+		//setsize(sotgun_projectileb, '0 0 0', '0 0 0');
+		sotgun_projectileb.angles = vectoangles(sotgun_projectileb.velocity);
+		sotgun_projectileb.touch = shotgun_projectile_touch;
+		sotgun_projectileb.effects = EF_NOSHADOW;
+
+		local float r, r1;
+		r = floor(random() *5) + 1;
+		sotgun_projectile.rsound_cntr = r;
+		r1 = floor(random() *5) + 1;
+		if (r1 == sotgun_projectile.rsound_cntr)
+			r1 += 1;
+		sotgun_projectileb.rsound_cntr = r1;
+		
+		
+		sotgun_projectileb.think  = shotgun_projectile_drunk;
+		sotgun_projectile.think  = shotgun_projectile_drunk;
+		sotgun_projectileb.nextthink =  time + 0.05;
+		sotgun_projectile.nextthink =  time + 0.05;
+		
 		self.attack_finished = time + self.shotgun_time2;
 		self.lastweapontime = time + 1.25;
 		self.punchangle_x = -5;

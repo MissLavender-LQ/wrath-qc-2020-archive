@@ -7,6 +7,7 @@ float FL_GARBAGE = 1;
 float FL_RESPAWN = 2;
 float FL_SHOOTER = 4;
 float FL_TOSS = 8;
+float FL_SPAWNER = 16;
 
 .vector oldangles;
 .float nojump;

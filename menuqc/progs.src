@@ -4,6 +4,8 @@ menudefs.qc
 ../shared_menu.qc
 ../shared_menu_csqc.qc
 wrathmenudefs.qc
+drawmenu.qc
+commands.qc
 menu.qc
 menu_types.qc
 

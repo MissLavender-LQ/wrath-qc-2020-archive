@@ -263,7 +263,7 @@ float(entity targ) hear_range = { local vector spot1, spot2;
 
 	return RANGE_FAR;
 };
-
+.float movingz;
 float(entity targ) range = { local vector spot1, spot2;
 	local float r;
 	spot1 = rorigin(self) + self.view_ofs;
@@ -351,8 +351,17 @@ float(entity targ) range = { local vector spot1, spot2;
 	}*/
 	else if (self.classname == "monster_heretic")
 	{
-		if (r < heretic_near)
-			return RANGE_MELEE;
+	
+		if(self.movingz == 1)
+		{
+			if (r < heretic_near + 16)
+				return RANGE_MELEE;
+		}
+		else
+		{
+			if (r < heretic_near)
+				return RANGE_MELEE;
+		}
 		if (r < heretic_mid)
 			return RANGE_NEAR;
 		if (r < heretic_far)
@@ -438,6 +447,14 @@ float(entity targ) oldvisible = { local vector spot1, spot2;
 };
 
 float(entity targ) reachable = { if (oldvisible(targ))
+		return TRUE;
+	return FALSE;
+}
+
+float(entity targ, entity e) reachable2 = 
+{ 
+	self = e;
+	if (oldvisible(targ))
 		return TRUE;
 	return FALSE;
 }
@@ -907,9 +924,13 @@ void(float dist) ai_painforward = { walkmove(self.ideal_yaw, dist);
 .float rollwalktoattack;
 .float findtargettime;
 .float painframe;
-void(float dist) ai_walk = { if (self.watertype == CONTENT_LAVA)	// do lava damage
-		T_Damage(self, world, world, 10 *self.waterlevel);
+void(float dist) ai_walk = { 
 
+		if (self.watertype == CONTENT_LAVA)	// do lava damage
+		{
+		T_Damage(self, world, world, 10 *self.waterlevel);
+		return;
+		}
 	movedist = dist;
 
 	// check for noticing a player
@@ -950,8 +971,12 @@ void(float dist) ai_walk = { if (self.watertype == CONTENT_LAVA)	// do lava dama
 
 .float rise;
 
-void() ai_stand = { if (self.watertype == CONTENT_LAVA)	// do lava damage
+void() ai_stand = { 
+		if (self.watertype == CONTENT_LAVA)	// do lava damage
+		{
 		T_Damage(self, world, world, 10 *self.waterlevel);
+		return;
+		}
 
 	if (self.oldenemy)
 	{
@@ -1385,9 +1410,18 @@ void(vector org, entity e) dropwaypoint = { local entity head, near;
 .float timeroaming;
 .float timestrafing;
 .float heavy;
-void(float dist) ai_runwalk = { if (self.watertype == CONTENT_LAVA)	// do lava damage
-		T_Damage(self, world, world, 10 *self.waterlevel);
+.float timeangles;
+.float movetogoal_time;
 
+
+
+void(float dist) ai_runwalk = { 
+
+		if (self.watertype == CONTENT_LAVA)	// do lava damage
+		{
+		T_Damage(self, world, world, 10 *self.waterlevel);
+		return;
+		}
 	if (self.movetype == MOVETYPE_FLYMISSILE)
 	{
 		ai_face();
@@ -1452,7 +1486,7 @@ void(float dist) ai_runwalk = { if (self.watertype == CONTENT_LAVA)	// do lava d
 			}
 		}
 
-		if ((self.timestrafing < time) && (self.heavymonster < 1))
+		if ((self.timestrafing < time) && (self.heavymonster < 1) && (self.timeangles < time)) 
 		{
 			local float visl, visr;
 			local vector spot1, spot2, spot3;
@@ -1489,27 +1523,40 @@ void(float dist) ai_runwalk = { if (self.watertype == CONTENT_LAVA)	// do lava d
 		if ((!self.heavymonster))
 			self.origincounter++;
 
-		if (self.zigzaging == 1)
-		{
-			local float zzpo;
-			zzpo = self.zigzagdeviance;
-			self.ideal_yaw = vectoyaw((rorigin(self.enemy)) - rorigin(self)) + zzpo;
-		}
-		else
-		{
-			self.ideal_yaw = vectoyaw((rorigin(self.enemy)) - rorigin(self));
-		}
 
-		ChangeYaw();
+		if(self.timeangles < time)
+		{
+			if (self.zigzaging == 1)
+			{
+				local float zzpo;
+				zzpo = self.zigzagdeviance;
+				self.ideal_yaw = vectoyaw((rorigin(self.enemy)) - rorigin(self)) + zzpo;
+			}
+			else
+			{
+				self.ideal_yaw = vectoyaw((rorigin(self.enemy)) - rorigin(self));
+			}
 
+			ChangeYaw();
+		}
 		//self.flags = self.flags | FL_PARTIALGROUND; 
 		//self.effects = EF_NODEPTHTEST;
 		if (self.heavymonster == 1)
 			self.velocity = '0 0 0';
 
-		if (!walkmove(self.angles_y, dist))
-			movetogoal(dist);
 
+
+		vector oldorigin = self.origin;
+		//movetogoal(dist);
+
+		if (!walkmove(self.angles_y, dist))
+		{
+		if(self.timeangles)
+		self.timeangles = 0;
+		//ChangeYaw();
+		
+		movetogoal(dist);
+		}
 		if ((self.origincounter == 3) && (!self.heavymonster))
 		{
 			if (vlen(self.origin - self.oldmonsterorigin) <= 1)
@@ -1764,7 +1811,7 @@ void(vector org, string locsound, float rnd, float vol) randompointsound = { loc
 	pointsound(org, samplesound, vol, 0.5);
 };
 
-.float rsound_cntr;
+
 void(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) randomsound2 = { local float r;
 	local string soundend, lsound, rsound;
 	if (iswav)
@@ -1782,6 +1829,16 @@ void(string locsound, float rnd, float vol, float nchannel, float iswav, float a
 	sound(self, nchannel, lsound, vol, atten);
 };
 
+void(string locsound, float vol, float nchannel, float iswav, float atten) alreadyrandomsound2 = {
+	local string soundend, lsound, rsound;
+	if (iswav)
+		soundend = ".wav";
+	else
+		soundend = ".ogg";
+	rsound = ftos(self.rsound_cntr);
+	lsound = strcat(locsound, rsound, soundend);
+	sound(self, nchannel, lsound, vol, atten);
+};
 void(string locsound, float rnd, float nchannel) monstersound1 = { local float r;
 	local string monstersound, rsound;
 
@@ -2123,6 +2180,72 @@ void() trigger_nowaypointed = { self.touch = trigger_nowaypointed_touch;
 	setmodel(self, self.model);
 	self.modelindex = 0;
 	self.model = string_null;
+};
+.float subangle;
+.entity lasttrigger;
+
+float(entity targ, entity eself) backtouch; 
+
+.float minorangle;
+void() info_angle=
+{
+//setmodel (self,"serser");
+};
+
+void()determine_subangle =
+{
+local entity t;
+t = find(world, targetname, self.target);
+self.enemy = t;
+}
+.float always_active;
+
+void() trigger_angle_touch =
+{
+	local entity oself;
+
+	if (!(other.flags & FL_MONSTER))
+	{
+		return;
+	}
+	if (((other.lasttrigger == self) && (other.timeangles > time)))
+	{
+		return;
+	}
+/*
+	if ((test_ia == FALSE))
+	{
+		return;
+	}
+*/
+
+	
+	self.subangle = self.enemy.angles_y;
+
+	makevectors2(other.angles);
+	if (((v_forward * self.movedir) < self.minorangle))
+	{
+		return;
+	}
+	other.lasttrigger = self;
+	other.timeangles = (time + TRUE);
+
+	oself = self;
+	self = other;
+	if((oself.always_active != 1) && (reachable(self.enemy)))
+	return;
+	self.angles_y = oself.subangle;
+	self.ideal_yaw = oself.subangle;
+	ChangeYaw();
+	self = oself;
+};
+
+void() trigger_angle =
+{
+	InitTrigger();
+	self.touch = trigger_angle_touch;
+	self.think = determine_subangle;
+	self.nextthink = self.ltime + 0.1;
 };
 
 /////////////

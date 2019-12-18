@@ -52,14 +52,12 @@ void() w_melee_release_damage = { self.lungetime = time + 0.1;
 		tracebox(source, '-7 -7 -7', '7 7 7', source + v_forward *96, FALSE, self);
 	else
 		tracebox(source, '-5 -5 -5', '5 5 5', source + v_forward *48, FALSE, self);
-	//traceline (source, source + v_forward*120, FALSE, self);
 	if (trace_fraction == 1.0)
 	{
-		//self.melee_ammount = 0;
 		return;
 	}
 
-	if ((trace_ent.takedamage))
+	if ((trace_ent.takedamage) && (trace_ent.only_damage_monster != 1))
 	{
 		org = trace_endpos - v_forward * 4;
 		if ((trace_ent.flags &FL_MONSTER))
@@ -92,6 +90,7 @@ void() w_melee_release_damage = { self.lungetime = time + 0.1;
 			lunge_damage += trace_ent.health;
 		}
 
+		if((trace_ent.only_damage_monster != 1))
 		T_Damage(trace_ent, self, self, lunge_damage);
 		self.melee_ammount = 1;
 
@@ -101,11 +100,15 @@ void() w_melee_release_damage = { self.lungetime = time + 0.1;
 			tracebox(source, '-5 -5 -5', '5 5 5', source + v_forward *96, FALSE, self);
 			if (trace_fraction == 1.0)
 				return;
-			if ((trace_ent.takedamage))
+			if ((trace_ent.takedamage) && (trace_ent.only_damage_monster != 1) )
 				T_Damage(trace_ent, self, self, lunge_damage);
 		}
 	}
 };
+
+
+
+
 
 void() w_melee_release = { if (!self.melee_kill_uber)
 	{
@@ -124,19 +127,7 @@ void() w_melee_release = { if (!self.melee_kill_uber)
 		playersound("weapons/melee/attack", 8);
 	}
 
-	if (self.vweaponframe == 28)
-		w_melee_release_damage();
-	if (self.vweaponframe == 29)
-		w_melee_release_damage();
-	if (self.vweaponframe == 30)
-		w_melee_release_damage();
-	if (self.vweaponframe == 31)
-		w_melee_release_damage();
-	if (self.vweaponframe == 32)
-		w_melee_release_damage();
-	if (self.vweaponframe == 33)
-		w_melee_release_damage();
-	if (self.vweaponframe == 34)
+	if ((self.vweaponframe >= 28) && (self.vweaponframe <= 34))
 		w_melee_release_damage();
 	if (self.vweaponframe == 35)
 	{
@@ -167,16 +158,88 @@ void() w_melee_release = { if (!self.melee_kill_uber)
 
 };
 .vector prejumpvelocity;
+void() w_melee_prerelease =
+{
 
-void() w_melee_prerelease = { if (self.melee_released >= 1)
+	if(self.melee_released >= 1)
+		self.melee_released = 2;
+	else
+		self.melee_released = 1;			
+	local float secondary_jump;
+	self.melee_jump_time = time + 0.2;
+	self.vweaponframe = 26;
+	if((!(self.flags & FL_ONGROUND)) && (self.melee_released == 2))
+		secondary_jump = 1;
+	else
+		secondary_jump = 0;
+
+	if((self.flags & FL_ONGROUND))
+	{
+		self.velocity_z += 160;
+		self.flags -= FL_ONGROUND;
+	}
+	else
+		self.velocity_z += 96;
+	
+	if((self.movetype != MOVETYPE_FLY)&& ( secondary_jump == 0) )
+	{
+		local float modifier_melee_amount;	
+		modifier_melee_amount = 1;
+		if (self.v_angle_x < 45)
+		{
+			makevectors (self.angles);
+			local float vcfactor, hightfactor;
+			if(self.v_angle_x >0)
+			{
+				vcfactor = (90 - self.v_angle_x) / 90;
+				hightfactor = 0;
+			}
+			else
+			{
+				vcfactor = ( ((90 + self.v_angle_x) / 90) );
+			}
+			hightfactor =  (1 - ((90 + self.v_angle_x) / 90)) * 90;
+			local vector wishspeed;
+			wishspeed += v_forward * (1024 * vcfactor);
+			local vector dir;
+			dir = aim (self, 100);
+			wishspeed = (dir * (1024 * vcfactor));
+			self.gravity = 0;
+			self.noshake = 1;
+			stuffcmd(self, "v_kickroll 0\n");
+			stuffcmd(self, "v_kickpitch 0\n");
+			self.velocity_x = wishspeed_x;
+			self.velocity_y = wishspeed_y;
+			if(wishspeed_z < 0)	
+				wishspeed_z = wishspeed_z *-1;
+			self.velocity_z = wishspeed_z  + hightfactor; 
+			if((self.flags & FL_ONGROUND))
+			{
+				self.velocity_z += 160;
+				self.flags -= FL_ONGROUND;
+			}
+			else
+				self.velocity_z += 96;
+		}
+		else
+		{
+			local float vrange;
+			vrange = 90 / self.v_angle_x; 
+			self.velocity = normalize(self.cursor_trace_endpos - self.origin);
+			self.velocity = self.velocity * 500 * vrange;
+		}
+	}
+	self.think = w_melee_release;
+	self.nextthink = time + 0.05;
+};
+void() w_melee_prerelease2 = 
+{ 
+	if (self.melee_released >= 1)
 		self.melee_released = 2;
 	else
 		self.melee_released = 1;
-
 	local float secondary_jump;
-
 	self.melee_jump_time = time + 0.2;
-
 	self.vweaponframe = 26;
 
 	if ((!(self.flags &FL_ONGROUND)) && (self.melee_released == 2))
@@ -184,14 +247,12 @@ void() w_melee_prerelease = { if (self.melee_released >= 1)
 	else
 		secondary_jump = 0;
 
-	if ((self.flags &FL_ONGROUND))
-	{
-		self.velocity_z += 160;
-		self.flags -= FL_ONGROUND;
-	}
+	if (!(self.flags &FL_ONGROUND))
+		self.velocity_z += lunge_velz;
 	else
-		self.velocity_z += 96;
-
+		self.velocity_z += lunge_velzog;
+	if (self.flags &FL_ONGROUND)
+			self.flags -= FL_ONGROUND;	
 	if ((self.movetype != MOVETYPE_FLY) && (secondary_jump == 0))
 	{
 		local float modifier_melee_amount;
@@ -202,36 +263,31 @@ void() w_melee_prerelease = { if (self.melee_released >= 1)
 			makevectors(self.angles);
 
 			local float vcfactor, hightfactor;
+			local vector wishspeed;
 
 			if (self.v_angle_x > 0)
 			{
 				vcfactor = (90 - self.v_angle_x) / 90;
-				hightfactor = 0;
+				hightfactor = (1 - ((90 + self.v_angle_x) / 90)) *90;
 			}
 			else
 			{
 				vcfactor = (((90 + self.v_angle_x) / 90));
 				hightfactor = (1 - ((90 + self.v_angle_x) / 90)) *90;
 			}
-
-			self.velocity += v_forward *(1024 *vcfactor);
+	
+			wishspeed += v_forward *(lunge_vel *vcfactor);
 			local vector dir;
 			dir = aim(self, 100);
-			self.velocity = (dir *(1024 *vcfactor));
+			wishspeed = (dir *(lunge_vel *vcfactor));
 
 			self.gravity = 0;
 			self.noshake = 1;
 			stuffcmd(self, "v_kickroll 0\n");
 			stuffcmd(self, "v_kickpitch 0\n");
-
-			if ((self.flags &FL_ONGROUND))
-			{
-				self.velocity_z += 160;
-				self.flags -= FL_ONGROUND;
-			}
-			else
-				self.velocity_z += 96;
-
+			self.velocity_x = wishspeed_x;
+			self.velocity_y = wishspeed_y;
+			
 			self.velocity_z += hightfactor;
 		}
 		else

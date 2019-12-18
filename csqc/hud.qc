@@ -245,8 +245,6 @@ void() Ammo_Hud = { float c_w, c_a, digits, cws;
 	if (c_a >= 1000)
 		digits = 4;
 
-	if (c_w == IT_MELEE)
-		digits = 0;
 
 	cws = getstatf(STAT_VWEAPONSTATE);
 
@@ -377,8 +375,14 @@ void() Ammo_Hud = { float c_w, c_a, digits, cws;
 	else
 		dammo_pos_x = rammo_pos_x;
 
-	if (cws != 3)
+	if ((cws != 3) &&(c_w) && (c_w != IT_MELEE))
+
 	{
+		if (digits == 0)
+		{
+			pic4 = strcat(picofnammo, c_ammo, ".tga");
+			DImage(dammo_pos, pic4, 1, ammo_scale, '1 1 1', '28 36 0');
+		}
 		if (digits == 1)
 		{
 			pic4 = strcat(picofnammo, c_ammo, ".tga");
@@ -442,6 +446,8 @@ void() Ammo_Hud = { float c_w, c_a, digits, cws;
 };
 float blalphaflag;
 float blalpha;
+float stalphaflag;
+float stalpha;
 float bbar;
 
 void() Hud = { vector postimage;
@@ -679,42 +685,81 @@ void() Hud = { vector postimage;
 
 	}
 
-	/*if (health >= 100)
-		health = 100;
-	local vector pos1, pos2, pos3, pos4;
-	float px;
-	pos1_x = bb1;
-	pos1_y = bb3;
-	pos2_y = bb3;
-	pos3_y = bb4;
-	pos4_x = bb1;
-	pos4_y = bb4;
-	pos2_x = pos1_x + (health *bb2);
-	pos3_x = pos1_x + (health *bb2);
-	string bloodbarimage;
-	bloodbarimage = strcat ("gfx/hud/bbar", ftos(floor (bbar) + 1),".tga");
-	vector bbcappos;
-	vector bbcapsiz;
-	bbcapsiz_y = bb4 - bb3;
-	bbcapsiz_x = 2;
-	bbcappos_x = pos3_x;
-	bbcappos_y = bb3;
-	if (health >= 0)
-	{
-		if (health >= 100)
-			health = 100;
-		px = health/100;
-		DPolygon (bloodbarimage,pos1,pos2,pos3,pos4, 1,'1 1 1',px,1);
-	}
-
-	DImage(bbcappos,"gfx/hud/bcap.tga",1,1,'1 1 1',bbcapsiz);
-	*/
-
 	string ring_artifact, ring_artifact2, ring_artifact3, timer_artifact;
+	string ring_tether, ring_tether2, ring_tether3;
 	//DImage(artr1,"gfx/hud/rings.tga",1,artr2,'1 1 1','160 60 0');
-	local float radialactive, radialtime;
+	local float radialactive, radialtime, tether_time,tetheractive;
 	radialactive = getstatf(STAT_RADIALACTIVE);
+	tetheractive = getstatf(STAT_RD_ST);
+	
 	radialtime = getstatf(STAT_ARTIFACTTIME);
+	tether_time = getstatf(STAT_TETHERTIME);
+	vector spos;
+	spos_x = artr1_x + 9 + artic_x;
+	spos_y = artr1_y + 5 + artic_y;
+	
+	ring_tether = "gfx/hud/cooldown/soul_tether_hud.tga";
+	ring_tether2 = "gfx/hud/cooldown/soul_tether_pulseA.tga";
+	ring_tether3 = "gfx/hud/cooldown/soul_tether_pulseB.tga";
+	DImage(spos, ring_tether, 1, artns, '1 1 1', '64 64 0');
+
+		if(tetheractive < 10)
+		{		
+			string ns1 = strcat("gfx/artifactmenu/artifact_num", ftos(tetheractive), ".tga");
+			DImage2(spos + artn, ns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
+		}
+		else
+		{
+			string ns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 1, 1), ".tga");
+			string ns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 0, 1), ".tga");
+
+			spos -= '4 0 0';
+			DImage2(spos + artn, ns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			DImage2(spos + artn + '6 0 0', ns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			spos += '4 0 0';
+		}
+	if(tether_time > 0)
+	{
+		local float stntimer, st_ralpha;
+		stntimer = tether_time;
+		if (stntimer == 136)
+			stalphaflag = 1;
+		if (stntimer >= 137)
+		{
+			if (stntimer == 137)
+			{
+				stalphaflag = 1;
+				st_ralpha = 1;
+			}
+			if (stntimer == 138)
+				st_ralpha = 1;
+			if (stntimer == 139)
+			{
+				stalphaflag = -1;
+				st_ralpha = 0;
+			}
+			if (stntimer == 140)
+				st_ralpha = 0;
+			if (stntimer == 141)
+				st_ralpha = 0;
+			if (stntimer == 142)
+			{
+				st_ralpha = 0;
+				stalphaflag = 0;
+			}
+			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
+			if ((stntimer >= 137) && (stntimer <= 138))
+				DImage(spos, ring_tether2, stalpha, artns, '1 1 1', '64 64 0');
+			if (stntimer >= 139)
+				DImage(spos, ring_tether3, stalpha, artns, '1 1 1', '64 64 0');
+			//drawstring ('0 0 0', ftos(stntimer),'12 12 0', '1 1 1', 1, 0);
+		}
+		else
+		{
+			st_ralpha = 1;
+			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
+		}
+	}
 	if (radialactive >= 1)
 	{
 		if (radialactive == 1) ring_artifact = "gfx/hud/cooldown/artifactA_hud.tga";
@@ -747,13 +792,12 @@ void() Hud = { vector postimage;
 		if (radialactive == 8) ring_artifact3 = "gfx/hud/cooldown/artifactH_pulseB.tga";
 		if (radialactive == 9) ring_artifact3 = "gfx/hud/cooldown/artifactI_pulseB.tga";
 		if (radialactive == 10) ring_artifact3 = "gfx/hud/cooldown/artifactJ_pulseB.tga";
-		vector spos;
-		spos_x = artr1_x + 9 + artic_x;
-		spos_y = artr1_y + 5 + artic_y;
+		//spos_x = spos_x;
+		spos_x = arti_pos_x + 9 + artic_x;
+		spos_y = arti_pos_y + 5 + artic_y;
 		if (radialtime > 0)
 		{
 			local float ntimer, artalpha;
-			//		ntimer = (radialtime *7) - 1;
 			ntimer = radialtime;
 			local string nametimer;
 			nametimer = ftos(ntimer);
@@ -797,11 +841,7 @@ void() Hud = { vector postimage;
 					blalphaflag = 0;
 				}
 
-				if (radialactive != 5)
-				{
-					DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 1);
-				}
-
+				DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 1);
 				DImage(spos, ring_artifact, artalpha, artics, '1 1 1', '64 64 0');
 
 				if ((ntimer >= 137) && (ntimer <= 138))
@@ -821,7 +861,6 @@ void() Hud = { vector postimage;
 			else
 			{
 				artalpha = 1;
-				//drawstring('0 0 0', timer_artifact, '8 8 0', '3 3 3', 1);
 				if (radialactive != 5)
 				{
 					DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 1);
@@ -832,6 +871,38 @@ void() Hud = { vector postimage;
 		}
 		else
 			DImage(spos, ring_artifact, 1, artics, '1 1 1', '64 64 0');
+
+		if (radialactive  >= 1)
+		{	
+			float artifact_count;
+
+			if (radialactive == 1)artifact_count  = 0;
+			if (radialactive == 2)artifact_count = getstatf(STAT_RD_DA);
+			if (radialactive == 3)artifact_count = 0;
+			if (radialactive == 4)artifact_count = 0;
+			if (radialactive == 5)artifact_count = 0;
+			if (radialactive == 6)artifact_count = getstatf(STAT_RD_LS);
+			if (radialactive == 7)artifact_count = 0;
+			if (radialactive == 8)artifact_count = getstatf(STAT_RD_AE);
+			if (radialactive == 9)artifact_count = 0;
+			if (radialactive == 10)artifact_count = 0;
+
+			if(artifact_count < 10)
+			{		
+				string rns1 = strcat("gfx/artifactmenu/artifact_num", ftos(artifact_count), ".tga");
+				DImage2(spos + artin, rns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			}
+			else
+			{
+				string rns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 1, 1), ".tga");
+				string rns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 0, 1), ".tga");
+
+				spos -= '4 0 0';
+				DImage2(spos + artin, rns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
+				DImage2(spos + artin + '6 0 0', rns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			}
+		}	
+
 	}
 
 	if (c_armr > 0)
@@ -1091,11 +1162,11 @@ void CSQC_UpdateView(float b, float c)
 
 	rmenu = getstatf(STAT_RMENU);
 	wdscreen = getstatf(STAT_WRATHDEBUGSCREEN);
-	vwframe = getstatf(STAT_VWEAPONFRAME);
-	ennhealth = getstatf(STAT_ENHEALTH);
-	ennframe = getstatf(STAT_ENFRAME);
 	if (wdscreen == 1)
 	{
+		vwframe = getstatf(STAT_VWEAPONFRAME);
+		ennhealth = getstatf(STAT_ENHEALTH);
+		ennframe = getstatf(STAT_ENFRAME);
 		vframe = strcat("weapon frame: ", ftos(vwframe));
 		enemyhealth = strcat("enemy health: ", ftos(ennhealth));
 		enemyclass = strcat("enemy frame: ", ftos(ennframe));
@@ -1106,12 +1177,15 @@ void CSQC_UpdateView(float b, float c)
 
 	float fclframetime = gettime(2);
 	float vfpsmultiplier;
+	if(fclframetime > 0)
 	vfpsmultiplier = (1 + ((300 - (1 / gettime(2))) / 220));
+	else
+	vfpsmultiplier = 1;
 	float vfps = 60 + 30 * vfpsmultiplier;
 	if (1 / fclframetime > 100)
 		vfps = 60;
 
-	//drawstring('0 0 0', X, '8 8 0', '3 3 3', 1);     	// Draw the "cursor"
+	//	drawstring('0 0 0', ftos (fclframetime), '8 8 0', '12 12 0', 1, 0);     	// Draw the "cursor"
 
 	float v_sfps = vfps / ((rint(1 / (fclframetime + 0.1))));
 
@@ -1216,6 +1290,13 @@ void CSQC_UpdateView(float b, float c)
 			blalpha += clframetime * 5;
 		if (blalphaflag == -1)
 			blalpha -= clframetime *7.5;
+
+		if (stalphaflag == 0)
+			stalpha = 0;
+		if (stalphaflag == 1)
+			stalpha += clframetime * 5;
+		if (stalphaflag == -1)
+			stalpha -= clframetime *7.5;
 
 		float pulseicon;
 		pulseicon = floor(getstatf(STAT_PULSEICON));
@@ -1330,7 +1411,7 @@ void CSQC_UpdateView(float b, float c)
 			removingmessages = 0;
 
 		float checked5;
-		checked5 = cvar("scratch1");
+		checked5 = cvar("saved1");
 		if (checked5 != 1)
 			Crosshair();
 

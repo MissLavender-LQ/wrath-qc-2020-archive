@@ -47,6 +47,7 @@ void() show_journal_ui = { string ui_image, ui_image2;
 
 	if (journal_chapter == 1)
 	{
+
 		float visited_maps;
 		visited_maps = getstatf(STAT_SPOTTED_MAPS);
 		posimage = '224 70 0' + '82 80 0';
@@ -622,6 +623,12 @@ void() show_journal_ui = { string ui_image, ui_image2;
 			string fw_key27 = keynumtostring(stof(argv(0)));
 		else
 			fw_key27 = " ";
+		///////////// Key "Use Soul Tether");
+		tokenize(findkeysforcommand("impulse 81", 0));
+		if (argv(0) != "-1")
+			string fw_key28 = keynumtostring(stof(argv(0)));
+		else
+			fw_key28 = " ";
 
 		posimage = '224 70 0' + '82 80 0';
 		scroll_variation3_y += -32 * journal_scroll;
@@ -664,6 +671,8 @@ void() show_journal_ui = { string ui_image, ui_image2;
 		DstringJournal(posimage2, strcat("Artifacts (hold)...........", case_fixed(fw_key7)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');
 		DstringJournal(posimage2, strcat("Use Artifact...............", case_fixed(fw_key22)), 1, 1, colorimg, ' 10 10 0');
+		posimage2 += nofixed_vector('0 12 0');
+		DstringJournal(posimage2, strcat("Use Soul Tether........", case_fixed(fw_key28)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');
 		DstringJournal(posimage2, strcat("Journal......................", case_fixed(fw_key21)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');

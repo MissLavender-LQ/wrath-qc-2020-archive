@@ -61,7 +61,10 @@ void() slagdrunk = { self.explodcount += 1;
 	if (self.explodcount < 50)
 		self.think = slagdrunk;
 	else
+	{
+		sound (self, CHAN_WEAPON, "misc/null.wav", 0, ATTN_NORM);	// stop loop
 		self.think = SUB_Remove;
+	}
 };
 
 void() srelease_cannon2 = { self.vweaponframe += 1;
@@ -380,7 +383,7 @@ void() pick_up_cannon = { self.weapon = IT_CANNON;
 	self.lastweapon = IT_CANNON;
 	W_SetWeapon();
 
-	sound(self, CHAN_WEAPON, "weapons/cannon/inspect.ogg", 1, ATTN_NORM);
+	//sound(self, CHAN_WEAPON, "weapons/cannon/inspect.ogg", 1, ATTN_NORM);
 	self.draw_w = 0;
 	self.vweaponstate = 2;
 	self.vweaponframe = 61;
@@ -405,9 +408,9 @@ void() raise_cannon2 = { if (self.vweaponframe == 42)
 
 void() raise_cannon = { self.weapon = IT_CANNON;
 	W_SetWeapon();
-	sound(self, CHAN_WEAPON, "weapons/cannon/raise.ogg", 1, ATTN_NORM);
+	//sound(self, CHAN_WEAPON, "weapons/cannon/raise.ogg", 1, ATTN_NORM);
 	self.vweaponglowmod = '1 1 1';
-	sound(self, CHAN_AUTO, "weapons/cannon/raise.ogg", 1, ATTN_NORM);
+	//sound(self, CHAN_AUTO, "weapons/cannon/raise.ogg", 1, ATTN_NORM);
 	self.draw_w = 0;
 	self.vweaponframe = 41;
 	self.vweaponstate = 1;
@@ -424,7 +427,8 @@ void() lower_cannon2 = { self.vweaponframe += 1;
 	self.nextthink = time + 0.0125;
 };
 
-void() lower_cannon = { sound(self, CHAN_WEAPON, "weapons/cannon/lower.ogg", 1, ATTN_NORM);
+void() lower_cannon = { 
+//sound(self, CHAN_WEAPON, "weapons/cannon/lower.ogg", 1, ATTN_NORM);
 	self.vweaponframe = 51;
 	self.attack_finished = time + 0.375;
 	self.think = lower_cannon2;

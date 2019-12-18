@@ -2401,11 +2401,29 @@ void() example_skel_player_delete =
 //idea: KrimZon
 //darkplaces implementation: KrimZon, LordHavoc
 //engine-called QC prototypes:
-//void(string s) SV_ParseClientCommand;
+void(string s) SV_ParseClientCommand;
 //builtin definitions:
+
+
+
+
 void(entity e, string s) clientcommand = #440;
 float(string s) tokenize = #441;
 string(float n) argv = #442;
+
+void(string str) SV_ParseClientCommand =
+{
+    float numargs = tokenize(str);
+    if (argv(0) == "save")
+	{
+		float autorizedsave = cvar("scratch1");
+		if (autorizedsave == 1)
+			clientcommand(self, str);
+	}
+    else
+        clientcommand(self, str);
+};
+
 //description:
 //provides QC the ability to completely control server interpretation of client commands ("say" and "color" for example, clientcommand is necessary for this and substring (FRIK_FILE) is useful) as well as adding new commands (tokenize, argv, and stof (FRIK_FILE) are useful for this)), whenever a clc_stringcmd is received the QC function is called, and it is up to the QC to decide what (if anything) to do with it
 /*

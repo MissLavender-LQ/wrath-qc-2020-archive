@@ -257,6 +257,8 @@ void(float type, float forg) W_FireSpitter = { local vector tagorg;
 		newmis.velocity = normalize(self.cursor_trace_endpos - newmis.origin) *spittervel2;
 	}
 
+	if (self.ammo_spitter <= 0)
+		self.ammo_spitter = 0;
 	newmis.cnt = type;
 	newmis.angles = vectoangles(newmis.velocity);
 	newmis.touch = spit_touch;
@@ -268,6 +270,7 @@ void(float type, float forg) W_FireSpitter = { local vector tagorg;
 
 void() wfire_spitter_loop = { if (self.ammo_spitter <= 0)
 	{
+		self.ammo_spitter = 0;
 		self.think = prelease_spitter;
 		self.nextthink = time + 0.05;
 		return;
@@ -312,6 +315,7 @@ void() wfire_spitter = { local string snd;
 
 	if (self.ammo_spitter <= 0)
 	{
+		self.ammo_spitter = 0;	
 		self.think = prelease_spitter;
 		self.nextthink = time + 0.05;
 		return;

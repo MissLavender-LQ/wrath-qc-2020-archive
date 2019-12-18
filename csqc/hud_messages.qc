@@ -231,10 +231,16 @@ void() Hud_Messages_Draw = { local string image;
 		image = "gfx/hud/msg_glyph_yellow.tga";
 	if (self.msg == 33)
 		image = "gfx/hud/msg_shotgun.tga";
-	if (self.msg == 34)
-		image = "gfx/hud/msg_coffer_locked.tga";
 	if (self.msg == 35)
 		image = "gfx/hud/msg_journal_update.tga";
+	if (self.msg == 36)
+		image = "gfx/hud/msg_locked_blue.tga";
+	if (self.msg == 37)
+		image = "gfx/hud/msg_locked_coffer.tga";
+	if (self.msg == 38)
+		image = "gfx/hud/msg_locked_red.tga";
+	if (self.msg == 39)
+		image = "gfx/hud/msg_locked_yellow.tga";
 
 	if (self.msg == 50)
 		image = "gfx/hud/msg_relic_e1m1.tga";
@@ -262,7 +268,9 @@ void() Hud_Messages_Draw = { local string image;
 	if (self.msg == 108)
 		image = "gfx/hud/msg_artifactH.tga";
 	if (self.msg == 109)
-		image = "gfx/hud/msg_artifact_full.tga";
+		image = "gfx/hud/msg_full.tga";
+	if (self.msg == 110)
+		image = "gfx/hud/msg_soul_tether.tga";
 	float hidehud;
 	hidehud = getstatf(STAT_THWOFG);
 	local vector msgsize;
@@ -345,7 +353,18 @@ void(float newent) Hud_Messages = { self.msg = ReadShort();
 				case_fixed(fw_key6), " Secondary Attack"));
 			remove(self);
 		}
-
+		if (self.msg == 260)
+		{
+			///////////// Key "Artifact");
+			tokenize(findkeysforcommand("impulse 81", 0));
+			if (argv(0) != "-1")
+				string fw_key28 = keynumtostring(stof(argv(0)));
+			else
+				fw_key28 = " ";
+			centerprint(strcat("Press ", case_fixed(fw_key28), " to Use Soul Tether"));
+			remove(self);
+		}
+		
 		if (self.msg == 259)
 		{
 			centerprint(strcat("Hold ", case_fixed(fw_key6), " then release at the top of your jump"));
@@ -356,7 +375,9 @@ void(float newent) Hud_Messages = { self.msg = ReadShort();
 			self.draw2d = Hud_Messages_Draw;
 			self.predraw = MessageThink;
 		}
-	}
+
+
+		}
 };
 
 void(float newent) Hud_Messages2 = { self.msg = ReadShort();

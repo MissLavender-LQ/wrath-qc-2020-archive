@@ -1077,7 +1077,7 @@ void() monster_stricken = { precache_model("models/enemies/stricken/gibs/gib_arm
 	self.solid = SOLID_SLIDEBOX;
 	self.movetype = MOVETYPE_STEP;
 	setmodel(self, "models/enemies/stricken/stricken.md3");
-	setsize(self, stricken_bbox *-0.5, stricken_bbox *0.5);
+	setsize(self, stricken_nbbox, stricken_bbox);
 	self.health = stricken_health;
 	self.classname = "monster_stricken";
 	self.th_stand = stricken_stand1;

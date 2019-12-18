@@ -670,7 +670,7 @@ void(float attackfloat) executioner_attack = { local vector delta;
 
 	if (attackfloat != 0)
 	{
-		if (dist < 110)
+		if (dist < exec_rangeattack)
 		{
 			local vector source, dir;
 			source = rorigin(self) + '0 0 16';
@@ -695,7 +695,7 @@ void(float attackfloat) executioner_attack = { local vector delta;
 	}
 	else
 	{
-		if (dist < 110)
+		if (dist < exec_rangeattack)
 		{
 			if (self.ty_charge == 1)
 				self.think = executioner_chargesh2;

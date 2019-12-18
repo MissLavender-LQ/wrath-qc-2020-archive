@@ -114,8 +114,14 @@ void() check_tether_inmap = { local entity tm;
 	if (profilename)
 		strunzone(profilename);
 };
+.float tether_global;
+.float lifetime;
 
-void() write_tether = { Kill_Tether();
+.float tether_model_client;
+void() artifact_client_remove3;
+void() write_tether = { 
+
+	Kill_Tether();
 	write_tether2(0);
 	Hud_message(24, self.origin, self);
 	read_currentprofileslot();
@@ -143,6 +149,20 @@ void() write_tether = { Kill_Tether();
 	fputs(writeparms, "\n");
 	fclose(writeparms);
 
+			local entity artifact_client3;
+			artifact_client3 = spawn();
+			artifact_client3.lifetime = time + 2;
+			artifact_client3.owner = self;
+			artifact_client3.effects = 256;
+			artifact_client3.viewmodelforclient = self;
+			setorigin(artifact_client3, '0 0 0');
+			artifact_client3.oldangles = self.angles;
+			artifact_client3.frame = 0;
+			self.tether_model_client = 1;
+			artifact_client3.alpha = 1;
+			setmodel(artifact_client3, "models/artifacts/active/soul_tether_active.md3");
+			artifact_client3.think = artifact_client_remove3;
+			artifact_client3.nextthink = time;
 	local entity tether_mark;
 	tether_mark = spawn();
 	sound(self, CHAN_AUTO, "items/artifacts/artifactE_use.ogg", 1, ATTN_NORM);
@@ -158,8 +178,7 @@ void() write_tether = { Kill_Tether();
 	tether_mark.style = 6;
 	tether_mark.classname = "tether_mark";
 	tether_mark.effects = EF_ADDITIVE;
-	self.radial_time = time + 1;
-	self.Tether_time = time + 0.25;
+	self.tether_global = time + 1;
 	self.radialruning = 1;
 	self.SoulTether -= 1;
 	self.tetherhasmodel = 1;
@@ -168,8 +187,11 @@ void() write_tether = { Kill_Tether();
 	//	read_currentprofileslot();
 	local string saveloc;
 	copy_save_maps(1);
-	saveloc = strcat("save data/profiles/", profilename, "/quick\n");
+	saveloc = strcat("save data/profiles/", profilename, "/tether\n");
+
+	stuffcmd(self, "scratch1 1\n");
 	stuffcmd(self, saveloc);
+	stuffcmd(self, "scratch1 0\n");
 
 	if (!(self.savedlist &SAVED_TETHER))
 		self.savedlist += SAVED_TETHER;

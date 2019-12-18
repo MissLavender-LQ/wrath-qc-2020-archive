@@ -27,7 +27,7 @@ void(vector txt_pos) menu_type_main = { vector buttions_locs;
 	//if(oldtotalprofileslots != totalprofileslots)
 	totalprofileslots = check_profileslottotal();
 
-	if (totalprofileslots < 10)
+	if (totalprofileslots < 7)
 	{
 		draw_buttionwrath(buttions_locs, "New Game", 1);
 		buttions_locs_y += 48 * vy_rel;
@@ -64,8 +64,11 @@ void() menu_type_ingame = { vector buttions_locs;
 };
 
 void() confirm_profile = { check_profileslot();
-	profileslot++;
+	
+	profilesammount = check_profileslottotal();
 	profilesammount++;
+	profileslot = profilesammount;
+	
 
 	write_profileslot();
 	check_profilenames();
@@ -107,6 +110,7 @@ void() confirm_profile = { check_profileslot();
 		strunzone(gah);
 	gah = "";
 	write_currentprofileslotfirsttime();
+	write_menuversion();
 
 };
 
@@ -144,13 +148,15 @@ void() menu_type_difficult = { local vector size, buttions_locs;
 	buttions_locs_y = 32 * vy_rel;
 	if (clientstate() != CS_CONNECTED)
 		drawpic('0 0 0', "gfx/menu/background.tga", vid_x *'1 0 0' + vid_y *'0 1 0', '0.65 0.65 0.65', 1, 0);
-	draw_fbuttion3(buttions_locs, "SELECT DIFFICULT");
+	draw_fbuttion3(buttions_locs, "SELECT DIFFICULTY");
 	buttions_locs_y += 56 * vy_rel;
 	draw_buttion(buttions_locs, "EASY", 45);
 	buttions_locs_y += 56 * vy_rel;
 	draw_buttion(buttions_locs, "NORMAL", 46);
 	buttions_locs_y += 56 * vy_rel;
 	draw_buttion(buttions_locs, "HARD", 47);
+	buttions_locs_y += 56 * vy_rel;
+	draw_buttion(buttions_locs, "OUTLANDER", 48);
 };
 
 void() menu_type_options_controls = { local vector size, buttions_locs;
@@ -164,7 +170,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 
 	draw_fbuttion3(buttions_locs, "CONTROL OPTIONS");
 	buttions_locs_x -= 322 * vx_rel;
-	buttions_locs_y += 32 * vy_rel;
+	buttions_locs_y += 42 * vy_rel;
 
 	////////// MOUSE SENSITIVITY
 	draw_fbuttion(buttions_locs, "Mouse Sensitivity");
@@ -182,7 +188,10 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	barpos = buttions_locs - fixed_vector('28 0 0');
 	barpos_y -= 8 * vy_rel;
 	barpos_x += senm *28 * vx_rel;
-	drawfill(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	//drawfill(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 2,101, 102, 256 / 100);
+	string msen;msen = substring(ftos(senm),0,3);draw_fbuttion2(barpos + fixed_vector('-128.5 -24 0'), msen);
+
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
 
@@ -200,7 +209,10 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	barpos2 = buttions_locs - fixed_vector('28 0 0');
 	barpos2_y -= 8 * vy_rel;
 	barpos2_x += (acel *25.5 + 25.5) *vx_rel;
-	drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	//drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 3,103, 104, 256 / 100);
+	string macel;macel = substring(ftos(acel),0,3);draw_fbuttion2(barpos2 + fixed_vector('-128.5 -24 0'), macel);
+
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
 
@@ -392,7 +404,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 		fw_key15 = " ";
 	draw_buttion(buttions_locs, fw_key15, 513);
 	buttions_locs += fixed_vector('-128 33 0');
-	////////////
+/*	////////////
 	draw_fbuttionsmall(buttions_locs, "Slag Cannon", 514);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 6", 0));
@@ -403,7 +415,6 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	draw_buttion(buttions_locs, fw_key16, 514);
 	buttions_locs += fixed_vector('-128 33 0');
 	////////////
-	/*
 	draw_fbuttionsmall(buttions_locs, "Artifact Inventory",515);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 7",0));
@@ -463,11 +474,8 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	else
 		fw_key22 = " ";
 	draw_buttion(buttions_locs, fw_key22, 520);
-	//	buttions_locs += fixed_vector('-128 33 0');
-	////////////
-	buttions_locs_y = buttion_y;
-	buttions_locs_x += (170 *vx_rel);
-
+		buttions_locs += fixed_vector('-128 33 0');
+	////////////	
 	draw_fbuttionsmall(buttions_locs, "Walk", 526);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("+button7", 0));
@@ -476,8 +484,11 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	else
 		fw_key28 = " ";
 	draw_buttion(buttions_locs, fw_key28, 526);
-	buttions_locs += fixed_vector('-128 33 0');
-	////////////	
+	//buttions_locs += fixed_vector('-128 33 0');
+	////////////
+	buttions_locs_y = buttion_y;
+	buttions_locs_x += (170 *vx_rel);
+
 	draw_fbuttionsmall(buttions_locs, "Swim Up", 521);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("+moveup", 0));
@@ -508,7 +519,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	draw_buttion(buttions_locs, fw_key25, 523);
 	buttions_locs += fixed_vector('-128 33 0');
 	////////////
-	draw_fbuttionsmall(buttions_locs, "Prev Weapon", 524);
+	draw_fbuttionsmall(buttions_locs, "Next Weapon", 524);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 55", 0));
 	if (argv(0) != "-1")
@@ -518,7 +529,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	draw_buttion(buttions_locs, fw_key26, 524);
 	buttions_locs += fixed_vector('-128 33 0');
 	////////////
-	draw_fbuttionsmall(buttions_locs, "Next Weapon", 525);
+	draw_fbuttionsmall(buttions_locs, "Prev Weapon", 525);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 56", 0));
 	if (argv(0) != "-1")
@@ -526,6 +537,16 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	else
 		fw_key27 = " ";
 	draw_buttion(buttions_locs, fw_key27, 525);
+	buttions_locs += fixed_vector('-128 33 0');
+	////////////
+	draw_fbuttionsmall(buttions_locs, "Use Soul Tether", 527);
+	buttions_locs_x += 128 * vx_rel;
+	tokenize(findkeysforcommand("impulse 81", 0));
+	if (argv(0) != "-1")
+		string fw_key28 = keynumtostring(stof(argv(0)));
+	else
+		fw_key28 = " ";
+	draw_buttion(buttions_locs, fw_key28, 527);
 	buttions_locs += fixed_vector('-128 33 0');
 };
 
@@ -569,6 +590,7 @@ void(float alternative) menu_type_confirmbind = { local vector buttions_locs;
 	if (gkcommand == 25) localkey = "previous weapon";
 	if (gkcommand == 26) localkey = "next weapon";
 	if (gkcommand == 27) localkey = "walk";
+	if (gkcommand == 28) localkey = "use soul tether";
 
 	buttions_locs_y -= 24 * vy_rel;
 	draw_fbuttion3(buttions_locs, localkey);
@@ -609,7 +631,8 @@ void(float alternative) menu_type_confirmbind = { local vector buttions_locs;
 	if (gkcommand == 24) localkey = "\"impulse 57\"";
 	if (gkcommand == 25) localkey = "\"impulse 55\"";
 	if (gkcommand == 26) localkey = "\"impulse 56\"";
-	if (gkcommand == 26) localkey = "+button7";
+	if (gkcommand == 27) localkey = "+button7";
+	if (gkcommand == 28) localkey = "\"impulse 81\"";
 
 	tokenize((findkeysforcommand(localkey, 0)));
 
@@ -631,7 +654,7 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 
 	draw_fbuttion3(buttions_locs, "GAMEPLAY OPTIONS");
 	buttions_locs_x -= 322 * vx_rel;
-	buttions_locs_y += 32 * vy_rel;
+	buttions_locs_y += 38 * vy_rel;
 
 	////////// SRAFE TILTING
 	draw_fbuttion(buttions_locs, "Strafe Tilting");
@@ -646,7 +669,7 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 		mark = " ";
 	draw_buttion(buttions_locs, mark, 107);
 	buttions_locs_x -= 320 * vx_rel;
-	buttions_locs_y += 28 * vy_rel;
+	buttions_locs_y += 34 * vy_rel;
 
 	////////// VIEW BOBBING
 	draw_fbuttion(buttions_locs, "View Bobbing");
@@ -661,7 +684,7 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 		mark2 = " ";
 	draw_buttion(buttions_locs, mark2, 108);
 	buttions_locs_x -= 320 * vx_rel;
-	buttions_locs_y += 28 * vy_rel;
+	buttions_locs_y += 34 * vy_rel;
 
 	////////// CROSSHAIR
 	draw_fbuttion(buttions_locs, "Crosshair");
@@ -669,16 +692,61 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	float checked3;
 	string mark3;
-	checked3 = cvar("scratch1");
+	checked3 = cvar("saved1");
 	if (checked3 == 0)
 		mark3 = "x";
 	else
 		mark3 = " ";
 	draw_buttion(buttions_locs, mark3, 109);
 	buttions_locs_x -= 320 * vx_rel;
-	buttions_locs_y += 28 * vy_rel;
+	buttions_locs_y += 34 * vy_rel;
 
-};
+	////////// CENTERED WEAPON
+	draw_fbuttion(buttions_locs, "Centered Weapons");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked4;
+	string mark4;
+	checked4 = cvar("saved3");
+	if (checked4 == 0)
+		mark4 = " ";
+	else
+		mark4 = "x";
+	draw_buttion(buttions_locs, mark4, 110);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+
+	////////// SWITCH WEAPON WHEN EMPTY
+	draw_fbuttion(buttions_locs, "Switch Empty Weapon");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked5;
+	string mark5;
+	checked5 = cvar("saved4");
+	if (checked5 == 0)
+		mark5 = " ";
+	else
+		mark5 = "x";
+	draw_buttion(buttions_locs, mark5, 111);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+
+	////////// BLOOD DECALS
+	draw_fbuttion(buttions_locs, "Blood Decals");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked6;
+	string mark6;
+	checked6 = cvar("cl_decals");
+	if (checked6 == 0)
+		mark6 = " ";
+	else
+		mark6 = "x";
+	draw_buttion(buttions_locs, mark6, 112);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+	
+	};
 void() menu_type_options_audio = { local vector size, buttions_locs;
 	size_x = vid_x;
 	size_y = vid_y;
@@ -706,7 +774,10 @@ void() menu_type_options_audio = { local vector size, buttions_locs;
 	barpos = buttions_locs - fixed_vector('0 0 0');
 	barpos_y -= 8 * vy_rel;
 	barpos_x += mvol *(256 *vx_rel);
-	drawfill(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+
+	drawfilldraggeable(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 4,201, 202, 256 / 20);
+
+//	drawfill(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
 	////////// EFFECTS VOLUME
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
@@ -723,7 +794,8 @@ void() menu_type_options_audio = { local vector size, buttions_locs;
 	barpos2 = buttions_locs - fixed_vector('0 0 0');
 	barpos2_y -= 8 * vy_rel;
 	barpos2_x += effvol *256 * vx_rel;
-	drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 5,203, 204, 256 / 20);
+	//drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
 	////////// MUSIC VOLUME
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
@@ -740,7 +812,8 @@ void() menu_type_options_audio = { local vector size, buttions_locs;
 	barpos3 = buttions_locs - fixed_vector('0 0 0');
 	barpos3_y -= 8 * vy_rel;
 	barpos3_x += bgmvol *256 * vx_rel;
-	drawfill(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 6,205, 206, 256 / 20);
+//	drawfill(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
 };
@@ -755,14 +828,14 @@ void() menu_type_confirmresolution = { local vector buttions_locs;
 	drawfill(buttions_locs + fixed_vector('-256 -32 0'), fixed_vector('464 128 0'), '0.2 0.2 0.23', 0.7, 0);
 	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
 	buttions_locs_x -= 148 * vx_rel;
-	draw_buttion(buttions_locs, "CONFIRM RESOLUTION", 272);
+	draw_buttion(buttions_locs, "CONFIRM RESOLUTION", 275);
 
 	buttions_locs_x += 148 * vx_rel;
 	buttions_locs_y += 48 * vy_rel;
 	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
 
 	buttions_locs_x -= 148 * vx_rel;
-	draw_buttion(buttions_locs, "CANCEL", 273);
+	draw_buttion(buttions_locs, "CANCEL", 276);
 };
 
 void() menu_type_confirmfullscreen = { local vector buttions_locs;
@@ -784,6 +857,29 @@ void() menu_type_confirmfullscreen = { local vector buttions_locs;
 	buttions_locs_x -= 148 * vx_rel;
 	draw_buttion(buttions_locs, "CANCEL", 322);
 };
+
+
+void() menu_type_deleteprofile = { local vector buttions_locs;
+	buttions_locs_x = (vid_x / 2) - (128 *vx_rel);
+
+	buttions_locs_y = 172 * vy_rel;
+	if (clientstate() != CS_CONNECTED)
+		drawpic('0 0 0', "gfx/menu/background.tga", vid_x *'1 0 0' + vid_y *'0 1 0', '0.65 0.65 0.65', 1, 0);
+	buttions_locs_x += 128 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('-256 -32 0'), fixed_vector('464 128 0'), '0.2 0.2 0.23', 0.7, 0);
+	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
+	buttions_locs_x -= 148 * vx_rel;
+	draw_buttion(buttions_locs, "CONFIRM", 17);
+
+	buttions_locs_x += 148 * vx_rel;
+	buttions_locs_y += 48 * vy_rel;
+	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
+
+	buttions_locs_x -= 148 * vx_rel;
+	draw_buttion(buttions_locs, "CANCEL", 2);
+};
+
+
 
 void() menu_type_confirmantialias = { local vector buttions_locs;
 	buttions_locs_x = (vid_x / 2) - (128 *vx_rel);
@@ -880,25 +976,25 @@ void() menu_type_options_resolution = { local vector size, buttions_locs;
 	buttions_locs_y += 32 * vy_rel;
 	draw_buttion(buttions_locs, "3840 * 2400", 271);
 
-	/*buttions_locs_y = 64* vy_rel;
+	buttions_locs_y = 64* vy_rel;
 	buttions_locs_x += 250* vx_rel;
 
 	draw_fbuttion(buttions_locs, "21:9");
 
 	buttions_locs_y += 32 * vy_rel;
-	draw_buttion(buttions_locs, "2560 * 1080", 274);
+	draw_buttion(buttions_locs, "2560 * 1080", 272);
 	buttions_locs_y += 32 * vy_rel;
-	draw_buttion(buttions_locs, "3440 * 1440", 275);
+	draw_buttion(buttions_locs, "3440 * 1440", 273);
 	buttions_locs_y += 32 * vy_rel;
-	draw_buttion(buttions_locs, "5120* 2160", 276);
+	draw_buttion(buttions_locs, "5120* 2160", 274);
 	buttions_locs_y += 32 * vy_rel;
 	buttions_locs_y += 32 * vy_rel;
 
 	buttions_locs_x -= 250* vx_rel;
-	*/
+	
 
 	////////// Fullscreen
-	buttions_locs_y = 64 * vy_rel;
+	//buttions_locs_y = 64 * vy_rel;
 	buttions_locs_x += 250 * vx_rel;
 
 	draw_fbuttion(buttions_locs, "Fullscreen");
@@ -955,10 +1051,11 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	drawfill(buttions_locs, fixed_vector('256 4 0'), '0.5 0.5 0.35', 0.7, 0);
 	brightlev = cvar("r_hdr_scenebrightness");
 	local vector barpos1;
-	barpos1 = buttions_locs - '14 0 0';
+	barpos1 = buttions_locs - '0 0 0';
 	barpos1_y -= 8 * vy_rel;
-	barpos1_x += brightlev *133 * vx_rel;
-	drawfill(barpos1, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	barpos1_x += brightlev *128 * vx_rel;
+	//drawfill(barpos1, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos1, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 7,291, 292, 256 / 40);
 	//	string bbri;bbri = ftos (brightlev);draw_fbuttion2(barpos1 + '-128.5 -24 0', bbri);
 	buttions_locs_x -= 241 * vx_rel;	// back to the x pos
 
@@ -977,7 +1074,8 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	barpos2 = buttions_locs - fixed_vector('14 0 0');
 	barpos2_y -= 8 * vy_rel;
 	barpos2_x += gammalev *133 * vx_rel;
-	drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	//drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 8,293, 294, 256 / 40);
 	//	string bgam;bgam = ftos (gammalev);draw_fbuttion2(barpos2 + '-128.5 -24 0', bgam);
 	buttions_locs_x -= 241 * vx_rel;	// back to the x pos
 
@@ -993,10 +1091,11 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	drawfill(buttions_locs, fixed_vector('256 4 0'), '0.5 0.5 0.35', 0.7, 0);
 	contlev = cvar("v_contrast");
 	local vector barpos3;
-	barpos3 = buttions_locs - fixed_vector('14 0 0');
+	barpos3 = buttions_locs - fixed_vector('28 0 0');
 	barpos3_y -= 8 * vy_rel;
-	barpos3_x += contlev *133 * vx_rel;
-	drawfill(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	barpos3_x += contlev *142 * vx_rel;
+	//	drawfill(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos3, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 9,295, 296, 256 / 40);
 	//	string bcon;bcon = ftos (contlev);draw_fbuttion2(barpos3 + fixed_vector('-128.5 -24 0'), bcon);
 	buttions_locs_x -= 241 * vx_rel;	// back to the x pos	
 
@@ -1012,12 +1111,14 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	drawfill(buttions_locs, fixed_vector('256 4 0'), '0.5 0.5 0.35', 0.7, 0);
 	fovlev = cvar("fov");
 	float fovlev_v;
-	fovlev_v = (fovlev - 80) / 10;
+	fovlev_v = (fovlev - 80) / 21;
 	local vector barpos4;
-	barpos4 = buttions_locs - fixed_vector('14 0 0');
+	barpos4 = buttions_locs - fixed_vector('0 0 0');
 	barpos4_y -= 8 * vy_rel;
 	barpos4_x += fovlev_v *133 * vx_rel;
-	drawfill(barpos4, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+//	drawfill
+	
+	drawfilldraggeable(barpos4, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 1,297, 298, 256 / 40);
 	string bdesc;bdesc = ftos(fovlev);draw_fbuttion2(barpos4 + fixed_vector('-128.5 -24 0'), bdesc);
 	buttions_locs_x -= 241 * vx_rel;	// back to the x pos		
 
@@ -1226,7 +1327,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	string texturemode;
 	string text_mark2, text_mark3, text_mark4;
 
-	texturemodef = cvar("scratch2");
+	texturemodef = cvar("saved2");
 
 	if (texturemodef == 0)
 		texturemode = "None";
@@ -1236,7 +1337,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 		texturemode = "Linear";
 
 	draw_fbuttion(buttions_locs, "Texture Filter");
-	checked5 = cvar("scratch2");
+	checked5 = cvar("saved2");
 	if (checked5 < 1)
 	{
 		text_mark2 = "x";
@@ -1314,7 +1415,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	draw_fbuttion(buttions_locs, "software palettization");
 	buttions_locs_x += 246 * vx_rel;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
-	float checked7;
+	//float checked7;
 	string anim_mark;
 	checked7 = cvar("r_glsl_postprocess");
 	if (checked7 == 1)
@@ -1542,19 +1643,19 @@ void() menu_type_resume = { if (oldtotalprofileslots > 0)
 
 	//posstring_x += aspectratio_fix_x *(vid_rwidth / vid_rheight);
 	if (c_profilename1 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename1, 1);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename1, 1);posstring_y += 32 * vy_rel;
 	if (c_profilename2 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename2, 2);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename2, 2);posstring_y += 32 * vy_rel;
 	if (c_profilename3 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename3, 3);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename3, 3);posstring_y += 32 * vy_rel;
 	if (c_profilename4 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename4, 4);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename4, 4);posstring_y += 32 * vy_rel;
 	if (c_profilename5 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename5, 5);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename5, 5);posstring_y += 32 * vy_rel;
 	if (c_profilename6 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename6, 6);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename6, 6);posstring_y += 32 * vy_rel;
 	if (c_profilename7 != "<empty profile>")
-		draw_buttionprofile((posstring), c_profilename7, 7);posstring += '0 32 0';
+		draw_buttionprofile((posstring), c_profilename7, 7);posstring_y += 32 * vy_rel;
 
 	if (c_profilename1 != "<empty profile>")
 		strunzone(c_profilename1);
@@ -1600,153 +1701,70 @@ void() menu_type_resume = { if (oldtotalprofileslots > 0)
 	if (ceil((posx_modifier) *100) == (167))
 		posx_modifier = 1.15;
 
+
+	local vector deletebuttonpos;
+	deletebuttonpos_x = posstring_x + 24 * vx_rel;
+
 	buttions_locs_x = (size_x / 2) + (fixedpos_x *(posx_modifier));
 	buttions_locs_y = pos_y;
 
 	local string sorete;
 	sorete = ftos(currentprofilessaves);
+	deletebuttonpos_y = pos_y + 186 * vy_rel;
+
 	if (!emptyprofile)
 	{
-		//if((!currentprofilessaves) && 	(cname != ""))
-		//{
-		draw_buttionload((buttions_locs), "Autosave", 1);
-		buttions_locs_y += 64 * vy_rel;
-		//}
-
-		if (currentprofilessaves & 1)
+		if (profilemenuversion  != menuversion)
 		{
-			draw_buttionload((buttions_locs), " Soul Tether", 2);
-			buttions_locs_y += 64 * vy_rel;
+			buttions_locs_y += 24 * vy_rel;
+			draw_fbuttion_warning(buttions_locs, "This profile");
+			buttions_locs_y += 24 * vy_rel;
+			draw_fbuttion_warning(buttions_locs, "is not compatible");
+			buttions_locs_y += 24 * vy_rel;
+			draw_fbuttion_warning(buttions_locs, "with this version");
+			buttions_locs_y += 24 * vy_rel;
+			draw_fbuttion_warning(buttions_locs, "of Wrath ");
+			
+			draw_buttionwrath(deletebuttonpos, "Delete", 16);
+
 		}
-
-		if (currentprofilessaves & 2)
-		{
-			draw_buttionload((buttions_locs), "Shrine", 3);
-		}
-
-		buttions_locs_y = pos_y + 186 * vy_rel;
-		fixedpos = fixed_vector('20 0 0');
-		buttions_locs_x += (fixedpos_x *(posx_modifier));
-		local vector txt_pos;
-
-		vector posfix, imgsize;
-		posfix_x = 128 * vx_rel;
-		posfix_y = 10 * vy_rel;
-
-		txt_pos = buttions_locs + posfix;
-		txt_len = stringwidth("NEWGAME GAME", true, BTT_FONT_SIZE);
-		txt_pos_x -= (txt_len / 2);
-
-		imgsize = fixed_vector2('152 40 0');
-
-		if (type_load_selected > 0)
-			draw_buttionwrath(buttions_locs, "Load", 7);
 		else
-			drawpic(txt_pos, "gfx/menu/load_game.tga", imgsize, '1 1 1', 1, 0);
-
-	}
-
-	oldprofileslot = profileslot;
-};
-/*
-void() menu_type_resume =
-{
-	if(oldtotalprofileslots > 0)
-	oldtotalprofileslots = 0;
-
-	local vector size, buttions_locs;
-	size_x = vid_x;
-	size_y = vid_y;
-
-	buttions_locs_x = (vid_x/2)-(512 *vx_rel);
-	buttions_locs_y = 384 * vy_rel;
-
-	drawpic('0 0 0',"gfx/menu/background.tga" ,vid_x *'1 0 0' + vid_y *'0 1 0', '0.65 0.65 0.65', 1, 0);
-
-	drawfill (fixed_vector('90 60 0'),fixed_vector('270 320 0'), '0.1 0.1 0.1', 1, 0);
-	////////////////////////////////////////////////////////////////////////////////
-	drawfill (fixed_vector('90 59 0'),fixed_vector('270 1 0'), '0.5 0.5 0.6', 1, 0);
-	drawfill (fixed_vector('90 60 0'),fixed_vector('270 2 0'), '0.3 0.3 0.4', 1, 0);
-
-	string csn;
-	if(profileslotpage == 1) csn = "character slot 1";
-	if(profileslotpage == 2) csn = "character slot 2";
-	if(profileslotpage == 3) csn = "character slot 3";
-	if(profileslotpage == 4) csn = "character slot 4";
-	if(profileslotpage == 5) csn = "character slot 5";
-	if(profileslotpage == 6) csn = "character slot 6";
-	if(profileslotpage == 7) csn = "character slot 7";
-	if(profileslotpage == 8) csn = "character slot 8";
-	if(profileslotpage == 9) csn = "character slot 9";
-	if(profileslotpage == 10) csn = "character slot 10";
-	//if(profileslotpage == 11) csn = "character slot 11";
-	//if(profileslotpage == 12) csn = "character slot 12";
-	drawstring (fixed_vector('90 68 0'),csn, fixed_vector('14 14 0'), '0.75 0.75 0.7', 1, 0);
-
-	drawfill (fixed_vector('90 91 0'),fixed_vector('270 1 0'), '0.5 0.5 0.6', 1, 0);
-	drawfill (fixed_vector('90 92 0'),fixed_vector('270 2 0'), '0.3 0.3 0.4', 1, 0);
-	/////////////////////////////////////////////////////////////////////////////////////
-	drawfill (fixed_vector('90 345 0'),fixed_vector('270 1 0'), '0.5 0.5 0.6', 1, 0);
-	drawfill (fixed_vector('90 346 0'),fixed_vector('270 2 0'), '0.3 0.3 0.4', 1, 0);
-
-	string cname;
-	if(oldprofileslot != profileslot)
-	check_profilenames_str(profileslot);
-	cname = profilename;
-
-	float emptyprofile;
-
-	if(cname != "")
-	{
-	emptyprofile = 0;
-	drawstring (fixed_vector('90 354 0'),cname, fixed_vector('14 14 0'), '0.75 0.75 0.7', 1, 0);
-	if(oldprofileslot != profileslot)
-	check_profile_saves(cname);
-	}
-	else
-	{
-	drawstring (fixed_vector('90 354 0'),"<empty profile>", fixed_vector('14 14 0'), '1 0.25 0.25', 1, 0);
-	emptyprofile = 1;
-	}
-
-	drawfill (fixed_vector('90 377 0'),fixed_vector('270 1 0'), '0.5 0.5 0.6', 1, 0);
-	drawfill (fixed_vector('90 378 0'),fixed_vector('270 2 0'), '0.3 0.3 0.4', 1, 0);
-	if(profileslotpage > 1)
-	draw_buttion(buttions_locs, "<", 5);
-	else
-	draw_fbuttion(buttions_locs, "<");
-
-	buttions_locs_x += 256* vx_rel;
-	if(profileslotpage < 10)
-	draw_buttion(buttions_locs, ">", 6);
-	else
-	draw_fbuttion(buttions_locs, ">");
-
-	buttions_locs_y -= 320* vy_rel;
-	buttions_locs_x += 256* vx_rel;
-
-	local string sorete;
-	sorete = ftos (currentprofilessaves);
-	if(!emptyprofile)
-	{	
-		//if((!currentprofilessaves) && 	(cname != ""))
-		//{
-		draw_buttion(buttions_locs, "LOAD AUTOSAVE", 7);
-		buttions_locs_y += 80* vy_rel;
-		//}
-
-		if(currentprofilessaves & 1)
 		{
-		draw_buttion(buttions_locs, "LOAD TETHER", 8);
-		buttions_locs_y += 80* vy_rel;
-		}
+			draw_buttionload((buttions_locs), "Autosave", 1);
+			buttions_locs_y += 32 * vy_rel;
+			if (currentprofilessaves & 1)
+			{
+				draw_buttionload((buttions_locs), " Soul Tether", 2);
+				buttions_locs_y += 32 * vy_rel;
+			}
+			if (currentprofilessaves & 2)
+			{
+				draw_buttionload((buttions_locs), "Shrine", 3);
+			}
+			buttions_locs_y = pos_y + 186 * vy_rel;
+			fixedpos = fixed_vector('20 0 0');
+			buttions_locs_x += (fixedpos_x *(posx_modifier));
+			local vector txt_pos;
 
-		if(currentprofilessaves & 2)
-		{
-		draw_buttion(buttions_locs, "LOAD SHRINE", 9);
+			vector posfix, imgsize;
+			posfix_x = 128 * vx_rel;
+			posfix_y = 10 * vy_rel;
+
+			txt_pos = buttions_locs + posfix;
+			txt_len = stringwidth("NEWGAME GAME", true, BTT_FONT_SIZE);
+			txt_pos_x -= (txt_len / 2);
+
+			imgsize = fixed_vector2('152 40 0');
+
+			if (type_load_selected > 0)
+				draw_buttionwrath(buttions_locs, "Load", 7);
+			else
+				drawpic(txt_pos, "gfx/menu/load_game.tga", imgsize, '1 1 1', 1, 0);
+			draw_buttionwrath(deletebuttonpos, "Delete", 16);
 		}
 	}
 
 	oldprofileslot = profileslot;
+	
 };
-*/
+

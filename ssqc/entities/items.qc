@@ -44,8 +44,14 @@ void(float mtype, vector org, entity ownr, float item_cntr) Hud_message2 = { loc
 	HudMessage.think = hud_message2_think;
 	HudMessage.nextthink = time;
 };
-
+.float fullitemtime;
 void(float mtype, vector org, entity ownr) Hud_message = { ownr.stat_time_hudmessage = 1;
+
+	/*if(mtype == 109)
+	{
+	if(ownr.time_hudmessage > time)
+	return;
+	}*/
 	ownr.time_hudmessage = time + 2;
 	local entity HudMessage;
 	HudMessage = spawn();
@@ -59,6 +65,7 @@ void(float mtype, vector org, entity ownr) Hud_message = { ownr.stat_time_hudmes
 	HudMessage.SendFlags = -1;
 	HudMessage.think = SUB_Remove;
 	HudMessage.nextthink = time + 2;
+	
 };
 
 void() respawn_items = { self.solid = SOLID_TRIGGER;
@@ -89,7 +96,28 @@ void() artifact_drop = { self.flags -= FL_ONGROUND;
 	self.velocity_y = crandom() *10;
 	self.velocity_z = 50 + random() *70;
 }
+void() vel_item = 
+{
 
+	self.solid = SOLID_TRIGGER;
+	self.cnt ++;
+	
+	if((self.velocity_x == 0) && (self.velocity_y == 0) )
+	{
+	self.flags -= FL_ONGROUND;
+	self.movetype = MOVETYPE_TOSS;
+	self.velocity_x = crandom() *10;
+	self.velocity_y = crandom() *10;
+	self.velocity_z = random() *10;
+	}
+
+if(self.flags & FL_ONGROUND)
+self.think = SUB_Null;
+else
+self.think = vel_item;
+
+	self.nextthink = time + 0.1;
+};
 void() PlaceItem = {	//	if(!(self.flags &FL_ITEM))
 	//	self.flags += FL_ITEM;		// make extra wide
 	self.origin_z = self.origin_z + 12;
@@ -160,14 +188,14 @@ void() start_key = { copy_old_data(self);
 	}
 	.float msg2;
 .float itemisweapon;
-
+.float time_emptymessage;
 ////////////////////////////////
 ///weapons and ammo///
 ////////////////////////////////
 void() wammo_touch = { if (other.classname != "player")
 		return;
 	if ((other.items &self.items))
-		return;
+	{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 	if ((other.attack_finished > time) && (self.itemisweapon == 1))
 		return;
 	if (self.msg == 3)
@@ -225,7 +253,7 @@ void() wammo_touch = { if (other.classname != "player")
 	if (self.msg == 18)
 	{
 		if ((other.ammo_coachgun >= 100))
-			return;
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 		if ((other.ammo_coachgun <= 0))
 		{
 			other.precoachgunclip = 1;
@@ -236,13 +264,12 @@ void() wammo_touch = { if (other.classname != "player")
 	if (self.msg == 19)
 	{
 		if ((other.ammo_cannon >= 100))
-			return;
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 	}
 	if (self.msg == 20)
 	{
 		if ((other.ammo_shotgun >= 100))
-			return;
-
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 		if ((other.weapon == IT_SHOTGUN) && (other.empty_shells == 1))
 		{
 			stuffcmd(other, "impulse 36\n");
@@ -251,13 +278,13 @@ void() wammo_touch = { if (other.classname != "player")
 
 	if (self.msg == 21)
 	{
-		if ((other.ammo_spitter >= 300))
-			return;
+		if ((other.ammo_spitter >= 200))
+			{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 	}
 	if (self.msg == 30)
 	{
 		if ((other.ammo_retcher >= 100))
-			return;
+			{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 		if ((other.ammo_retcher <= 0))
 		{
 			other.preloadcyst = 1;
@@ -276,8 +303,8 @@ void() wammo_touch = { if (other.classname != "player")
 	if (other.ammo_cannon > 100)
 		other.ammo_cannon = 100;
 	other.ammo_spitter = self.ammo_spitter + other.ammo_spitter;
-	if (other.ammo_spitter > 300)
-		other.ammo_spitter = 300;
+	if (other.ammo_spitter > 200)
+		other.ammo_spitter = 200;
 	other.ammo_retcher = self.ammo_retcher + other.ammo_retcher;
 	if (other.ammo_retcher > 100)
 		other.ammo_retcher = 100;
@@ -531,7 +558,7 @@ void() ammo_fangs = { self.noise = "items/fangs.ogg";
 void() larmor_touch = { if (other.classname != "player")
 		return;
 	if ((other.health == 100) && (self.health))
-		return;
+	{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 	other.health += self.health;
 	if (other.health > 100)
 		other.health = 100;
@@ -551,7 +578,7 @@ void() larmor_touch = { if (other.classname != "player")
 	if (self.rarmorvalue)	//1024 - 2048
 	{
 		if ((other.rarmorvalue == 100))
-			return;
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 		other.rarmorvalue += self.rarmorvalue;
 		if (other.rarmorvalue > 100)
 			other.rarmorvalue = 100;
@@ -566,7 +593,7 @@ void() larmor_touch = { if (other.classname != "player")
 	if (self.darmorvalue)	//4096 -8192
 	{
 		if ((other.darmorvalue == 100))
-			return;
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 		other.darmorvalue += self.darmorvalue;
 		if (other.darmorvalue > 100)
 			other.darmorvalue = 100;
@@ -771,26 +798,37 @@ void() guardian_shield = {};
 ///artifacts///
 /////////////////
 
+	
 void() artifact_touch = { if (other.classname != "player")
 		return;
-	if ((other.LifeSiphon >= 9) && (self.LifeSiphon))
-		return;
-	if ((other.TrinketofRespite >= 9) && (self.TrinketofRespite))
-		return;
-	if ((other.SoulTether >= 9) && (self.SoulTether))
-		return;
-	if ((other.Aegis >= 9) && (self.Aegis))
-		return;
-	if ((other.DrownerApp >= 9) && (self.DrownerApp))
-		return;
 
-	if (!(other.centerprint_messages &1))
+
+	if ((other.LifeSiphon >= 9) && (self.LifeSiphon))
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
+	if ((other.TrinketofRespite >= 9) && (self.TrinketofRespite))
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
+	if ((other.Aegis >= 9) && (self.Aegis))
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
+	if ((other.DrownerApp >= 9) && (self.DrownerApp))
+		{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
+	if ((!(other.centerprint_messages &1)) && (!self.SoulTether))
 	{
 		Hud_message(256, other.origin, other);
 		other.centerprint_messages += 1;
 	}
+	else
+	{
+		if (!(other.centerprint_messages &4)) 
+		{	
+		Hud_message(260, other.origin, other);
+		other.centerprint_messages += 4;
+		}
+	}
+
 	other.LifeSiphon += self.LifeSiphon;
 	other.SoulTether += self.SoulTether;
+	
+	
 	other.TrinketofRespite += self.TrinketofRespite;
 	other.DrownerApp += self.DrownerApp;
 	other.Aegis += self.Aegis;
@@ -798,8 +836,6 @@ void() artifact_touch = { if (other.classname != "player")
 
 	if (self.msg)
 		Hud_message(self.msg, other.origin, other);
-	if ((other.LifeSiphon == 9) && (other.TrinketofRespite == 9) && (other.SoulTether == 9) && (other.Aegis == 9) && (other.DrownerApp == 9))
-		Hud_message(109, other.origin, other);
 
 	if (self.secret == 1)
 	{
@@ -845,7 +881,7 @@ void() artifact_soul_tether = { radial();
 	setsize(self, artifact_nsize, artifact_size);
 	//setsize (self, '-8 -8 -8', ' 9 9 9');
 
-	self.msg = 105;
+	self.msg = 110;
 	self.touch = artifact_touch;
 };
 
@@ -930,7 +966,7 @@ void() weapon_spawner_use = { local entity pl;
 		self.classtype = "slagcannon";
 	if ((self.classtype) && (self.cnt))
 	{
-		self.use = SUB_Null;
+		self.use =SUB_Null;
 		convert_to_item(self.origin, self.classtype, self.item_ammount, self);
 	}
 
@@ -1051,13 +1087,16 @@ void() item_spawner = { /*	if (!self.classitem0)
 
 void() PreStartItem = { StartItem(self.PreStartItemvalue);
 };
-
+.float counter_coffer_use;
 void(vector org, string class, float ammount, entity ownr) drop_item = { local entity dropped;
 	dropped = spawn();
 	dropped.origin = org;
 	dropped.movetype = MOVETYPE_TOSS;
 	dropped.owner = ownr;
 	dropped.angles = ownr.angles;
+	
+	
+	
 	if ((dropped.owner.flags &FL_MONSTER))
 	{
 		local vector revel;
@@ -1070,6 +1109,19 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 		if (self.owner.target)
 			dropped.target = self.owner.target;
 	}
+
+	if(ownr.classname == "coffer")
+	{
+		dropped.movetype = MOVETYPE_BOUNCE;
+		dropped.gravity = coffer_item_gravity;
+		dropped.bouncefactor = coffer_item_bounce;
+		local vector revel;
+		makevectors(ownr.angles);
+		
+		revel = (v_forward * coffer_item_vel) + v_right* ( + 180 - ownr.counter_coffer_use * 90);
+		revel_z += (coffer_item_vel);
+	}
+
 
 	if (class == "slugs")
 	{
@@ -1115,7 +1167,6 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 		setmodel(dropped, "models/items/fangs.md3");
 		dropped.noise = "items/fangs.ogg";
 		dropped.msg = 21;
-		revel = '0 0 0';
 		setsizeitem(dropped, resin_size);
 		dropped.ammo_spitter = fang_ammount;
 		dropped.touch = wammo_touch;
@@ -1214,10 +1265,12 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 		dropped.colormod = '1 1 1';
 		setmodel(dropped, "models/items/lifeblood_vial.md3");
 		dropped.touch = larmor_touch;
-		dropped.nextthink = time + 0.2;	// items start after other solids
 		setsizeitem(dropped, vial_size);
+		if(ownr.classname != "coffer")
+		{
 		dropped.nextthink = time + 0.2;	// items start after other solids
 		dropped.think = PlaceItem;
+		}
 		dropped.msg = 11;
 	}
 
@@ -1231,11 +1284,13 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 		dropped.colormod = '1 1 1';
 		setmodel(dropped, "models/items/lifeblood_beaker.md3");
 		dropped.touch = larmor_touch;
-		dropped.nextthink = time + 0.2;	// items start after other solids
 		setsizeitem(dropped, beaker_size);
 		dropped.msg = 10;
+		if(ownr.classname != "coffer")
+		{
 		dropped.nextthink = time + 0.2;	// items start after other solids
 		dropped.think = PlaceItem;
+		}
 	}
 	if (class == "siphon")
 	{
@@ -1282,7 +1337,7 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 		precache_model("models/artifacts/soul_tether.md3");
 		setmodel(dropped, "models/artifacts/soul_tether.md3");
 		setsize(dropped, artifact_nsize, artifact_size);
-		dropped.msg = 105;
+		dropped.msg = 110;
 		dropped.touch = artifact_touch;
 	}
 
@@ -1389,35 +1444,33 @@ void(vector org, string class, float ammount, entity ownr) drop_item = { local e
 
 	dropped.velocity = revel;
 	dropped.solid = SOLID_TRIGGER;
+	
+	
+ 	if(dropped.owner.classname == "coffer")
+	{
+	dropped.solid = SOLID_NOT;
+	dropped.nextthink = time + 0.1;	// items start after other solids
+	dropped.think = vel_item;
+//	dropped.think = 
+	}
 
 };
 
 void(vector org, string class, float ammount, entity slf) convert_to_item = { self.origin = org;
 	self.movetype = MOVETYPE_TOSS;
 	self.angles = self.angles;
-	self.use = null;
 	//	if(!(self.flags &FL_ITEM))
 	//	self.flags += FL_ITEM;		// make extra wide
-	self.targetname = string_null;
+	//self.targetname = string_null;
+	self.use = artifact_drop;
 	self.classtype = string_null;
 	self.classitem1 = 0;
 	self.classitem2 = 0;
 	self.classitem3 = 0;
 	self.classitem4 = 0;
 	self.classitem5 = 0;
-	if ((self.owner.flags &FL_MONSTER))
-	{
-		local vector revel;
-		makevectors(self.angles);
-		revel = v_forward *(120 + random() *50);
-		revel_z += (150 + random() *50);
-	}
-	else
-	{
-		if (self.owner.target)
-			self.target = self.owner.target;
-	}
-
+	vector revel;
+	
 	if (class == "slugs")
 	{
 		setmodel(self, "models/items/slugs.md3");
@@ -1466,7 +1519,6 @@ void(vector org, string class, float ammount, entity slf) convert_to_item = { se
 		self.classname = "ammo_fangs";
 		self.noise = "items/fangs.ogg";
 		self.msg = 21;
-		revel = '0 0 0';
 		setsizeitem(self, resin_size);
 		self.ammo_spitter = fang_ammount;
 		self.touch = wammo_touch;
@@ -1644,7 +1696,7 @@ void(vector org, string class, float ammount, entity slf) convert_to_item = { se
 		precache_model("models/artifacts/soul_tether.md3");
 		setmodel(self, "models/artifacts/soul_tether.md3");
 		setsize(self, artifact_nsize, artifact_size);
-		self.msg = 105;
+		self.msg = 110;
 		self.touch = artifact_touch;
 	}
 
@@ -1754,7 +1806,6 @@ void(vector org, string class, float ammount, entity slf) convert_to_item = { se
 		self.touch = wammo_touch;
 		self.msg = 14;
 	}
-	self.use = artifact_drop;
 	self.velocity = revel;
 	self.solid = SOLID_TRIGGER;
 };
@@ -1767,7 +1818,7 @@ void() item_Sigil = { StartItem(6);
 void() key_touch = { if (other.classname != "player")
 		return;
 	if ((other.items &self.items))
-		return;
+	{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 
 	if (self.slot_keys)
 	{
@@ -1904,7 +1955,7 @@ void() key_yellow = { self.noise = "items/glyph.ogg";
 void() relic_touch = { if (other.classname != "player")
 		return;
 	if ((other.relics &self.relics))
-		return;
+	{if(other.time_emptymessage < time)Hud_message(109, other.origin, other);other.time_emptymessage = time + 2.1;return;}
 	other.relics += self.relics;
 	other.foundedrelics += self.relics;
 	other.oldrelics++;
@@ -2001,144 +2052,112 @@ void() coffer_item_think = { local entity pl;
 	self.nextthink = time + 2.5;
 };
 
-void() trigger_coffer_use = { local entity ca, cm, cr, ch;
-	local float nti;
-	if (self.coffer_artifacts)
+
+.float coffer_random_order;
+
+.float coffer_step;
+
+
+void() trigger_coffer_use = 
+{ 	local entity ca, cm, cr, ch;
+	self.classname = "coffer";
+
+
+	if(!self.coffer_random_order)
+	{
+	self.coffer_random_order = floor (random() * 3) + 1;
+	self.counter_coffer_use = self.coffer_random_order;
+	}	
+	if((self.counter_coffer_use ==5))
+	self.think = SUB_Null;
+	else
+	self.think = trigger_coffer_use ;
+	self.nextthink = time + 0.25;
+
+	//self.counter_coffer_use ++;
+	if ((self.coffer_artifacts) && (self.counter_coffer_use ==1))
 	{
 		ca = spawn();
 		if (self.coffer_artifacts == 2)
-		{
-			ca.noise = "items/artifacts/artifactB_pickup.ogg";
-			ca.DrownerApp = 1;
-			ca.msg = 102;
-		}
-		else if (self.coffer_artifacts == 5)
-		{
-			ca.noise = "items/artifacts/artifactE_pickup.ogg";
-			ca.SoulTether = 1;
-			ca.msg = 105;
-		}
+			drop_item(self.origin + '0 0 32', "apparatus", 1, self);
+		else if (self.coffer_artifacts == 5)			
+			drop_item(self.origin + '0 0 32', "theter", 1, self);
 		else if (self.coffer_artifacts == 6)
-		{
-			ca.noise = "items/artifacts/artifactF_pickup.ogg";
-			ca.LifeSiphon = 1;
-			ca.msg = 106;
-		}
+			drop_item(self.origin + '0 0 32', "siphon", 1, self);
 		else if (self.coffer_artifacts == 8)
-		{
-			ca.noise = "items/artifacts/artifactH_pickup.ogg";
-			ca.Aegis = 1;
-			ca.msg = 108;
-		}
-		//setsizeitem (ca, '12 12 12');	
-		ca.solid = SOLID_TRIGGER;
-		ca.touch = artifact_touch;
-		ca.think = coffer_item_think;
-		ca.nextthink = time;
-		nti = 0.5;
-	}
-	if (self.coffer_ammo)
+			drop_item(self.origin + '0 0 32', "aegis", 1, self);
+		if(self.coffer_random_order == 1)
+			self.counter_coffer_use = 3;
+		if(self.coffer_random_order == 2)
+			self.counter_coffer_use = 3;
+		if(self.coffer_random_order == 3)
+			self.counter_coffer_use = 4;
+		if(self.coffer_random_order == 4)
+			self.counter_coffer_use= 5;
+	return;		
+	}		
+	if ((self.coffer_ammo) && (self.counter_coffer_use ==2))
 	{
-
-		cm = spawn();
 		if (self.coffer_ammo == 1)
-		{
-			cm.noise = "items/slugs.ogg";
-			cm.ammo_coachgun = 15;
-			cm.msg = 18;
-		}
+			drop_item(self.origin + '0 0 32', "slugs", 15, self);
 		else if (self.coffer_ammo == 2)
-		{
-			cm.noise = "items/shells.ogg";
-			cm.ammo_shotgun = 10;
-			cm.msg = 20;
-		}
+			drop_item(self.origin + '0 0 32', "shells", 10, self);
 		else if (self.coffer_ammo == 3)
-		{
-			cm.noise = "items/fangs.ogg";
-			cm.ammo_spitter = 20;
-			cm.msg = 21;
-		}
+			drop_item(self.origin + '0 0 32', "fangs", 20, self);
 		else if (self.coffer_ammo == 4)
-		{
-			cm.noise = "items/cysts.ogg";
-			cm.ammo_retcher = 10;
-			cm.msg = 30;
-		}
-		//setsizeitem (cm, '12 12 12');	
-		cm.solid = SOLID_TRIGGER;
-		cm.touch = wammo_touch;
-		cm.think = coffer_item_think;
-		cm.nextthink = time + nti;
-		nti += 0.5;
+			drop_item(self.origin + '0 0 32', "cysts", 10, self);
+		if(self.coffer_random_order == 1)
+			self.counter_coffer_use = 4;
+		if(self.coffer_random_order == 2)
+			self.counter_coffer_use = 4;
+		if(self.coffer_random_order == 3)
+			self.counter_coffer_use = 5;
+		if(self.coffer_random_order == 4)
+			self.counter_coffer_use = 3;
+	return;		
 	}
-	if (self.coffer_armor)
+	if ((self.coffer_armor) && (self.counter_coffer_use ==3))
 	{
-		cr = spawn();
 		if (self.coffer_armor == 1)
-		{
-			cr.msg = 13;
-			cr.noise = "items/armor_shard3.ogg";
-			cr.rarmorvalue = 10;
-		}
+			drop_item(self.origin + '0 0 32', "shard", 1, self);
 		if (self.coffer_armor == 2)
-		{
-			cr.msg = 9;
-			cr.noise = "items/armor1.ogg";
-			cr.rarmorvalue = 30;
-		}
+			drop_item(self.origin + '0 0 32', "armor", 1, self);
 		if (self.coffer_armor == 3)
-		{
-			cr.msg = 2;
-			cr.noise = "items/armor1.ogg";
-			cr.rarmorvalue = 50;
-		}
+			drop_item(self.origin + '0 0 32', "helm", 1, self);
 		if (self.coffer_armor == 4)
-		{
-			cr.msg = 6;
-			cr.noise = "items/armor_shard_dark3.ogg";
-			cr.darmorvalue = 10;
-		}
+			drop_item(self.origin + '0 0 32', "shard_dark", 1, self);
 		if (self.coffer_armor == 5)
-		{
-			cr.msg = 5;
-			cr.noise = "items/armor_dark1.ogg";
-			cr.darmorvalue = 30;
-		}
+			drop_item(self.origin + '0 0 32', "armor_dark", 1, self);
 		if (self.coffer_armor == 6)
-		{
-			cr.msg = 4;
-			cr.noise = "items/armor_dark1.ogg";
-			cr.darmorvalue = 50;
-		}
-		//setsizeitem (cr, '12 12 12');	
-		cr.solid = SOLID_TRIGGER;
-		cr.touch = larmor_touch;
-		cr.think = coffer_item_think;
-		cr.nextthink = time + nti;
-		nti += 0.5;
+			drop_item(self.origin + '0 0 32', "helm_dark", 1, self);
+		if(self.coffer_random_order == 1)
+			self.counter_coffer_use = 2;
+		if(self.coffer_random_order == 2)
+			self.counter_coffer_use = 5;
+		if(self.coffer_random_order == 3)
+			self.counter_coffer_use = 1;
+		if(self.coffer_random_order == 4)
+			self.counter_coffer_use = 1;
+	return;		
 	}
-	if (self.coffer_health)
+	if ((self.coffer_health) && (self.counter_coffer_use ==4))
 	{
 		ch = spawn();
 		if (self.coffer_health == 1)
-		{
-			ch.msg = 11;
-			ch.noise = "items/lifeblood_vial1.ogg";
-			ch.health = 10;
-		}
+			drop_item(self.origin + '0 0 32', "vial", 1, self);
 		if (self.coffer_health == 2)
-		{
-			ch.msg = 10;
-			ch.noise = "items/lifeblood_vial2.ogg";
-			ch.health = 30;
-		}
-		//setsizeitem (cr, '12 12 12');	
-		ch.solid = SOLID_TRIGGER;
-		ch.touch = larmor_touch;
-		ch.think = coffer_item_think;
-		ch.nextthink = time + nti;
+			drop_item(self.origin + '0 0 32', "beaker", 1, self);
+		if(self.coffer_random_order == 1)
+			self.counter_coffer_use = 5;
+		if(self.coffer_random_order == 2)
+			self.counter_coffer_use = 1;
+		if(self.coffer_random_order == 3)
+			self.counter_coffer_use = 2;
+		if(self.coffer_random_order == 4)
+			self.counter_coffer_use = 2;
+	return;		
 	}
+
 };
 
 void() trigger_coffer = { self.use = trigger_coffer_use;
@@ -2238,8 +2257,7 @@ void() use_coffer = { local float ft;
 	if (self.frame > 16)
 		ft = 0.1;
 	if (self.frame == 18)
-	{
-		trigger_coffer_use();
+	{		
 		SUB_UseTargets();
 	}
 	self.nextthink = time + ft;
@@ -2247,7 +2265,7 @@ void() use_coffer = { local float ft;
 	if (self.frame >= 19)
 	{
 		self.nextthink = time + ft;
-		self.think = null;
+		self.think = trigger_coffer_use;
 	}
 };
 

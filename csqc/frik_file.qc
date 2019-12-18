@@ -1,5 +1,5 @@
-vector artr1, artn, artic;
-float artr2, artns, artics;
+vector artr1, artn, artin, artic, arti_pos;
+float artrns,artirns, artns, artics;
 vector health_pos;
 vector healthsep;
 vector health_pos2;
@@ -72,15 +72,37 @@ void() check_hudmessages =
 
 void() check_artifactring =
 {
+/*
+1				//	scale of soul tether icon
+-84				//	x position soul tether icon (206 center, -84 side,)
+-47				//	y position soul tether icon (-35 lower, )
+-4				//	x position for number soul tether ammount relative to soul tether icon
+-2				//	y position for number soul tether ammount relative to soul tether icon
+1				//	scale of number soul tether ammount
+5				//	x position for icon relative to ring 
+1				//	y position for icon relative to ring
+1				//	artifact icon scale
+-84				//	x position artifact icon (206 center, -84 side,)
+-47				//	y position artifact icon (-35 lower, )
+-4				//	x position for number soul tether ammount relative to soul tether icon
+-2				//	y position for number soul tether ammount relative to soul tether icon
+1				//	scale of number soul tether ammount
+*/
 	local float readparms;
 	local string readtext;
-	readparms = fopen ("hud/artefectring.txt", FILE_READ);    //open what file to use (THIS TIME IN READ MODE)
+	readparms = fopen ("hud/tether_artifact.txt", FILE_READ);    //open what file to use (THIS TIME IN READ MODE)
+	readtext = fgets(readparms);                //read the text
+	artns = stof(readtext);
 	readtext = fgets(readparms);                //read the text
 	artr1_x = stof(readtext);        //turn the text into the float u want (by using stof: string to float) 
 	readtext = fgets(readparms);                //read the text
 	artr1_y  = stof(readtext);         
 	readtext = fgets(readparms);                //read the text
-	artr2 = stof(readtext);         
+	artn_x = stof(readtext);        //turn the text into the float u want (by using stof: string to float) 
+	readtext = fgets(readparms);                //read the text
+	artn_y  = stof(readtext);         
+	readtext = fgets(readparms);                //read the text
+	artrns = stof(readtext);         
 	readtext = fgets(readparms);                //read the text
 	artic_x = stof(readtext);        //turn the text into the float u want (by using stof: string to float) 
 	readtext = fgets(readparms);                //read the text
@@ -88,11 +110,15 @@ void() check_artifactring =
 	readtext = fgets(readparms);                //read the text
 	artics = stof(readtext);
 	readtext = fgets(readparms);                //read the text
-	artn_x = stof(readtext);        //turn the text into the float u want (by using stof: string to float) 
+	arti_pos_x = stof(readtext);
 	readtext = fgets(readparms);                //read the text
-	artn_y  = stof(readtext);         
+	arti_pos_y = stof(readtext);
 	readtext = fgets(readparms);                //read the text
-	artns = stof(readtext);
+	artin_x = stof(readtext);        //turn the text into the float u want (by using stof: string to float) 
+	readtext = fgets(readparms);                //read the text
+	artin_y  = stof(readtext);         
+	readtext = fgets(readparms);                //read the text
+	artirns = stof(readtext);         
 	fclose (readparms);    
 };
 

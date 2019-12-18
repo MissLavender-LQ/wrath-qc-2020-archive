@@ -1,3 +1,3 @@
-quakec codebase for wrath - V 0.5689 EA release
-november 25, 2019
+quakec codebase for wrath - V 0.577 PATCH 1
+december 18, 2019
 

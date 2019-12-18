@@ -419,7 +419,7 @@ void() afflicted_explosion = { local vector tagorg;
 	ThrowGib2("models/gibs/gib_med.md3", self.health *0.25, 0.75, 1, 1, rorigin(self), relvel(aff_gib13, self), 0, 0);
 
 	self.movetype = 0;
-	drop_item(self.origin + '0 0 40', "cyst", 2, self);
+	drop_item(rorigin(self)+ '0 0 -10', "cyst", 1, self);
 	local string diesound, r;
 	r = ftos(floor(random() *3) + 1);
 	diesound = strcat("enemies/afflicted/die", r, ".ogg");

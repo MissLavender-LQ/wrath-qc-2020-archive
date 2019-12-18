@@ -1185,7 +1185,6 @@ void() fallen_paind20 =[$fn_mutilated20, fallen_paind20]
 	self.cnt = 100;
 	self.flags = 0;
 	self.health = 0;
-	killed_monsters = killed_monsters + 1;
 	monster_death_use();
 
 	self.nextthink = time + 99999999999999999;

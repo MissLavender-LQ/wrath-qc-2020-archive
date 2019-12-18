@@ -475,7 +475,9 @@ void() trigger_shrine_touch = { if (other.classname != "player")
 	copy_save_maps(0);
 	local string saveloc;
 	saveloc = strcat("save data/profiles/", profilename, "/shrine\n");
+	stuffcmd(other, "scratch1 1\n");
 	stuffcmd(other, saveloc);
+	stuffcmd(other, "scratch1 0\n");
 	//	stuffcmd(other, "save shrine\n");
 	if (!(other.savedlist &SAVED_SIGIL))
 		other.savedlist += SAVED_SIGIL;
@@ -575,6 +577,10 @@ void() trigger_secret = { precache_sound("misc/secret.ogg");
 
 void() stricken_preattack1;
 .float turret;
+
+
+
+
 void() trigger_turret_touch = { if (other.classname != "monster_stricken")
 		return;
 	if (other.turret != 1)

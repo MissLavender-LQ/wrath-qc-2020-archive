@@ -87,7 +87,7 @@ void() load_tether = { cmd("set cvar_restoregame 0\n");
 	read_currentprofileslot();
 	load_save_maps(1);
 	string cname;
-	cname = strcat("load data/profiles/", profilename, "/quick.sav\n");
+	cname = strcat("load data/profiles/", profilename, "/tether.sav\n");
 	//	bprint(cname);
 	cmd("scratch3 0 \n");
 	cmd(cname);

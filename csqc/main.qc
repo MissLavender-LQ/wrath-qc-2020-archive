@@ -17,7 +17,6 @@ void CSQC_Init(void)
 	strCmd = ("exec fonts/font.cfg \n");
 	localcmd(strCmd);
 	cvar_set("r_glsl_postprocess_uservec1", "0 0 0 0");
-	cvar_set("sv_friction", "8");
 	//cvar_set("r_viewscale", "1");
 	cvar_set("sv_maxvelocity", "10000");
 	Hud_Init();
@@ -765,6 +764,10 @@ void CSQC_Init(void)
 	precache_pic("gfx/hud/msg_lifeblood_beaker.tga");
 	precache_pic("gfx/hud/msg_lifeblood_vial.tga");
 	precache_pic("gfx/hud/msg_load.tga");
+	precache_pic("gfx/hud/msg_locked_blue.tga");
+	precache_pic("gfx/hud/msg_locked_coffer.tga");
+	precache_pic("gfx/hud/msg_locked_red.tga");
+	precache_pic("gfx/hud/msg_locked_yellow.tga");
 	precache_pic("gfx/hud/msg_ore.tga");
 	precache_pic("gfx/hud/msg_retcher.tga");
 	precache_pic("gfx/hud/msg_saved.tga");

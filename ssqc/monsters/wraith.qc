@@ -241,6 +241,7 @@ void() WraithProjectileTouch = { local float damg;
 	if (pointcontents(self.origin) == CONTENT_SKY)
 	{
 		remove(self);
+		sound (self, CHAN_WEAPON, "misc/null.wav", 0, ATTN_NORM);	// stop loop sound
 		return;
 	}
 	self.solid = SOLID_NOT;
@@ -250,16 +251,15 @@ void() WraithProjectileTouch = { local float damg;
 		if (other.classname == "monster_oppressor")
 			damg = damg *0.25;	// mostly immune
 		T_Damage(other, self, self.owner, damg);
-		//	msound (self, CHAN_AUTO, "oppressor/claw.wav", 1, ATTN_NORM);
 	}
 	else
 	{
 		T_RadiusDamage(self, self.owner, damg, world);
-		//	msound (self, CHAN_VOICE, "oppressor/hit.wav", 0.7, ATTN_NORM);	// bounce sound
 	}
 	pointparticles(particleeffectnum("wraith_fire_impact"), self.origin, v_forward *(-550), 1);
-	//	self.velocity = '0 0 0';
 	setmodel(self, "models/projectiles/proj_wraith_explo.md3");
+	sound (self, CHAN_WEAPON, "misc/null.wav", 0, ATTN_NORM);	// stop loop sound
+	randomsound2("enemies/wraith/proj_impact", 3, 1, CHAN_AUTO, 0, 0.25);
 	pointparticles(particleeffectnum("proj_wraith_impact"), self.origin, '0 0 0', 1);
 	self.movetype = 0;
 	self.alpha = 1;
@@ -290,6 +290,9 @@ void() wraith_StartFast = { local entity missile;
 	missile.velocity = normalize(self.enemy.origin - tagorg);
 	missile.velocity = missile.velocity * 1200;
 	missile.angles = vectoangles(missile.velocity);
+	local entity oself;oself = self;self = missile;
+	randomsound2("enemies/wraith/proj_loop", 3, 1, CHAN_WEAPON, 0, 0.25);
+	self = oself;
 	missile.touch = WraithProjectileTouch;
 	missile.nextthink = time;
 	missile.think = slagdrunk;
@@ -929,6 +932,12 @@ void() precache_monster_wraith = { precache_model("models/enemies/wraith/wraith_
 	precache_sound("enemies/wraith/pain1.ogg");
 	precache_sound("enemies/wraith/pain2.ogg");
 	precache_sound("enemies/wraith/pain3.ogg");
+	precache_sound("enemies/wraith/proj_impact1.ogg");
+	precache_sound("enemies/wraith/proj_impact2.ogg");
+	precache_sound("enemies/wraith/proj_impact3.ogg");
+	precache_sound("enemies/wraith/proj_loop1.ogg");
+	precache_sound("enemies/wraith/proj_loop2.ogg");
+	precache_sound("enemies/wraith/proj_loop3.ogg");
 	precache_sound("enemies/wraith/sight1.ogg");
 	precache_sound("enemies/wraith/sight2.ogg");
 	precache_sound("enemies/wraith/sight3.ogg");
@@ -961,6 +970,12 @@ void() monster_wraith = { precache_model("models/enemies/wraith/wraith_tail2.md3
 	precache_sound("enemies/wraith/pain1.ogg");
 	precache_sound("enemies/wraith/pain2.ogg");
 	precache_sound("enemies/wraith/pain3.ogg");
+	precache_sound("enemies/wraith/proj_impact1.ogg");
+	precache_sound("enemies/wraith/proj_impact2.ogg");
+	precache_sound("enemies/wraith/proj_impact3.ogg");
+	precache_sound("enemies/wraith/proj_loop1.ogg");
+	precache_sound("enemies/wraith/proj_loop2.ogg");
+	precache_sound("enemies/wraith/proj_loop3.ogg");
 	precache_sound("enemies/wraith/sight1.ogg");
 	precache_sound("enemies/wraith/sight2.ogg");
 	precache_sound("enemies/wraith/sight3.ogg");

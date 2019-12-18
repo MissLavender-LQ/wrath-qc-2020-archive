@@ -27,6 +27,10 @@ float gkcommand;
 
 float effvol;
 
+float draggable_select;
+float olddraggable_select;
+vector draggable_select_vector;
+
 float fscselected;
 float versync;
 float antial;
@@ -63,6 +67,7 @@ float M_TYPE_CONFIRMFULLSCREEN = 20;
 float M_TYPE_CONFIRMBIND = 21;
 float M_TYPE_PLAYING = 22;
 float M_TYPE_SELECT_DIFFICULT = 23;
+float M_TYPE_DELETEPROFILE = 24;
 float profileslotpage;
 float checksaves;
 

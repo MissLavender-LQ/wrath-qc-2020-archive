@@ -1,7 +1,9 @@
 /////////////////////////////////////////////
 ////////////CLIENT FRIK_FILE////////////
 /////////////////////////////////////////////
-
+float lunge_vel;
+float lunge_velz;
+float lunge_velzog;
 .string melee_model;
 void() check_melee = { self.melee_model = "models/weapons/melee/v_gauntlet.md3";	// strzone(readtext);
 	self.dvweapon_x = 4;	//stof(readtext);        
@@ -11,6 +13,24 @@ void() check_melee = { self.melee_model = "models/weapons/melee/v_gauntlet.md3";
 	self.vweaponangles_x = 0;	// stof(readtext);
 	self.vweaponangles_y = 0;	//stof(readtext);
 	self.vweaponangles_z = 0;	//stof(readtext);
+	local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/melee.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	readtext = fgets(readfrik);
+	lunge_vel = stof(readtext);
+	readtext = fgets(readfrik);
+	lunge_velz = stof(readtext);
+	readtext = fgets(readfrik);
+	lunge_velzog = stof(readtext);
+	fclose(readfrik);
 };
 //vweaponangles
 
@@ -49,6 +69,12 @@ void() check_vmodel = { local float readfrik;
 .float buckshot_count;
 .float charge_shotgun_count;
 .float shotgun_clip;
+.float shotgun_proj_speed;
+.float shotgun_proj_dmg;
+float proj_shotgun_drunkfactorv;
+float proj_shotgun_drunkfactorh;
+float proj_shotgun_timing;
+vector proj_shotgun_bbox;
 void() check_shotgun = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("weapons/shotgun.txt", FILE_READ);
@@ -92,6 +118,18 @@ void() check_shotgun = { local float readfrik;
 	self.buckshot_count = stof(readtext);
 	readtext = fgets(readfrik);
 	self.charge_shotgun_count = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_proj_speed = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_proj_dmg = stof(readtext);
+	readtext = fgets(readfrik);
+	proj_shotgun_drunkfactorv = stof(readtext);
+	readtext = fgets(readfrik);
+	proj_shotgun_drunkfactorh = stof(readtext);
+	readtext = fgets(readfrik);
+	proj_shotgun_timing = stof(readtext);
+	readtext = fgets(readfrik);
+	proj_shotgun_bbox = stov(readtext);
 	fclose(readfrik);
 };
 
@@ -419,6 +457,26 @@ void() check_itemlight = { local float readfrik;
 
 vector retcher_proj_size;
 vector shells_size_invader;
+float coffer_item_bounce;
+float coffer_item_gravity;
+float coffer_item_vel;
+float coffer_item_delay;
+
+void() check_coffer =
+{
+	local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("items/coffer.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	coffer_item_gravity = stof(readtext);
+	readtext = fgets(readfrik);
+	coffer_item_bounce = stof(readtext);
+	readtext = fgets(readfrik);
+	coffer_item_vel= stof(readtext);
+	readtext = fgets(readfrik);
+	coffer_item_delay= stof(readtext);
+	fclose(readfrik);
+};	
 void() check_itemsize = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("items/size.txt", FILE_READ);
@@ -986,7 +1044,7 @@ void() check_damg_pain = { local float readfrik;
 	hpdmg = stof(readtext);
 	fclose(readfrik);
 };
-
+float exec_rangeattack;
 float exec_vwalk1;
 float exec_vwalk2;
 float exec_vwalk3;
@@ -1063,6 +1121,8 @@ void() check_exec_vel = { local float readfrik;
 	exec_health = stof(readtext);
 	readtext = fgets(readfrik);
 	exec_damage = stof(readtext);
+	readtext = fgets(readfrik);
+	exec_rangeattack = stof(readtext);
 	readtext = fgets(readfrik);
 	exec_chargedamage = stof(readtext);
 	readtext = fgets(readfrik);
@@ -1693,6 +1753,7 @@ float stricken_sad;
 float stricken_dtp;
 float stricken_pth;
 vector stricken_bbox;
+vector stricken_nbbox;
 float stricken_far;
 float stricken_mid;
 float stricken_near;
@@ -1735,6 +1796,8 @@ void() check_stricken = { local float readfrik;
 	stricken_pth = stof(readtext);	// chance pain to run or attack
 	readtext = fgets(readfrik);
 	stricken_bbox = stov(readtext);	/// boox
+	readtext = fgets(readfrik);
+	stricken_nbbox = stov(readtext);	/// boox
 	readtext = fgets(readfrik);
 	stricken_far = stof(readtext);	// far
 	readtext = fgets(readfrik);

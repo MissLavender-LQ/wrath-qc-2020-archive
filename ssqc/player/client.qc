@@ -477,12 +477,15 @@ void() autosave = { read_currentprofileslot();
 	string saveloc;
 	saveloc = strcat("save data/profiles/", profilename, "/autosave\n");
 	copy_save_maps(2);
+	stuffcmd(self, "scratch1 1\n");
 	stuffcmd(self, saveloc);
+	stuffcmd(self, "scratch1 0\n");
 	if (profilename)
 		strunzone(profilename);
 };
 
 .float strafetime;
+.float melee_lunge;
 void() wraith_side1;
 void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 		self.impulse = 0;
@@ -550,7 +553,7 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 
 	if (!self.crouch)
 	{
-		if (self.button7)
+		if ((self.button7) && (self.flags & FL_ONGROUND))
 		{
 			if (!(self.effects &256))
 			{
@@ -681,7 +684,7 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 		self.flags = self.flags | FL_JUMPRELEASED;
 	if ((self.radial_time < time) && (self.radialruning == 1))
 	{
-		self.radialactive = 0;
+		//self.radialactive = 0;
 		self.radialruning = 0;
 	}
 
@@ -716,14 +719,14 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 		if (!(self.crosshairflag &2))
 			self.crosshairflag += 2;
 
-		if (skill >= 2)
+		/*if (skill >= 1)
 		{
 			if ((self.cursor_trace_ent.classname == "wraith") && (self.cursor_trace_ent.enemy == self) && (self.cursor_trace_ent.strafetime < time))
 			{
 				self.cursor_trace_ent.strafetime = time + 1;
 				self.cursor_trace_ent.think = wraith_side1;
 			}
-		}
+		}*/
 	}
 	else
 	{
@@ -742,6 +745,7 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 void() check_weapons = { self.checkweaponflag = 1;
 };
 
+.float tether_model_client;
 .float shrine_model_client;
 .float artifact_model_client;
 .float v_nextthink;
@@ -767,6 +771,24 @@ void() artifact_client_remove2 = { if (self.owner.shrine_model_client == 1)
 	self.nextthink = time + 0.05;
 }
 
+void() artifact_client_remove3 = { if (self.owner.tether_model_client == 1)
+	{
+		self.alpha -= 0.1;
+		self.frame++;
+	}
+
+	if (self.alpha <= 0.1)
+	{
+		self.think = SUB_Remove;
+		self.owner.tether_model_client = 0;
+	}
+	else
+		self.think = artifact_client_remove3;
+
+	if (self.lifetime < time)
+		self.think = SUB_Remove;
+	self.nextthink = time + 0.05;
+}
 void() artifact_client_remove = { if ((self.owner.radial_time > time) && (self.owner.artifact_model_client == 2))
 	{
 		if (self.owner.healthpulsetime > time)
@@ -830,13 +852,13 @@ void() ArtifactClientModel =	//ArtifactClientModel
 			setorigin(artifact_client2, '0 0 0');
 			artifact_client2.oldangles = self.angles;
 			artifact_client2.frame = 0;
-			artifact_client2.alpha = 0.01;
 			self.shrine_model_client = 1;
 			artifact_client2.alpha = 1;
 			setmodel(artifact_client2, "models/artifacts/active/soul_tether_active.md3");
 			artifact_client2.think = artifact_client_remove2;
 			artifact_client2.nextthink = time;
 		}
+
 
 		local entity artifact_client;
 
@@ -870,26 +892,16 @@ void() ArtifactClientModel =	//ArtifactClientModel
 					self.artifact_model_client = 4;
 					setmodel(artifact_client, "models/artifacts/active/drowners_apparatus_active.md3");
 				}
-
-				if (self.Tether_time > time)
-				{
-					self.artifact_model_client = 3;
-					artifact_client.alpha = 1;
-					setmodel(artifact_client, "models/artifacts/active/soul_tether_active.md3");
-					artifact_client.think = artifact_client_remove;
-					artifact_client.lifetime = time + 30;
-					artifact_client.nextthink = time;
-					return;
-				}
-
 				artifact_client.lifetime = time + 30;
 				artifact_client.think = artifact_client_think;
 				artifact_client.nextthink = time;
 			}
 		}
 	};
-
-void() PlayerPostThink = { if (self.deadflag)
+.float fakewatertype;
+.float check_centered;
+void() PlayerPostThink = { 
+if (self.deadflag)
 		return;
 	if (self.playerdeadtime > time)
 		return;
@@ -1287,7 +1299,10 @@ string currentmap;
 void(entity e) write_exploredmap = { read_currentprofileslot();
 	local string saveloc, savestats;
 	saveloc = strcat("save data/profiles/", profilename, "/maps/", currentmap, "\n");
+
+	stuffcmd(e, "scratch1 1\n");
 	stuffcmd(e, saveloc);
+	stuffcmd(e, "scratch1 0\n");
 	savestats = strcat("profiles/", profilename, "/maps/", currentmap, ".stats");
 	float save_stats;
 	string writethis;
@@ -1332,7 +1347,17 @@ void() changelevel_touch = { if (self.wait > time)
 		return;
 	if (other.classname != "player")
 		return;
+	local float invrtmsb;
+	if (stof(cvar_string("m_pitch")) < 0)
+		invrtmsb = 1;
+	else
+		invrtmsb = 0;
+
+	if(invrtmsb)
+	stuffcmd(other, "m_pitch -0.001\n");
+	else
 	stuffcmd(other, "m_pitch 0\n");
+	
 	stuffcmd(other, "m_yaw 0\n");
 	garbage_collector();
 	if (!self.location)
@@ -1744,14 +1769,17 @@ void() DecodeLevelParms = { self.items = parm1;
 };
 
 .float oldrelics_start;
-
-void() RestoreGame = { if (cvar("cvar_restoregame") != 1)
+void()recount_monsters;
+void() RestoreGame = {
+	self.check_centered = 1;
+	if (cvar("cvar_restoregame") != 1)
 		return;
 	//	SetChangeParms();
 	monster_relocator();
 	FriktoParms();
 	DecodeLevelParms();
 	respawn_entities();
+	recount_monsters();
 	//	ParmstoFrik();
 	local entity spawn_spot;	// This holds where we want to spawn
 	spawn_spot = SelectSpawnPoint();

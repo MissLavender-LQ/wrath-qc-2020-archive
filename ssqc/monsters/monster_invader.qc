@@ -448,7 +448,7 @@ void() invader_run =[$inv_run1, invader_run2]
 		monstersound5("enemies/invader/chatter", 5, CHAN_VOICE);
 
 	if (visible(self.enemy))
-		self.invader_search_time = time + 5;
+		self.invader_search_time = time + 10;
 
 };
 void() invader_run2 =[$inv_run2, invader_run3]
@@ -471,23 +471,6 @@ void() invader_run5 =[$inv_run5, invader_run6]
 {
 	ai_runwalk(invader_rs);
 	inv_check_melee();
-	/*self.findtargettime = time + 0.1; 
-	local float r;		
-	if((visible(self.enemy))&& (self.enemy.classname != "path_waypoint))
-	{
-		enemy_range = range(self.enemy);
-		if (enemy_range == RANGE_FAR)
-			return; 
-		if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
-		{
-			r = random() *100;
-			if(invader_rth >= r)
-				self.think = invader_preattack;
-		}
-
-		if (enemy_range == RANGE_MELEE)
-			self.think = invader_sattack; 
-	}*/
 
 };
 void() invader_run6 =[$inv_run6, invader_run7]
@@ -540,12 +523,12 @@ void() invader_run10 =[$inv_run10, invader_run]
 	if ((visible(self.enemy)) && (self.enemy.classname != "path_waypoint"))
 	{
 		enemy_range = range(self.enemy);
-		if (enemy_range == RANGE_FAR)
+		if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
 			return;
-		if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
+		if ((enemy_range == RANGE_NEAR) )
 		{
 			r = random() *100;
-			if (invader_rth >= r)
+			if ((invader_rth >= r) && (self.timeangles < time))
 				self.think = invader_preattack;
 		}
 
@@ -553,8 +536,8 @@ void() invader_run10 =[$inv_run10, invader_run]
 			self.think = invader_sattack;
 	}
 
-	if ((!(visible(self.enemy))) && (self.invader_search_time < time))
-		self.think = invader_waiting;
+//	if ((!(visible(self.enemy))) && (self.invader_search_time < time))
+//		self.think = invader_waiting;
 };
 
 /*
@@ -565,10 +548,10 @@ void()	invader_run1	=[	$inv_run1,	invader_run1	]
 		self.wknd = 1;
 		local float rp;
 		rp = random() *100;
-		if(invader_itadr >= rp)
+		if((invader_itadr >= rp) && (self.timeangles < time))
 		{	
 			enemy_range = range(self.enemy);
-			if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
+			if ((enemy_range == RANGE_NEAR))
 				self.think = invader_preattack;
 			if (enemy_range == RANGE_MELEE)
 			{
@@ -616,12 +599,12 @@ void()	invader_run1	=[	$inv_run1,	invader_run1	]
 		if((visible(self.enemy)))
 		{
 			enemy_range = range(self.enemy);
-			if (enemy_range == RANGE_FAR)
+			if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
 			return; 
-			if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
+			if ((enemy_range == RANGE_NEAR))
 			{
 			r = random() *100;
-			if(invader_rth >= r)
+			if((invader_rth >= r) && (self.timeangles < time))
 			self.think = invader_preattack;
 			else	
 			self.runing_time = time + invader_rt;
@@ -668,6 +651,13 @@ void() shotgun_proj_touch2 = { if (other == self.owner)
 		local vector org;
 		org = self.origin;
 		pointparticles(particleeffectnum("TE_GUNSHOT"), org, '0 0 0', 1);
+	randomsound2  ("impact/projectiles/bullet",15,0.5, CHAN_AUTO, 0, 0.25);
+	
+	
+	//local float r;
+	//r = random();
+	//if (r < 0.1)
+	//randomsound2  ("impact/projectiles/rico",15,0.25, CHAN_AUTO, 0, 0.25);
 	}
 
 	/*
@@ -814,7 +804,7 @@ void() invader_attack10 =[$inv_attack10, invader_attack]
 		if (visible(self.enemy))
 			self.think = invader_attack;
 		else
-			self.think = invader_waiting;
+			self.think = invader_run;
 	}
 	else
 	{
@@ -823,9 +813,9 @@ void() invader_attack10 =[$inv_attack10, invader_attack]
 			if (visible(self.enemy))
 			{
 				enemy_range = range(self.enemy);
-				if (enemy_range == RANGE_FAR)
+				if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
 					self.think = invader_run;
-				if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
+				if ((enemy_range == RANGE_NEAR) )
 				{
 					local float r;
 					r = random() *100;
@@ -1028,7 +1018,7 @@ void() invader_sattack10 =[$inv_sattack10, invader_sattack]
 	if (visible(self.enemy))
 	{
 		enemy_range = range(self.enemy);
-		if (enemy_range == RANGE_FAR)
+		if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
 		{
 			if (self.skin == 1)
 				self.think = invader_blindechase;
@@ -1036,7 +1026,7 @@ void() invader_sattack10 =[$inv_sattack10, invader_sattack]
 				self.think = invader_run;
 		}
 
-		if ((enemy_range == RANGE_NEAR) || (enemy_range == RANGE_MID))
+		if ((enemy_range == RANGE_NEAR))
 		{
 			local float r;
 			r = random() *100;
@@ -1062,7 +1052,7 @@ void() invader_sattack10 =[$inv_sattack10, invader_sattack]
 		}
 	}
 	else
-		self.think = invader_waiting;
+		self.think = invader_run;//waiting;
 
 };
 
@@ -1128,7 +1118,7 @@ void() invader_postpain = { ai_face();
 		if (visible(self.enemy))
 			self.think = invader_preattack;
 		else
-			self.think = invader_waiting;
+			self.think = invader_run; //waiting;
 	}
 
 	self.nextthink = time;
@@ -1503,6 +1493,29 @@ void() precache_monster_invader = { precache_model("models/enemies/invader/invad
 	precache_sound("enemies/invader/step4.ogg");
 	precache_sound("enemies/invader/step5.ogg");
 };
+
+void() invader_touch =
+{
+if(!(other.flags & FL_MONSTER))
+return;
+if(self.timeangles <= other.timeangles)
+{
+self.ideal_yaw = other.angles_y;
+self.think = other.think;
+ChangeYaw();
+}
+else
+{
+other.ideal_yaw = self.angles_y;
+local entity oself;
+oself = self;
+self = other;
+self.think = oself.think;
+ChangeYaw();
+self = oself;
+}
+};
+
 void() monster_invader = { precache_model("models/enemies/invader/invader.md3");
 	precache_model("models/enemies/invader/gibs/gib_head.md3");
 	precache_model("models/enemies/invader/gibs/gib_arm_l.md3");
@@ -1547,6 +1560,7 @@ void() monster_invader = { precache_model("models/enemies/invader/invader.md3");
 	else
 		self.th_run = invader_preattack;
 	self.th_missile = invader_preattack;
+	//self.touch =invader_touch;
 	self.th_melee = invader_sattack;
 	self.th_pain = invader_pain;
 	self.th_die = invader_death;

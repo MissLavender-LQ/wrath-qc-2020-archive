@@ -29,6 +29,9 @@ void(float index, float type, .float) SV_AddStatFloat = #232;
 .vector ltdest;
 .vector lorigin;
 .float artifacttime;
+.float tethertime;
+.float tether_global_time;
+
 .float damagescreen;
 .float shrine;
 .float relics;
@@ -109,6 +112,8 @@ const float STAT_JOURNAL_MESSAGESM = 86;
 const float STAT_SPOTTED_MAPS = 87;
 const float STAT_USED_RELICS = 88;
 const float STAT_FOUND_RELICS = 89;
+const float STAT_TETHERTIME = 90;
+
 
 const float STAT_DARM = 93;
 const float STAT_RARM = 94;
@@ -245,7 +250,31 @@ float LE_HUB3 = 4194304;
 float LE_HUB4 = 8388608;
 
 .float centerprint_messages;
-
+/*
+1 = first artifact
+2 = first time to open inventory
+4 =  first soul tether
+8 =
+16 =
+32 = 
+64 =
+128 =
+256 =
+512 =
+1024 =
+2048 =
+4096 =
+8192 =
+16384 =
+32768  =
+65536 =
+131072 = 
+262144 =
+1048576 =
+2097152 =
+4194304 =  
+8388608 =
+*/
 float CENTERPRINT_A = 1;
 float CENTERPRINT_B = 2;
 float CENTERPRINT_C = 4;

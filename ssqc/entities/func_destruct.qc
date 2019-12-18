@@ -378,14 +378,47 @@ void() destruct_die = { float nsnd, rnsnd;
 	self.nextthink = time;	// + 55;
 };
 
-void() auto_triggerhurt_touch
+
+.float touch_smash;
+.float touch_smash_delay;
+
+void() func_destruct_touch =
 {
-	if ((other.classname == "monster_stricken") || (other.classname == "executioner"))
-	{
+
+	if(other.classname != "player")
+	return;
+	self.touch_smash = 0;
+	self.think = destruct_die;
+	self.nextthink = time + self.touch_smash_delay;
+};
+
+void() auto_triggerhurt_touch_think =
+{
 		T_Damage(self.owner, other, other, 120);	// its damage
 		remove(self);
+}
+
+void() auto_triggerhurt_touch =
+{
+	if(self.touch_smash & 2)
+	{
+		if (other.flags & FL_MONSTER)
+		{
+		self.touch_smash = 0;
+		self.think = auto_triggerhurt_touch_think ;
+		self.nextthink = time + self.touch_smash_delay;
+		}
+	}
+else
+	{
+		if ((other.classname == "monster_stricken") || (other.classname == "executioner"))
+		{
+			T_Damage(self.owner, other, other, 120);	// its damage
+			remove(self);
+		}
 	}
 };
+
 
 void() func_destruct = { precache_model("models/gibs/gib_stone1.bsp");
 	precache_model("models/gibs/gib_stone2.bsp");
@@ -490,16 +523,25 @@ void() func_destruct = { precache_model("models/gibs/gib_stone1.bsp");
 		self.takedamage = DAMAGE_YES;
 	self.use = destruct_die;
 	self.th_die = destruct_die;
-	if ((self.targetname) && (self.spawnflags &1))
+	if(self.touch_smash & 1)
+	self.touch = func_destruct_touch;
+	
+	if (((self.targetname) && (self.spawnflags &1)) || (self.touch_smash&2)) 
 	{
 		local entity auto_triggerhurt;
 		auto_triggerhurt = spawn();
 		self.autotrigger = auto_triggerhurt;
 		auto_triggerhurt.solid = SOLID_TRIGGER;
 		auto_triggerhurt.owner = self;
-		setsize(auto_triggerhurt, (self.absmin - ('20 20 0')), (self.absmax + ('20 20 1')));
+		auto_triggerhurt.touch_smash = self.touch_smash;
+		auto_triggerhurt.touch_smash_delay = self.touch_smash_delay;
+		if(self.touch_smash & 2)
+		setsize(auto_triggerhurt, (self.absmin - ('4 4 2')), (self.absmax + ('4 4 2')));
+		else
+		setsize(auto_triggerhurt, (self.absmin - ('20 20 2')), (self.absmax + ('20 20 2')));
 		auto_triggerhurt.touch = auto_triggerhurt_touch;
 	}
+	
 };
 
 void() rotate_stop = { if (self.noise2)

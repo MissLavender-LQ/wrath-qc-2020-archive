@@ -221,23 +221,37 @@ float	JB_H					= 128;
 
 			if (floor(attacker.health) <= 99)
 				sound7(attacker, CHAN_AUTO, "player/gain_health.ogg", 1, ATTN_NORM, 100, 1);
+			float health_gain;
 
-			if (attacker.health <= 95)
-				attacker.health += 5;
-			if (floor(attacker.health) == 96)
-				attacker.health += 4;
-			if (floor(attacker.health) == 97)
-				attacker.health += 3;
-			if (floor(attacker.health) == 98)
-				attacker.health += 2;
-			if (floor(attacker.health) == 99)
-				attacker.health += 1;
-
+			if (self.classname == "fallen")
+				health_gain = attacker.health + 5;
+			if (self.classname == "wraith")
+				health_gain = attacker.health + 5;
+			if (self.classname == "afflicted")
+				health_gain = attacker.health + 10;
+			if (self.classname == "widow")
+				health_gain = attacker.health + 10;
+			if (self.classname == "monster_invader")
+				health_gain = attacker.health + 10;
+			if (self.classname == "monster_heretic")
+				health_gain = attacker.health + 20;
+			if (self.classname == "executioner")
+				health_gain = attacker.health + 30;
+			if (self.classname == "monster_stricken")
+				health_gain = attacker.health + 30;
+			if(health_gain > 100)
+			health_gain = 100;			
+			
+			attacker.health = health_gain; 
 			life_siphon_effect(self.origin, self);
 
 		}
 	}
-
+	if (self.watertype == CONTENT_LAVA)	// do lava damage
+	{
+	self.effects = 0;
+	self.health = -9999;
+	}
 	self.th_die();
 	self.touch = SUB_Null;
 	monster_death_use();
@@ -275,11 +289,17 @@ void(entity targ, entity inflictor, entity attacker, float damage) T_Damage = { 
 
 	if (targ.classname == "player")
 	{
+		local float floatdmg;
 		if (skill == 0)
-			damage = damage *0.5;
+			floatdmg = damage *0.25;
 		if (skill == 1)
-			damage = damage *0.75;
-
+			floatdmg = damage *0.5;
+		if (skill == 2)
+			floatdmg = damage *0.75;
+		if (skill == 3)
+			floatdmg = damage *1;
+	
+		damage = floatdmg;
 	}
 
 	if (damage <= 0)

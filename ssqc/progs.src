@@ -5,7 +5,7 @@ dpextensions.qc
 ../shared.qc
 ../shared_menu.qc
 wrathdefs.qc
-player/playermovement.qc
+//player/sv_user.qc
 subroutines.qc
 main.qc                                             // Main subroutines
 gore.qc

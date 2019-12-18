@@ -249,6 +249,7 @@ void() Use_Func = { local vector source;
 		{
 			if (!(self.items &IT_KEY4))
 			{
+				Hud_message(37, other.origin, other);
 				sound(trace_ent, CHAN_VOICE, trace_ent.noise2, 1, 0.5);
 				return;
 			}
@@ -379,9 +380,10 @@ void() Use_Func = { local vector source;
 	{
 		if (trace_ent.keyrequired == 1)
 		{
-			if (!(self.items &IT_KEY1))
+			if (!(self.items &IT_KEY1))// red key
 			{
 				//	sound (trace_ent, CHAN_VOICE,"sound/misc/Door_Locked.wav", 1, 0.5);
+				Hud_message(38, self.origin, self);
 				return;
 			}
 
@@ -393,8 +395,9 @@ void() Use_Func = { local vector source;
 
 		if (trace_ent.keyrequired == 2)
 		{
-			if (!(self.items &IT_KEY2))
+			if (!(self.items &IT_KEY2)) // blue key
 			{
+				Hud_message(36, self.origin, self);
 				//	sound (trace_ent, CHAN_VOICE,"sound/misc/Door_Locked.wav", 1, 0.5);
 				return;
 			}
@@ -407,8 +410,9 @@ void() Use_Func = { local vector source;
 
 		if (trace_ent.keyrequired == 3)
 		{
-			if (!(self.items &IT_KEY3))
+			if (!(self.items &IT_KEY3)) // yellow
 			{
+				Hud_message(39, self.origin, self);
 				//	sound (trace_ent, CHAN_VOICE,"sound/misc/Door_Locked.wav", 1, 0.5);
 				return;
 			}
@@ -419,19 +423,19 @@ void() Use_Func = { local vector source;
 			//sound (trace_ent, CHAN_AUTO,"sound/misc/Door_Activated_Unlock.wav", 1, 0.5);
 		}
 
-		if (trace_ent.keyrequired == 4)
+		/*if (trace_ent.keyrequired == 4)
 		{
 			if (!(self.items &IT_KEY4))
 			{
 				sound(trace_ent, CHAN_VOICE, trace_ent.noise2, 1, 0.5);
-				Hud_message(109, self.origin, self);
+				Hud_message(37, self.origin, self);
 				return;
 			}
 			else
 				self.items -= IT_KEY4;
 			self.keyson.wrathflags -= FL_RESPAWN;
 		}
-
+		*/
 		trace_ent.duser = self;
 		trace_ent.think = door_puse;
 		trace_ent.nextthink = trace_ent.ltime + 0.01;

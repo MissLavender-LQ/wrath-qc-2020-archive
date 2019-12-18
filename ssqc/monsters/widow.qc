@@ -492,7 +492,7 @@ void() widow_diec5 =[$deathc5, widow_diec5]
 void() widow_die = { loop_widow_soundoff();
 	msound(self, CHAN_ITEM, "enemies/widow/run.ogg", 0, 0);
 
-	drop_item(self.origin + '0 0 0', "fangs", 10, self);
+	drop_item(self.origin - '0 0 12', "fangs", 10, self);
 	self.solid = 0;
 	if ((self.health < widod) || (self.gibbable))
 	{
