@@ -500,8 +500,9 @@ void() func_destruct = { precache_model("models/gibs/gib_stone1.bsp");
 
 	//self.origin = 0.5 *(self.absmax + self.absmin); 
 	self.angles = '0 0 0';
-	//	self.movetype = MOVETYPE_PUSH;	// so it doesn't get pushed by anything
 	self.solid = SOLID_BSP;
+	//self.movetype = MOVETYPE_PUSH;	// so it doesn't get pushed by anything
+	//setorigin (self, self.origin);
 	if (!self.base_scale)
 		self.base_scale = -1;
 	if (!self.volume)
@@ -525,7 +526,8 @@ void() func_destruct = { precache_model("models/gibs/gib_stone1.bsp");
 	self.th_die = destruct_die;
 	if(self.touch_smash & 1)
 	self.touch = func_destruct_touch;
-	
+	 self.fake_origin = (self.absmin + self.absmax) *0.5;
+	 
 	if (((self.targetname) && (self.spawnflags &1)) || (self.touch_smash&2)) 
 	{
 		local entity auto_triggerhurt;

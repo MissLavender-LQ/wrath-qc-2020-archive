@@ -14,72 +14,6 @@ vector(vector pos) relconsizex = { vector newpos;
 float(float a) nextslot;
 float(float a) prevslot;
 float oldmarkerposx;
-
-float firstslot;
-float lastslot;
-
-void() fl_slot = { float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9, slot10;
-	slot1 = 0;
-	slot2 = getstatf(STAT_RD_DA);
-	slot3 = 0;
-	slot4 = getstatf(STAT_RD_CA);
-	slot5 = 0;
-	slot6 = getstatf(STAT_RD_LS);
-	slot7 = 0;
-	slot8 = getstatf(STAT_RD_AE);
-	slot9 = 0;
-	slot10 = 0;
-	
-	
-
-	if (slot1 > 0)
-		firstslot = 1;
-	else if (slot2 > 0)
-		firstslot =  2;
-	else if (slot3 > 0)
-		firstslot =  3;
-	else if (slot4 > 0)
-		firstslot =  4;
-	else if (slot5 > 0)
-		firstslot =  5;
-	else if (slot6 > 0)
-		firstslot =  6;
-	else if (slot7 > 0)
-		firstslot =  7;
-	else if (slot8 > 0)
-		firstslot =  8;
-	else if (slot9 > 0)
-		firstslot =  9;
-	else if (slot10 > 0)
-		firstslot =  10;
-	else
-		firstslot =  0;
-
-	if (slot10 > 0)
-		lastslot = 10;
-	else if (slot9 > 0)
-		lastslot =  9;
-	else if (slot8 > 0)
-		lastslot =  8;
-	else if (slot7 > 0)
-		lastslot =  7;
-	else if (slot6 > 0)
-		lastslot =  6;
-	else if (slot5 > 0)
-		lastslot =  5;
-	else if (slot4 > 0)
-		lastslot =  4;
-	else if (slot3 > 0)
-		lastslot =  3;
-	else if (slot2 > 0)
-		lastslot =  2;
-	else if (slot1 > 0)
-		lastslot =  1;
-	else
-		lastslot =  0;
-
-};
-
 void() slot_icons = { float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9, slot10;
 	vector col1, col2, col3, col4, col5, col6, col7, col8, col9, col10;
 	slot1 = 0;
@@ -266,104 +200,239 @@ void() slot_icons = { float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slo
 		DImage2(real_r_ic10, "gfx/artifactmenu/artifactJ_icon.tga", 1 *rmenualpha, r_ic, col10, '40 40 0', radialflag);
 	}
 
-	vector relomp, align;
-	float ry = (vid_rwidth / vid_rheight);
+	vector relomp;
 
-	align_x = 240;
-	align_y = vid_height - 27;
-	vector v_ry;
-	v_ry_x = 12* ry;
-	real_r_ic1 += align- v_ry;
-	real_r_ic2 += align- v_ry;
-	real_r_ic3 += align- v_ry;
-	real_r_ic4 += align- v_ry;
-	real_r_ic5 += align- v_ry;
-	real_r_ic6 += align- v_ry;
-	real_r_ic7 += align- v_ry;
-	real_r_ic8 += align- v_ry;
-	real_r_ic9 += align- v_ry;
-	real_r_ic10 += align- v_ry;
-
-
-	relomp_x = (gomp_x);
+	relomp_x = (gomp_x) - ((vid_width / 2));
 	marker_pos_y = real_radialpos_y - 64;
 
+	/*if(relomp_x <= -75)
+	relomp_x  = 0;	
+	if(relomp_x >= 75)
+	relomp_x  = 0;	
+	*/
 
+	/*art_min_screen_width = (vid_width / 2) - 75;
+	art_max_screen_width = (vid_width / 2) + 75; */
 
-	fl_slot();
-	
-	marker_pos_x = relomp_x;
-	
-	if (firstslot < 6)
+	if ((gomp_x > ((vid_width / 2) - 20)) && (gomp_x < ((vid_width / 2) + 20)))
 	{
-		if((firstslot == 1) && (relomp_x <= real_r_ic1_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic1_x + 16 * ry;
-		if((firstslot == 2) && (relomp_x <= real_r_ic2_x+ 16 * ry))
-			marker_pos_x = real_r_ic2_x + 16 * ry;
-		if((firstslot == 3) && (relomp_x <= real_r_ic3_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic3_x + 16 * ry;
-		if((firstslot == 4) && (relomp_x <= real_r_ic4_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic4_x + 16 * ry;
-		if((firstslot == 5) && (relomp_x <= real_r_ic5_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic5_x + 16 * ry;
+		float rel_acelerator;
+		rel_acelerator = gomp_x - (vid_width / 2);
+		if (rel_acelerator < 0)
+			rel_acelerator = rel_acelerator *-1;
+		rel_acelerator = rel_acelerator / 20;
+		relomp_x = relomp_x * rel_acelerator;
 	}
-	else
-		if (relomp_x <= real_r_ic5_x + 48 * ry) 
-			marker_pos_x = real_r_ic5_x + 48 * ry;
-	
 
-	
-	if (lastslot > 5)
+	if (slotradialselected == prevslot(slotradialselected))
 	{
-		if((lastslot == 10) && (relomp_x >= real_r_ic10_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic10_x + 16 * ry;
-		if((lastslot == 9) && (relomp_x >= real_r_ic9_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic9_x + 16 * ry;
-		if((lastslot == 8) && (relomp_x >= real_r_ic8_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic8_x + 16 * ry;
-		if((lastslot == 7) && (relomp_x >= real_r_ic7_x+ 16 * ry))
-			marker_pos_x = real_r_ic7_x + 16 * ry;
-		if((lastslot == 6) && (relomp_x >= real_r_ic6_x+ 16 * ry)) 
-			marker_pos_x = real_r_ic6_x + 16 * ry;
+		if (gomp_x < (vid_width / 2))
+			relomp_x = 0;
 	}
-	else
-		if (relomp_x >= real_r_ic6_x + 1 * ry) 
-			marker_pos_x = real_r_ic6_x + 1 * ry;
-	
-	
-	if(((marker_pos_x >= real_r_ic1_x) && (marker_pos_x <real_r_ic1_x + 50* ry)) && (slot1))
-	slotradialselected = 1;
-	if(((marker_pos_x >= real_r_ic2_x) && (marker_pos_x <real_r_ic2_x + 50* ry)) && (slot2))
-	slotradialselected = 2;
-	if(((marker_pos_x >= real_r_ic3_x) && (marker_pos_x <real_r_ic3_x + 50* ry)) && (slot3))
-	slotradialselected = 3;
-	if(((marker_pos_x >= real_r_ic4_x) && (marker_pos_x <real_r_ic4_x + 50* ry)) && (slot4))
-	slotradialselected = 4;
-	if(((marker_pos_x >= real_r_ic5_x) && (marker_pos_x <real_r_ic5_x + 50* ry)) && (slot5))
-	slotradialselected = 5;
-	if(((marker_pos_x >= real_r_ic6_x) && (marker_pos_x <real_r_ic6_x + 50* ry)) && (slot6))
-	slotradialselected = 6;
-	if(((marker_pos_x >= real_r_ic7_x) && (marker_pos_x <real_r_ic7_x + 50* ry)) && (slot7))
-	slotradialselected = 7;
-	if(((marker_pos_x >= real_r_ic8_x) && (marker_pos_x <real_r_ic8_x + 50* ry)) && (slot8))
-	slotradialselected = 8;
-	if(((marker_pos_x >= real_r_ic9_x) && (marker_pos_x <real_r_ic9_x + 50* ry)) && (slot9))
-	slotradialselected = 9;
-	if(((marker_pos_x >= real_r_ic10_x) && (marker_pos_x <real_r_ic10_x + 50* ry)) && (slot10))
-	slotradialselected = 10;
-	
-		
-	if(firstslot)
-	DImage2(marker_pos - '240 0 0' , "gfx/artifactmenu/artifact_marker.tga", 1 *rmenualpha, r_ic, '1 1 1', '16 76 0', radialflag2);
-//	drawstring(gomp, "X", '20 20 0', '1 1 1', 1, 0);
+
+	if (nextslot(slotradialselected) == slotradialselected)
+	{
+		if (gomp_x > (vid_width / 2))
+			relomp_x = 0;
+	}
+
+	float rel_vel_marker;
+	float nexslot, preslot, vel_marker_addition;
+
+	rel_vel_marker = 1;
+
+	if (gomp_x >= (vid_width / 2))	// next slots speed 
+	{
+		nexslot = nextslot(slotradialselected);
+		if (nexslot != slotradialselected)
+		{
+			vel_marker_addition = (nexslot - slotradialselected) / 6;
+			if ((slotradialselected <= 5) && (nexslot >= 6))
+				vel_marker_addition += 1.25;
+		}
+	}
+
+	if (gomp_x < (vid_width / 2))	// prev slots speed 
+	{
+		preslot = prevslot(slotradialselected);
+		if (preslot != slotradialselected)
+		{
+			vel_marker_addition = (slotradialselected - preslot) / 6;
+			if ((slotradialselected >= 6) && (preslot <= 5))
+				vel_marker_addition += 1.25;
+		}
+	}
+
+	rel_vel_marker += vel_marker_addition;
+
+	if (relomp_x == (vid_width *-0.5))
+		relomp_x = oldmarkerposx;
+
+	if (slotradialselected == 11)
+		marker_pos_x = ((real_r_si5_x + real_r_si6_x) / 2) - 8 + relomp_x;
+	if (slotradialselected == 1)
+		marker_pos_x = real_r_si1_x + 16 + relomp_x;
+	if (slotradialselected == 2)
+		marker_pos_x = real_r_si2_x + 16 + (relomp_x *rel_vel_marker);
+	if (slotradialselected == 3)
+		marker_pos_x = real_r_si3_x + 16 + relomp_x;
+	if (slotradialselected == 4)
+		marker_pos_x = real_r_si4_x + 16 + (relomp_x *rel_vel_marker);
+	if (slotradialselected == 5)
+		marker_pos_x = real_r_si5_x + 16 + (relomp_x *rel_vel_marker);
+	if (slotradialselected == 6)
+		marker_pos_x = real_r_si6_x - 28 + (relomp_x *rel_vel_marker);
+	if (slotradialselected == 7)
+		marker_pos_x = real_r_si7_x - 28 + relomp_x;
+	if (slotradialselected == 8)
+		marker_pos_x = real_r_si8_x - 28 + (relomp_x *rel_vel_marker);
+	if (slotradialselected == 9)
+		marker_pos_x = real_r_si9_x - 28 + relomp_x;
+	if (slotradialselected == 10)
+		marker_pos_x = real_r_si10_x - 28 + relomp_x;
+
+	oldmarkerposx = relomp_x;
+	DImage2(marker_pos, "gfx/artifactmenu/artifact_marker.tga", 1 *rmenualpha, r_ic, '1 1 1', '16 76 0', radialflag2);
 
 };
+/*
+void(float my, float mx) change_slot =
+{
+	if (slotradialselected == 1) 
+	{
+		if (my ==1)
+		{
+			if (mx == 1)
+				slotradialselected = 2;
+			else
+				slotradialselected = 8;
+		}
+	}
+	else if (slotradialselected == 2) 
+	{
+		if ((mx ==1) && (my == -1))
+			slotradialselected = 1;
+		if ((mx == 1) && (my == -1))
+			slotradialselected = 3;
+	}
+	else if (slotradialselected == 3) 
+	{
+		if (mx ==1)
+		{
+			if (my == -1)
+				slotradialselected = 2;
+		}
+		else
+			slotradialselected = 4;
+	}
+	else if (slotradialselected == 4) 
+	{
+		if ((mx ==1) && (my == 1))
+			slotradialselected = 5;
+		if ((mx == -1) && (my == -1))
+			slotradialselected = 3;
+	}
+	else if (slotradialselected == 5) 
+	{
+		if (my ==-1)
+		{
+			if (mx == -1)
+			slotradialselected = 4;
+		}
+		else
+			slotradialselected = 6;
+	}
+	else if (slotradialselected == 6) 
+	{
+		if ((mx ==-1) && (my == 1))
+			slotradialselected = 5;
+		if ((mx == 1) && (my == -1))
+			slotradialselected = 7;
+	}
+	else if (slotradialselected == 7) 
+	{
+		if (mx ==-1)
+		{
+			if (my == -1)
+				slotradialselected = 8;
+		}
+		else
+			slotradialselected = 6;
+	}
+	else if (slotradialselected == 8) 
+	{
+		if ((mx ==1) && (my == 1))
+			slotradialselected = 7;
+		if ((mx == -1) && (my == -1))
+			slotradialselected = 1;
+	}  
+};
 
+void() mouse_pos_timer =
+{
+	float mousepos_x;
+	float mousepos_y;
+	vector omp;
+	omp = getmousepos();//;
+	if (omp_x <= 300)
+		mousepos_x = -1;
+	else if (omp_x >= 470)
+		mousepos_x = 1;
+	else
+	{
+		mousepos_x = 0;
+		return;
+	}
 
-float slot_timer;
-float(float cs) nextslot = { 
+	if (omp_y <= 60)
+		mousepos_y = 1;
+	else if (omp_y >= 270)
+		mousepos_y = -1;
+	else
+	{
+		mousepos_y = 0;
+		return;
+	}
 
-	mm = 0;
+	change_slot (mousepos_x, mousepos_y);
+};
+*/
+float() firstslot = { float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9, slot10;
+	slot1 = 0;
+	slot2 = getstatf(STAT_RD_DA);
+	slot3 = 0;
+	slot4 = getstatf(STAT_RD_CA);
+	slot5 = 0;
+	slot6 = getstatf(STAT_RD_LS);
+	slot7 = 0;
+	slot8 = getstatf(STAT_RD_AE);
+	slot9 = 0;
+	slot10 = 0;
+	if (slot1 > 0)
+		return 1;
+	else if (slot2 > 0)
+		return 2;
+	else if (slot3 > 0)
+		return 3;
+	else if (slot4 > 0)
+		return 4;
+	else if (slot5 > 0)
+		return 5;
+	else if (slot6 > 0)
+		return 6;
+	else if (slot7 > 0)
+		return 7;
+	else if (slot8 > 0)
+		return 8;
+	else if (slot9 > 0)
+		return 9;
+	else if (slot10 > 0)
+		return 10;
+	else
+		return 0;
+};
+
+float(float cs) nextslot = { mm = 0;
 	//restart_cursor();;
 	float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9, slot10;
 	slot1 = 0;
@@ -544,9 +613,7 @@ float(float cs) nextslot = {
 		return 1;
 };
 
-float(float cs) prevslot = { 
-
-	mm = 0;
+float(float cs) prevslot = { mm = 0;
 	//restart_cursor();;
 	float slot1, slot2, slot3, slot4, slot5, slot6, slot7, slot8, slot9, slot10;
 	slot1 = 0;
@@ -728,6 +795,9 @@ float(float cs) prevslot = {
 };
 float deathmatch;
 
+void() restart_cursor = { setcursormode(0);
+	gomp_x = vid_width / 2;
+};
 float inventory_active;
 void() ArtifactMenu = { vector vi;
 	vi = '220 -400 0';
@@ -780,9 +850,9 @@ void() ArtifactMenu = { vector vi;
 		art_min_screen_width = (vid_width / 2) - 75;
 		art_max_screen_width = (vid_width / 2) + 75;
 
-		if ((rmenualpha >= 1) && (inventory_active) && (slot_timer <= 0))
+		if ((rmenualpha >= 1) && (inventory_active))
 		{
-			/*if (slotradialselected == 1)
+			if (slotradialselected == 1)
 			{
 				if (relomp_x > art_max_screen_width)
 				{
@@ -803,15 +873,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 3)
@@ -819,15 +889,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 4)
@@ -835,16 +905,16 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
+					restart_cursor();
 					relomp_x = 0;
 					slotradialselected = prevslot(slotradialselected);
-					restart_cursor();
 				}
 			}
 			else if (slotradialselected == 5)
@@ -852,15 +922,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 6)
@@ -868,15 +938,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 7)
@@ -884,15 +954,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 8)
@@ -900,15 +970,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 9)
@@ -916,15 +986,15 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 10)
@@ -938,8 +1008,8 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
 			else if (slotradialselected == 11)
@@ -947,18 +1017,17 @@ void() ArtifactMenu = { vector vi;
 				if (relomp_x > art_max_screen_width)
 				{
 					mm = 0;
-					slotradialselected = nextslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = nextslot(slotradialselected);
 				}
 
 				if (relomp_x < art_min_screen_width)
 				{
 					mm = 0;
-					slotradialselected = prevslot(slotradialselected);
 					restart_cursor();
+					slotradialselected = prevslot(slotradialselected);
 				}
 			}
-			*/
 		}
 
 		//string pic_radial;
@@ -1006,3 +1075,46 @@ void() ArtifactMenu = { vector vi;
 	}
 };
 
+void() ArtifactMenu2 = { if (rmenualpha > 0)
+	{
+		if (!slotradialselected)
+		{
+			slotradialselected = firstslot();
+			if (deathmatch != 1)
+				localcmd("slowmo 0.1\n");
+			//localcmd("r_viewscale 0.125\n");
+		}
+
+		if (mm == 0)
+		{
+			setcursormode(1);
+			mm = 1;
+		}
+
+		vector r_radialpos;
+		r_radialpos = radialpos;
+		r_radialpos_x = r_radialpos_x - ((960 - vid_width) *0.5);
+		DImage2(r_radialpos, "gfx/artifactmenu/artifact_menu.tga", 1 *rmenualpha, 1, '1 1 1', '688 144 0', radialflag);
+	}
+
+	if (rmenualpha == 0)
+	{
+		//if ((oldslotradialselected > 0) && (oldslotradialselected < 9))
+		//{
+		//local string impulselected;
+		//impulselected = strcat ("impulse ", ftos(20 + slotradialselected),"\n"); 
+		//localcmd("slowmo 1\n");
+		//localcmd(impulselected);
+		//	oldslotradialselected = 10;
+		slotradialselected = 0;
+		mm = 0;
+		//}
+
+		//if (oldslotradialselected >= 10)
+		//{
+		slotradialselected = 0;
+		setcursormode(0);
+		//	oldslotradialselected = 0;
+		//}
+	}
+};

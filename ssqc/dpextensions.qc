@@ -245,7 +245,7 @@ float EF_DELTA = 8388608;
 //idea: LordHavoc
 //darkplaces implementation: LordHavoc
 //fields:
-//.entity exteriormodeltoclient;
+.entity exteriormodeltoclient;
 //description:
 //the entity is visible to all clients with one exception: if the specified client is using first person view (not using chase_active) the entity will not be shown.  Also if tag attachments are supported any entities attached to the player entity will not be drawn in first person.
 
@@ -624,7 +624,7 @@ float(float a) tan = #475; // returns tangent value (which is simply sin(a)/cos(
 //idea: LordHavoc
 //darkplaces implementation: LordHavoc
 //builtin definitions:
-//void(entity from, entity to) copyentity = #400;
+void(entity from, entity to) copyentity = #400;
 //description:
 //copies all data in the entity to another entity.
 
@@ -1664,7 +1664,7 @@ float MF_TRACER3 = 128; // purple trail
 //idea: LordHavoc
 //darkplaces implementation: LordHavoc
 //field definitions:
-//.entity nodrawtoclient;
+.entity nodrawtoclient;
 //description:
 //the entity is not visible to the specified client.
 
@@ -1719,7 +1719,9 @@ void(float effectnum, vector org, vector vel, float howmany) pointparticles = #3
 //engine-called QC prototypes:
 //void() SV_PlayerPhysics;
 //description:
-//.movement vector contains the movement input from the player, allowing QC to do as it wishs with the input, and SV_PlayerPhysics will completely replace the player physics if present (works for all MOVETYPE's), see darkplaces mod source for example of this function (in playermovement.qc, adds HalfLife ladders support, as well as acceleration/deceleration while airborn (rather than the quake sudden-stop while airborn), and simplifies the physics a bit)
+//.movement vector contains the movement input from the player, allowing QC to do as it wishs with the input, and SV_PlayerPhysics will completely
+//replace the player physics if present (works for all MOVETYPE's), see darkplaces mod source for example of this function (
+//in playermovement.qc, adds HalfLife ladders support, as well as acceleration/deceleration while airborn (rather than the quake sudden-stop while airborn), and simplifies the physics a bit)
 
 //DP_PHYSICS_ODE
 //idea: LordHavoc
@@ -1778,32 +1780,33 @@ const float FORCETYPE_TORQUE = 3;
 //   for a force:
 //     force vector to apply
 //field definitions:
-//.float  geomtype;     // see GEOMTYPE_*, a more correct way to set collision shape, allows to set SOLID_CORPSE and trimesh collisions
-//.float  maxcontacts;  // maximum number of contacts to make for this object, lesser = faster (but setting it too low will could make object pass though walls), default is 16, maximum is 32
-//.float  mass;         // ODE mass, standart value is 1
-//.vector massofs;      // offsets a mass center out of object center, if not set a center of model bounds is used
+.float  geomtype;     // see GEOMTYPE_*, a more correct way to set collision shape, allows to set SOLID_CORPSE and trimesh collisions
+.float  maxcontacts;  // maximum number of contacts to make for this object, lesser = faster (but setting it too low will could make object pass though walls), default is 16, maximum is 32
+.float  mass;         // ODE mass, standart value is 1
+.vector massofs;      // offsets a mass center out of object center, if not set a center of model bounds is used
 .float  friction;     // a friction of object, get multiplied by second objects's friction on contact
 .float  bouncefactor;
 .float  bouncestop; 
 
 
-/*
 
 
-//.float  jointtype;    // type of joint
-.//float  forcetype;    // type of force
-//.float  erp;          // error restitution parameter, makes ODE solver attempt to fix errors in contacts, 
+
+.float  jointtype;    // type of joint
+.float  forcetype;    // type of force
+.float  erp;          // error restitution parameter, makes ODE solver attempt to fix errors in contacts, 
                       // bringing together 2 joints or fixing object being stuch in other object, 
 			          // a value of 0.1 will fix slightly, a value of 1.0 attempts to fix whole error in one frame
 			          // use with care as high values makes system unstable and likely to explode
 //builtin definitions:
-//void(entity e, float physics_enabled) physics_enable = #540; // enable or disable physics on object
-//void(entity e, vector force, vector force_pos) physics_addforce = #541; 
+void(entity e, float physics_enabled) physics_enable = #540; // enable or disable physics on object
+void(entity e, vector force, vector force_pos) physics_addforce = #541; 
 // deprecated, apply a force from certain origin, length of force vector is power of force
-//void(entity e, vector torque) physics_addtorque = #542; // deprecated, add relative torque
+void(entity e, vector torque) physics_addtorque = #542; // deprecated, add relative torque
 //description: provides Open Dynamics Engine support, requires extenal dll to be present or engine compiled with statical link option
 //be sure to checkextension for it to know if library is loaded and ready, also to enable physics set "physics_ode" cvar to 1
 //note: this extension is highly experimental and may be unstable
+/*
 
 //DP_SV_PRINT
 //idea: id Software (QuakeWorld Server)
@@ -2710,4 +2713,5 @@ float(string fnold, string fnnew) frename = #651;
 float(string fname) fremove = #652;
 float(string filename) fexists = #653;
 float(string path) rmtree = #654;
+float (float yaw, float dist) walkmovedist = #655
 ///////////////end qc file

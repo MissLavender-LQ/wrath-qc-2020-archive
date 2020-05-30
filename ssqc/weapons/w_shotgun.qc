@@ -37,6 +37,38 @@ void() idle_shotgun = { if (self.playerdeadtime > time)
 	self.nextthink = time + 0.1;
 };
 
+vector() wall_velocity;
+.float oldspeed;
+.float nspeed;
+.float checkspeedtime;
+void() shot_projectile_think =
+{
+	if(self.solid != SOLID_BBOX)
+		self.solid = SOLID_BBOX;
+	if(self.cnt < 2)
+	self.cnt +=1;
+	if(self.cnt == 2)
+	self.traileffectnum = particleeffectnum("shottrail");
+
+	if(self.checkspeedtime < time)
+	{
+		float speed = vlen(self.velocity);
+		if(speed <= self.nspeed)
+		{
+			vector dir = normalize (self.angles);
+			self.velocity = dir * self.nspeed * 2;
+		}
+	self.checkspeedtime = time + 0.5;
+	}
+	if(self.velocity_z == 0)
+	self.velocity_z = random(-500, 500);
+
+	if((self.lifetime > time) && (self.count > 0))
+		self.think = shot_projectile_think;
+	else
+		self.think = SUB_Remove;
+	self.nextthink = time + 0.05;
+};
 .float alreadytouched1;
 .float alreadytouched2;
 .float alreadytouched3;
@@ -58,138 +90,19 @@ void() idle_shotgun = { if (self.playerdeadtime > time)
 .float alreadytouched19;
 .float alreadytouched20;
 .float alreadytoucher;
-
-vector() wall_velocity;
-void() shot_projectile_think = { local vector source;
-	local entity head;
-	source = self.origin;
-	head = findradius(source, 8);
-	local float dm;
-	dm = 1;
-	self.cnt += 1;
-	if (self.cnt == 2)
-		self.traileffectnum = particleeffectnum("shottrail");
-
-	while (head)
-	{
-		if ((head.takedamage) && (head != self.owner) && (head.health > 0) && ((head.solid == SOLID_SLIDEBOX) || (head.solid == SOLID_BBOX) || (head.solid == SOLID_BSP)))
-		{
-			if ((self.alreadytoucher == 1) && (head.alreadytouched1 > time)) dm = 0;
-			if ((self.alreadytoucher == 2) && (head.alreadytouched2 > time)) dm = 0;
-			if ((self.alreadytoucher == 3) && (head.alreadytouched3 > time)) dm = 0;
-			if ((self.alreadytoucher == 4) && (head.alreadytouched4 > time)) dm = 0;
-			if ((self.alreadytoucher == 5) && (head.alreadytouched5 > time)) dm = 0;
-			if ((self.alreadytoucher == 6) && (head.alreadytouched6 > time)) dm = 0;
-			if ((self.alreadytoucher == 7) && (head.alreadytouched7 > time)) dm = 0;
-			if ((self.alreadytoucher == 8) && (head.alreadytouched8 > time)) dm = 0;
-			if ((self.alreadytoucher == 9) && (head.alreadytouched9 > time)) dm = 0;
-			if ((self.alreadytoucher == 10) && (head.alreadytouched10 > time)) dm = 0;
-			if ((self.alreadytoucher == 11) && (head.alreadytouched11 > time)) dm = 0;
-			if ((self.alreadytoucher == 12) && (head.alreadytouched12 > time)) dm = 0;
-			if ((self.alreadytoucher == 13) && (head.alreadytouched13 > time)) dm = 0;
-			if ((self.alreadytoucher == 14) && (head.alreadytouched14 > time)) dm = 0;
-			if ((self.alreadytoucher == 15) && (head.alreadytouched15 > time)) dm = 0;
-			if ((self.alreadytoucher == 16) && (head.alreadytouched16 > time)) dm = 0;
-			if ((self.alreadytoucher == 17) && (head.alreadytouched17 > time)) dm = 0;
-			if ((self.alreadytoucher == 18) && (head.alreadytouched18 > time)) dm = 0;
-			if ((self.alreadytoucher == 19) && (head.alreadytouched19 > time)) dm = 0;
-			if ((self.alreadytoucher == 20) && (head.alreadytouched20 > time)) dm = 0;
-			if (dm == 1)
-			{
-				if (self.owner.classname == "player")
-					T_Damage(head, self, self.owner, 25);
-				else
-					T_Damage(head, self, self.owner, invader_ad);
-				if (head.solid == SOLID_SLIDEBOX)
-				{
-					local float r;
-					r = random();
-					if (r < 1)
-					{
-						if (other.classname == "afflicted")
-							explo_blood_sprite(3, source);
-						else if (other.classname == "wraith")
-							explo_blood_sprite(4, source);
-						else
-						{
-							if (r < 0.5)
-								explo_blood_sprite(1, source);
-							else
-								explo_blood_sprite(2, source);
-						}
-					}
-
-					local vector vel;
-					vel = wall_velocity() *0.2;
-					if (head.classname == "afflicted")
-						SpawnBlood(source, vel *0.2, 25, 2, 1);
-					else if (head.classname == "wraith")
-						SpawnBlood(source, vel *0.2, 25, 4, 1);
-					else
-						SpawnBlood(source, vel *0.2, 25, 1, 0);
-				}
-
-				if (self.alreadytoucher == 1)
-					head.alreadytouched1 = time + 0.1;
-				if (self.alreadytoucher == 2)
-					head.alreadytouched2 = time + 0.1;
-				if (self.alreadytoucher == 3)
-					head.alreadytouched3 = time + 0.1;
-				if (self.alreadytoucher == 4)
-					head.alreadytouched4 = time + 0.1;
-				if (self.alreadytoucher == 5)
-					head.alreadytouched5 = time + 0.1;
-				if (self.alreadytoucher == 6)
-					head.alreadytouched6 = time + 0.1;
-				if (self.alreadytoucher == 7)
-					head.alreadytouched7 = time + 0.1;
-				if (self.alreadytoucher == 8)
-					head.alreadytouched8 = time + 0.1;
-				if (self.alreadytoucher == 9)
-					head.alreadytouched9 = time + 0.1;
-				if (self.alreadytoucher == 10)
-					head.alreadytouched10 = time + 0.1;
-				if (self.alreadytoucher == 11)
-					head.alreadytouched11 = time + 0.1;
-				if (self.alreadytoucher == 12)
-					head.alreadytouched12 = time + 0.1;
-				if (self.alreadytoucher == 13)
-					head.alreadytouched13 = time + 0.1;
-				if (self.alreadytoucher == 14)
-					head.alreadytouched14 = time + 0.1;
-				if (self.alreadytoucher == 15)
-					head.alreadytouched15 = time + 0.1;
-				if (self.alreadytoucher == 16)
-					head.alreadytouched16 = time + 0.1;
-				if (self.alreadytoucher == 17)
-					head.alreadytouched17 = time + 0.1;
-				if (self.alreadytoucher == 18)
-					head.alreadytouched18 = time + 0.1;
-				if (self.alreadytoucher == 19)
-					head.alreadytouched19 = time + 0.1;
-				if (self.alreadytoucher == 20)
-					head.alreadytouched20 = time + 0.1;
-			}
-		}
-
-		head = head.chain;
-	}
-
-	if (self.cnt >= 500)
-		remove(self);
-	self.think = shot_projectile_think;
-	self.nextthink = time + 0.01;
-};
 .float waittime;
+.float copied;
 void(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) randomsound2;
 void() shotgun_proj_touch = { local vector org;
 	//self.velocity =	self.oldvelocity;
 
 	if (other == self.owner)
 		return;
+	if(self.count < 0)
+		remove(self);
 
-	//if (other.solid == SOLID_TRIGGER)
-	//	return;	// trigger field, do nothing
+	if (other.solid == SOLID_TRIGGER)
+	return;	// trigger field, do nothing
 
 	if (pointcontents(self.origin) == CONTENT_SKY)
 	{
@@ -199,39 +112,183 @@ void() shotgun_proj_touch = { local vector org;
 
 	if ((other == world) || (other.solid == SOLID_BSP))
 	{
-		org = self.origin;
+		self.count -= 1;
+		if(time > self.waittime)
+			randomsound2  ("impact/projectiles/rico",15,0.5, CHAN_WEAPON, 0, 0.25);
+		/*org = self.origin;
 		pointparticles(particleeffectnum("TE_GUNSHOT"), org, '0 0 0', 1);
 		local vector rvel;
 		rvel_x = crandom() *50;
 		rvel_y = crandom() *50;
 		rvel_z = crandom() *50;
 		self.angles = vectoangles(self.velocity);
-		//void(vector org, string locsound, float rnd, float vol)
-		self.count -= 1;
+		void(vector org, string locsound, float rnd, float vol)
+		*/
 	}
+	float dm = 1;
+	if((self.alreadytoucher == 1) && (other.alreadytouched1 > time))dm = 0;
+	if((self.alreadytoucher == 2) && (other.alreadytouched2 > time))dm = 0;
+	if((self.alreadytoucher == 3) && (other.alreadytouched3 > time))dm = 0;
+	if((self.alreadytoucher == 4) && (other.alreadytouched4 > time))dm = 0;
+	if((self.alreadytoucher == 5) && (other.alreadytouched5 > time))dm = 0;
+	if((self.alreadytoucher == 6) && (other.alreadytouched6 > time))dm = 0;
+	if((self.alreadytoucher == 7) && (other.alreadytouched7 > time))dm = 0;
+	if((self.alreadytoucher == 8) && (other.alreadytouched8 > time))dm = 0;
+	if((self.alreadytoucher == 9) && (other.alreadytouched9 > time))dm = 0;
+	if((self.alreadytoucher == 10) && (other.alreadytouched10 > time))dm = 0;
+	if((self.alreadytoucher == 11) && (other.alreadytouched11 > time))dm = 0;
+	if((self.alreadytoucher == 12) && (other.alreadytouched12 > time))dm = 0;
+	if((self.alreadytoucher == 13) && (other.alreadytouched13 > time))dm = 0;
+	if((self.alreadytoucher == 14) && (other.alreadytouched14 > time))dm = 0;
+	if((self.alreadytoucher == 15) && (other.alreadytouched15 > time))dm = 0;
+	if((self.alreadytoucher == 16) && (other.alreadytouched16 > time))dm = 0;
+	if((self.alreadytoucher == 17) && (other.alreadytouched17 > time))dm = 0;
+	if((self.alreadytoucher == 18) && (other.alreadytouched18 > time))dm = 0;
+	if((self.alreadytoucher == 19) && (other.alreadytouched19 > time))dm = 0;
+	if((self.alreadytoucher == 20) && (other.alreadytouched20 > time))dm = 0;	
+	if (other.takedamage) 
+	{
+		if(self.alreadytoucher == 1)
+			other.alreadytouched1 = time + 0.1;
+		if(self.alreadytoucher == 2)
+			other.alreadytouched2 = time + 0.1;
+		if(self.alreadytoucher == 3)
+			other.alreadytouched3 = time + 0.1;
+		if(self.alreadytoucher == 4)
+			other.alreadytouched4 = time + 0.1;
+		if(self.alreadytoucher == 5)
+			other.alreadytouched5 = time + 0.1;
+		if(self.alreadytoucher == 6)
+			other.alreadytouched6 = time + 0.1;
+		if(self.alreadytoucher == 7)
+			other.alreadytouched7 = time + 0.1;
+		if(self.alreadytoucher == 8)
+			other.alreadytouched8 = time + 0.1;
+		if(self.alreadytoucher == 9)
+			other.alreadytouched9 = time + 0.1;
+		if(self.alreadytoucher == 10)
+			other.alreadytouched10 = time + 0.1;
+		if(self.alreadytoucher == 11)
+			other.alreadytouched11 = time + 0.1;
+		if(self.alreadytoucher == 12)
+			other.alreadytouched12 = time + 0.1;
+		if(self.alreadytoucher == 13)
+			other.alreadytouched13 = time + 0.1;
+		if(self.alreadytoucher == 14)
+			other.alreadytouched14 = time + 0.1;
+		if(self.alreadytoucher == 15)
+			other.alreadytouched15 = time + 0.1;
+		if(self.alreadytoucher == 16)
+			other.alreadytouched16 = time + 0.1;
+		if(self.alreadytoucher == 17)
+			other.alreadytouched17 = time + 0.1;
+		if(self.alreadytoucher == 18)
+			other.alreadytouched18 = time + 0.1;
+		if(self.alreadytoucher == 19)
+			other.alreadytouched19 = time + 0.1;
+		if(self.alreadytoucher == 20)
+			other.alreadytouched20 = time + 0.1;
+		if (other.flags &FL_MONSTER)
+		{
 	
-	if(time > self.waittime)
-	randomsound2  ("impact/projectiles/rico",15,0.5, CHAN_AUTO, 0, 0.25);
-//(string locsound, float rnd, float vol, float nchannel, float iswav, float atten) 
-	if ((self.owner.classname != "player") && (other.classname != "projectile"))
-		remove(self);
+			if (other.classname == "monster_afflicted")
+				spawn_touchblood2(9, 2);
+			else if (other.classname == "monster_wraith")
+				spawn_touchblood2(9, 4);
+			else if (other.classname != "monster_oppressor")
+				spawn_touchblood2(9, 1);
 
-	if (self.count <= 0)
-		remove(self);
+			local float r;
+			r = random();
+			if (r < 1)
+			{
+				if (other.classname == "monster_afflicted")
+					explo_blood_sprite(3, org);
+				else if (other.classname == "monster_oppressor")
+					spawn_touchblood2(9, 5);
+				else if (other.classname == "monster_wraith")
+					explo_blood_sprite(4, org);
+				else
+				{
+					if (r < 0.5)
+						explo_blood_sprite(1, org);
+					else
+						explo_blood_sprite(2, org);
+				}
+			}
+		}
+		if (self.owner.weapon == IT_SHOTGUN)
+			T_Damage(other, self, self.owner, 25 * dm);
+		else
+		{	
+		if(other.classname == "player")
+			T_Damage(other, self, self.owner,self.owner.coachgun_damage2_mp * dm);
+		else
+			T_Damage(other, self, self.owner,self.owner.coachgun_damage2 * dm);
+		}
+		entity bullet_clone = spawn();
+		if(!self.copied)
+		{
+		copyentity(self,bullet_clone);
+		self.copied = 1;
+		}
+		bullet_clone.solid = SOLID_TRIGGER;
+		self.movetype = 0;
+		setmodel (self,"");
+		self.touch = SUB_Null;
+		self.velocity = '0 0 0';
+		self.solid = 0;
+		self.traileffectnum = particleeffectnum("null");
+		self.think = SUB_Remove;
+		self.nextthink = time + 0.5;
+	}			
 };
-
+void(vector org, vector dir, float order, entity ownerproj) launch_projectile_coachgun =
+{
+	local entity shotgun_proj;
+	shotgun_proj = spawn ();
+	shotgun_proj.owner = ownerproj;
+	shotgun_proj.movetype = MOVETYPE_BOUNCEMISSILE;
+	shotgun_proj.solid = SOLID_BBOX;
+	shotgun_proj.count = 3;
+	shotgun_proj.angles = vectoangles(dir);
+	shotgun_proj.touch = shotgun_proj_touch;
+	shotgun_proj.alreadytoucher = order;// counter of touchs
+	shotgun_proj.classname = "projectile";
+	shotgun_proj.lifetime = time + 5;
+	shotgun_proj.think = shot_projectile_think;
+	shotgun_proj.nextthink = time;
+	setmodel (shotgun_proj, "models/projectiles/proj_shrapnel.md3");
+	setsize (shotgun_proj, '0 0 0', '0 0 0');
+	if(ownerproj.classname == "player")
+	makevectors(ownerproj.v_angle);
+	else
+	makevectors(ownerproj.angles);
+	
+	//org -=v_forward*order ;
+	setorigin (shotgun_proj, org);
+	local vector rvec;
+	rvec_x += ownerproj.coachgun_spread2 * 0.25;
+	rvec_y += ownerproj.coachgun_spread2 * 0.25;
+	rvec = crandom()*(rvec_x )*v_right + crandom()*(rvec_y)*v_up;
+	dir += rvec;
+	shotgun_proj.velocity = dir * (coach_proj_vel +(25 * order));
+	shotgun_proj.oldvelocity = shotgun_proj.velocity;
+	shotgun_proj.nspeed = (coach_proj_vel +(25 * order));
+};
 void(vector org, vector dir, float order, entity ownerproj) launch_projectile = { local entity shotgun_proj;
 	shotgun_proj = spawn();
 	shotgun_proj.owner = ownerproj;
 	shotgun_proj.movetype = MOVETYPE_BOUNCEMISSILE;
-	shotgun_proj.solid = SOLID_TRIGGER;
+	shotgun_proj.solid = SOLID_BBOX;
 	shotgun_proj.count = 3;
+	shotgun_proj.alreadytoucher = order;// counter of touchs
 	shotgun_proj.angles = vectoangles(dir);
-	shotgun_proj.alreadytoucher = order;	// counter of touchs
 	shotgun_proj.touch = shotgun_proj_touch;
 	shotgun_proj.classname = "projectile";
-	shotgun_proj.waittime =  time + 0.05;
+	shotgun_proj.waittime =  time + 0.2;
 	shotgun_proj.think = shot_projectile_think;
+	shotgun_proj.lifetime = time + 5;
 	shotgun_proj.nextthink = time;
 	setmodel(shotgun_proj, "models/projectiles/proj_shrapnel.md3");
 	setsize(shotgun_proj, '0 0 0', '0 0 0');
@@ -249,6 +306,7 @@ void(vector org, vector dir, float order, entity ownerproj) launch_projectile = 
 	dir += rvec;
 	shotgun_proj.velocity = dir *(1000 + (2.5 *order));
 	shotgun_proj.oldvelocity = shotgun_proj.velocity;
+	shotgun_proj.nspeed = (1000 + (2.5 *order));
 };
 .float rsound_cntr;
 void()launch_projectiles_explosion =
@@ -302,9 +360,9 @@ void()shotgun_projectile_touch =
 	{
 			if (other.flags &FL_MONSTER)
 		{
-			if (other.classname == "afflicted")
+			if (other.classname == "monster_afflicted")
 				spawn_touchblood2(9, 2);
-			else if (other.classname == "wraith")
+			else if (other.classname == "monster_wraith")
 				spawn_touchblood2(9, 4);
 			else
 				spawn_touchblood2(9, 1);
@@ -313,9 +371,9 @@ void()shotgun_projectile_touch =
 			r = random();
 			if (r < 1)
 			{
-				if (other.classname == "afflicted")
+				if (other.classname == "monster_afflicted")
 					explo_blood_sprite(3, org);
-				else if (other.classname == "wraith")
+				else if (other.classname == "monster_wraith")
 					explo_blood_sprite(4, org);
 				else
 				{
@@ -327,7 +385,10 @@ void()shotgun_projectile_touch =
 			}
 		}
 		
-	T_Damage(other, self, self.owner, self.owner.shotgun_proj_dmg);
+	if(other.classname == "player")
+		T_Damage(other, self, self.owner, self.owner.shotgun_proj_dmg_mp);
+	else
+		T_Damage(other, self, self.owner, self.owner.shotgun_proj_dmg);
 	self.count = 1;
 	}
 	alreadyrandomsound2  ("impact/projectiles/shotgun_explo",1, CHAN_AUTO, 0, 0.25);
@@ -372,10 +433,14 @@ void() shotgun_projectile_drunk = { self.explodcount += 1;
 
 .float time_piston;
 
-void() wfire_shotgunempty1 = { self.empty_shells = 1;
+void() wfire_shotgunempty1 = { 
+
+	float centered_frames;
+	if(self.centered == 1)	centered_frames = 100;	
+	self.empty_shells = 1;
 	self.vweaponframe += 1;
 	self.shotgun_fire1 = 1;
-	if (self.vweaponframe == 113)
+	if (self.vweaponframe == 113 + centered_frames)
 	{
 		local vector dir;
 		self.vweaponglowmod = '0.9 0.9 0.9';
@@ -401,7 +466,7 @@ void() wfire_shotgunempty1 = { self.empty_shells = 1;
 		muzzle.nextthink = time + 0.05;
 	}
 
-	if ((self.vweaponframe > 114) && (self.vweaponglowmod_x > 0))
+	if ((self.vweaponframe > 114 + centered_frames) && (self.vweaponglowmod_x > 0))
 	{
 		self.realoding = 1;
 		self.timezoomframe = time + 0.05;
@@ -413,7 +478,7 @@ void() wfire_shotgunempty1 = { self.empty_shells = 1;
 	//		if(self.vweaponframe == 123)
 	//		sound(self,CHAN_WEAPON,"misc/null.wav",1,1);
 
-	if (self.vweaponframe >= 130)
+	if (self.vweaponframe >= 130 + centered_frames)
 	{
 		self.shotgun_fire1 = 0;
 		self.think = idle_shotgun;
@@ -425,8 +490,11 @@ void() wfire_shotgunempty1 = { self.empty_shells = 1;
 void() wsfire_shotgunempty1 = { self.empty_shells = 1;
 
 	self.vweaponframe += 1;
-
-	if (self.vweaponframe == 113)
+	float centered_frames;
+	if(self.centered == 1)	centered_frames = 100;	
+	
+	
+	if ((self.vweaponframe == 113) || ((self.centered == 1) && (self.vweaponframe == 213)))
 	{
 		local vector dir, tagorg;
 		local float tagindex;
@@ -520,7 +588,7 @@ void() wsfire_shotgunempty1 = { self.empty_shells = 1;
 
 	}
 
-	if ((self.vweaponframe > 113) && (self.vweaponglowmod_x > 0))
+	if ((self.vweaponframe > 113 + centered_frames) && (self.vweaponglowmod_x > 0))
 	{
 		self.realoding = 1;
 		self.timezoomframe = time + 0.05;
@@ -529,26 +597,32 @@ void() wsfire_shotgunempty1 = { self.empty_shells = 1;
 		self.vweaponglowmod_z -= 0.1;
 	}
 
-	if (self.vweaponframe == 116)
+	if (self.vweaponframe == 116 + centered_frames)
 		self.timezoom = time + self.shotgun_time1 / 2;
 
 	//	if(self.vweaponframe == 123)
 	//		sound(self,CHAN_WEAPON,"misc/null.wav",1,1);
 
-	if (self.vweaponframe == 130)
+	if (self.vweaponframe == 130+ centered_frames)
 	{
 		self.time_piston = time + 0.15;
 		self.shotgun_fire1 = 0;
 		self.timezoomframe = time;
 		self.think = idle_shotgun;
 	}
+	else
+	self.think = wsfire_shotgunempty1;
 
 	self.nextthink = time + 0.05;
 };
 
 void() wsfire_shotgun1 = { self.vweaponframe += 1;
+
+	float centered_frames;
 
-	if (self.vweaponframe == 43)
+
+	if(self.centered == 1)	centered_frames = 131;	
+	if (self.vweaponframe == 43 + centered_frames)
 	{
 		local vector dir, tagorg;
 		local float tagindex;
@@ -641,7 +715,7 @@ void() wsfire_shotgun1 = { self.vweaponframe += 1;
 
 	}
 
-	if ((self.vweaponframe > 43) && (self.vweaponglowmod_x > 0))
+	if ((self.vweaponframe > 43 + centered_frames) && (self.vweaponglowmod_x > 0))
 	{
 		self.realoding = 1;
 		self.timezoomframe = time + 0.05;
@@ -650,11 +724,11 @@ void() wsfire_shotgun1 = { self.vweaponframe += 1;
 		self.vweaponglowmod_z -= 0.1;
 	}
 
-	if (self.vweaponframe == 56)
+	if (self.vweaponframe == 56 + centered_frames)
 		self.timezoom = time + self.shotgun_time1 / 2;
-	if (self.vweaponframe >= 56)
+	if (self.vweaponframe >= 56 + centered_frames)
 		self.shotgun_clip = 2;
-	if (self.vweaponframe == 81)
+	if (self.vweaponframe == 81 + centered_frames)
 	{
 		if (!self.button3)
 			sound(self, CHAN_WEAPON, "weapons/shotgun/piston_out.ogg", 1, ATTN_NORM);
@@ -663,11 +737,12 @@ void() wsfire_shotgun1 = { self.vweaponframe += 1;
 
 	}
 
-	if (self.vweaponframe >= 82)
+	if (self.vweaponframe >= 82 + centered_frames)
 	{
 		self.shotgun_fire1 = 0;
 		self.timezoomframe = time;
 		self.think = idle_shotgun;
+		self.vweaponframe = 0;
 	}
 	else
 		self.think = wsfire_shotgun1;
@@ -677,7 +752,10 @@ void() wsfire_shotgun1 = { self.vweaponframe += 1;
 
 void() wfire_shotgun1 = { self.vweaponframe += 1;
 	self.shotgun_fire1 = 1;
-	if (self.vweaponframe == 3)
+	
+	float centered_frames;
+	if(self.centered == 1)	centered_frames = 131;	
+	if (self.vweaponframe == 3 + centered_frames)
 	{
 		local vector dir;
 		self.vweaponglowmod = '0.9 0.9 0.9';
@@ -703,7 +781,7 @@ void() wfire_shotgun1 = { self.vweaponframe += 1;
 		muzzle.nextthink = time + 0.05;
 	}
 
-	if ((self.vweaponframe > 4) && (self.vweaponglowmod_x > 0))
+	if ((self.vweaponframe > 4 + centered_frames) && (self.vweaponglowmod_x > 0))
 	{
 		self.realoding = 1;
 		self.timezoomframe = time + 0.05;
@@ -717,11 +795,11 @@ void() wfire_shotgun1 = { self.vweaponframe += 1;
 	//		self.timezoom = time + self.shotgun_time1 /2;
 	//	}
 
-	if (self.vweaponframe >= 15)
+	if (self.vweaponframe >= 15 + centered_frames)
 		self.shotgun_clip = 2;
 	//	if(self.vweaponframe == 40)
 	//	self.timezoomframe = time;
-	if (self.vweaponframe >= 41)
+	if (self.vweaponframe >= 41 + centered_frames)
 	{
 		self.shotgun_fire1 = 0;
 		self.think = idle_shotgun;
@@ -731,7 +809,13 @@ void() wfire_shotgun1 = { self.vweaponframe += 1;
 	self.nextthink = time + 0.05;
 };
 
-void() wsfire_shotgunwait = { if (!self.button3)
+void() wsfire_shotgunwait = {
+	float centered_frames,centered_framesb;
+	if(self.centered == 1)	
+	{
+	centered_frames = 131; 
+	centered_framesb = 100; 	}
+	if (!self.button3)
 	{
 		self.think = idle_shotgun;
 		sound(self, CHAN_WEAPON, "weapons/shotgun/piston_out.ogg", 1, ATTN_NORM);
@@ -740,18 +824,18 @@ void() wsfire_shotgunwait = { if (!self.button3)
 	else
 	{
 		self.vweaponframe += 1;
-		if (self.vweaponframe == 102)
+		if (self.vweaponframe == 102 )
 		{
 			if (self.ammo_shotgun <= 2)
 			{
-				self.vweaponframe = 112;
+				self.vweaponframe = 112 + centered_framesb;
 				wsfire_shotgunempty1();
 				return;
 			}
 
 			if (self.ammo_shotgun > 2)
 			{
-				self.vweaponframe = 42;
+				self.vweaponframe = 42 + centered_frames;
 				wsfire_shotgun1();
 				return;
 			}
@@ -762,15 +846,26 @@ void() wsfire_shotgunwait = { if (!self.button3)
 
 	self.nextthink = time + 0.05;
 };
-void() wsfire_shotgun = { if (time > self.time_piston)
+void() wsfire_shotgun = {
+
+	float centered_frames;
+	if(self.centered == 1)	centered_frames = 0;
+ if (time > self.time_piston)
 		sound(self, CHAN_AUTO, "weapons/shotgun/piston_in.ogg", 1, ATTN_NORM);
 	sound(self, CHAN_WEAPON, "weapons/shotgun/charge.ogg", 1, ATTN_NORM);
-	self.vweaponframe = 82;
+	self.vweaponframe = 82 + centered_frames;
 	self.think = wsfire_shotgunwait;
 	self.nextthink = time + 0.05;
 };
 
-void() wfire_shotgun = { if ((self.vweaponglowmod_x > 0) && (self.vweaponglowmod_x < 1))
+void() wfire_shotgun = { 
+
+	float centered_frames,centered_framesb;
+	if(self.centered == 1)	
+	{
+	centered_frames = 131; 
+	centered_framesb = 100; 	}
+	if ((self.vweaponglowmod_x > 0) && (self.vweaponglowmod_x < 1))
 	{
 		self.attack_finished = time + 0.05;
 		return;
@@ -782,12 +877,12 @@ void() wfire_shotgun = { if ((self.vweaponglowmod_x > 0) && (self.vweaponglowmod
 			self.vweaponglowmod = '0.5 0.5 0.5';
 		if (self.ammo_shotgun > 2)
 		{
-			self.vweaponframe = 2;
+			self.vweaponframe = 2+ centered_frames ;
 			self.think = wfire_shotgun1;
 		}
 		else
 		{
-			self.vweaponframe = 112;
+			self.vweaponframe = 112+ centered_framesb;
 			self.think = wfire_shotgunempty1;
 		}
 	}

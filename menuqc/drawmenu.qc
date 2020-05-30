@@ -1,4 +1,5 @@
- float menuversion = 1.127;
+ float menuversion = 1.27;
+float smallbuttons;
 
  void() m_display;
  float pausesound;
@@ -94,9 +95,9 @@ void()write_totalprofileslot_updatedversion;
  	// add some mouse acceleration 
 
  	local float mousesen;
- 	mousesen = cvar("sensitivity");
- 	raw_mouse_x = raw_mouse_x *mousesen *0.5;	//pow(vlen(raw_mouse), mousesen);
- 	raw_mouse_y = raw_mouse_y *mousesen *0.5;
+ 	mousesen = cvar("saved5") + 0.1;
+ 	raw_mouse_x = raw_mouse_x *mousesen *5;	//pow(vlen(raw_mouse), mousesen);
+ 	raw_mouse_y = raw_mouse_y *mousesen *5;
  	mouse_pos += raw_mouse;
  	if (mouse_pos_x < 0)
  		mouse_pos_x = 0;
@@ -383,6 +384,21 @@ void()write_totalprofileslot_updatedversion;
  	cmd(strcat("vid_conheight ", consize_h, " \n"));
  	cmd(strcat("vid_conwidth ", consize_w, " \n"));
 
+	float checked1;
+ 	checked1 = cvar("saved2");
+ 	if(!checked1)
+ 		cmd("gl_texturemode gl_nearest\n");
+ 	if(checked1 == 1)
+ 		cmd("gl_texturemode gl_nearest_mipmap_linear\n");
+ 	if(checked1 == 2)
+ 		cmd("gl_texturemode gl_linear_mipmap_linear\n");		
+	float checked2;
+ 	checked2 = cvar("saved7");
+ 	if (checked2 == 2)
+ 		cmd("cl_rollangle 2\n");
+ 	else
+ 		cmd("cl_rollangle 0\n");
+			
  	cmd("set cvar_restoregame 0\n");
  	cmd("scratch3 0\n");
  	refresh_mouse();
@@ -453,196 +469,6 @@ float mouse1_held;
  	cmd(strcat("vid_conwidth ", consize_w, " \n"));
  	refresh_mouse();
  };
- void(float local_option) order_fill = { 
-
- 	switch (local_option)
- 	{
-		 		case 101:
- 			string sens, sensv;
- 			float senv;
- 			if (senm > 1)
- 				senv = senm - 0.1;
- 			else
- 				senv = 1;
- 			sensv = ftos(senv);
- 			sens = strcat("sensitivity ", sensv, " \n");
- 			cmd(sens);
- 			break;
- 		case 102:
- 			if (senm < 10)
- 				senv = senm + 0.1;
- 			else
- 				senv = 10;
- 			sensv = ftos(senv);
- 			sens = strcat("sensitivity ", sensv, " \n");
- 			cmd(sens);
- 			break;
-
- 		case 103:
- 			string acels, acelsv;
- 			float acelv;
- 			if (acel > 0)
- 				acelv = acel - 0.1;
- 			else
- 				acelv = 0;
- 			acelsv = ftos(acelv);
- 			acels = strcat("m_accelerate ", acelsv, " \n");
- 			cmd(acels);
- 			break;
- 		case 104:
- 			if (acel < 10)
- 				acelv = acel + 0.1;
- 			else
- 				acelv = 10;
- 			acelsv = ftos(acelv);
- 			acels = strcat("m_accelerate ", acelsv, " \n");
- 			cmd(acels);
- 			break;
-
- 			//////////// VOLUME BUTTONS
- 		case 201:
- 			string mvolumes, mvolumesv;
- 			float mvolumev;
- 			if (mvol >= 0.05)
- 				mvolumev = mvol - 0.05;
- 			else
- 				mvolumev = 0;
- 			mvolumesv = ftos(mvolumev);
- 			mvolumes = strcat("mastervolume ", mvolumesv, " \n");
- 			cmd(mvolumes);
- 			break;
- 		case 202:
- 			if (mvol < 1)
- 				mvolumev = mvol + 0.05;
- 			else
- 				mvolumev = 1;
- 			mvolumesv = ftos(mvolumev);
- 			mvolumes = strcat("mastervolume ", mvolumesv, " \n");
- 			cmd(mvolumes);
- 			break;
- 		case 203:
- 			string effvolumes, effvolumesv;
- 			float effvolumev;
- 			if (effvol >= 0.05)
- 				effvolumev = effvol - 0.05;
- 			else
- 				effvolumev = 0;
- 			effvolumesv = ftos(effvolumev);
- 			effvolumes = strcat("volume ", effvolumesv, " \n");
- 			cmd(effvolumes);
- 			break;
- 		case 204:
- 			if (effvol < 1)
- 				effvolumev = effvol + 0.05;
- 			else
- 				effvolumev = 1;
- 			effvolumesv = ftos(effvolumev);
- 			effvolumes = strcat("volume ", effvolumesv, " \n");
- 			cmd(effvolumes);
- 			break;
- 		case 205:
- 			string bgmvolumes, bgmvolumesv;
- 			float bgmvolumev;
- 			if (bgmvol >= 0.05)
- 				bgmvolumev = bgmvol - 0.05;
- 			else
- 				bgmvolumev = 0;
- 			bgmvolumesv = ftos(bgmvolumev);
- 			bgmvolumes = strcat("bgmvolume ", bgmvolumesv, " \n");
- 			cmd(bgmvolumes);
- 			break;
- 		case 206:
- 			if (bgmvol < 1)
- 				bgmvolumev = bgmvol + 0.05;
- 			else
- 				bgmvolumev = 1;
- 			bgmvolumesv = ftos(bgmvolumev);
- 			bgmvolumes = strcat("bgmvolume ", bgmvolumesv, " \n");
- 			cmd(bgmvolumes);
- 			break;
- 		case 291:
- 			string bright_s, bright_c;
- 			float bright_f;
- 			if (brightlev > 0.05)
- 				bright_f = brightlev - 0.05;
- 			else
- 				bright_f = 0;
- 			bright_s = ftos(bright_f);
- 			bright_c = strcat("r_hdr_scenebrightness ", bright_s, " \n");
- 			cmd(bright_c);
- 			break;
- 		case 292:
- 			if (brightlev < 2)
- 				bright_f = brightlev + 0.05;
- 			else
- 				bright_f = 2;
- 			bright_s = ftos(bright_f);
- 			bright_c = strcat("r_hdr_scenebrightness ", bright_s, " \n");
- 			cmd(bright_c);
- 			break;
- 		case 293:
- 			string gamma_s, gamma_c;
- 			float gamma_f;
- 			if (gammalev > 0.15)
- 				gamma_f = gammalev - 0.05;
- 			else
- 				gamma_f = 0.1;
- 			gamma_s = ftos(gamma_f);
- 			gamma_c = strcat("v_gamma ", gamma_s, " \n");
- 			cmd(gamma_c);
- 			break;
- 		case 294:
- 			if (gammalev < 2)
- 				gamma_f = gammalev + 0.05;
- 			else
- 				gamma_f = 2;
- 			gamma_s = ftos(gamma_f);
- 			gamma_c = strcat("v_gamma ", gamma_s, " \n");
- 			cmd(gamma_c);
- 			break;
- 		case 295:
- 			string cont_s, cont_c;
- 			float cont_f;
- 			if (contlev > 0.2)
- 				cont_f = contlev - 0.2;
- 			else
- 				cont_f = 0.2;
- 			cont_s = ftos(cont_f);
- 			cont_c = strcat("v_contrast ", cont_s, " \n");
- 			cmd(cont_c);
- 			break;
- 		case 296:
- 			if (contlev < 2)
- 				cont_f = contlev + 0.05;
- 			else
- 				cont_f = 2;
- 			cont_s = ftos(cont_f);
- 			cont_c = strcat("v_contrast ", cont_s, " \n");
- 			cmd(cont_c);
- 			break;
- 			//////////// VIDEO BUTTONS
-			case 297:
- 			string fov_s, fov_c;
- 			float fov_f;
- 			if (fovlev > 80)
- 				fov_f = fovlev - 1;
- 			else
- 				fov_f = 80;
- 			fov_s = ftos(fov_f);
- 			fov_c = strcat("fov ", fov_s, " \n");
- 			cmd(fov_c);
- 			break;
- 		case 298:
- 			if (fovlev < 120)
- 				fov_f = fovlev + 1;
- 			else
- 				fov_f = 120;
- 			fov_s = ftos(fov_f);
- 			fov_c = strcat("fov ", fov_s, " \n");
- 			cmd(fov_c);
- 			break;
-	}
-};
 
 
 vector mystringpos;
@@ -656,12 +482,17 @@ string(float keynum) keynumtostring_wrath =
 };
 
 
-
+ float last_selected_option;
+ float mouseactive;
  void(float key, float ascii) m_keydown = { float deadmenu;
  	deadmenu = cvar("scratch3");
  	if (deadmenu)
- 		return;
-
+	 {
+	 if (key == K_ESCAPE)
+  		string bindcmd = ("impulse 90\n");
+ 		cmd(bindcmd);
+		return;
+	}
  	if (key >= K_MOUSE1)
  	{
 	mouse1_held = 1;
@@ -738,11 +569,19 @@ string(float keynum) keynumtostring_wrath =
 
  	if (key == K_MOUSE1)
  	{
- 		if ((clientstate() == CS_CONNECTED) && (menuingame == 1))
+ 		
+	if(menutype == M_TYPE_CONFIRMBIND)
+	{
+		last_selected_option = 0;
+		mouseactive = 0;
+		selected_option = 0;
+	}
+
+		if ((clientstate() == CS_CONNECTED) && (menuingame == 1))
  			return;
  		time = gettime();
 
-
+		
  		check_keys(selected_option, 0);
 
  		if (mousereleased == 0)
@@ -818,6 +657,7 @@ string(float keynum) keynumtostring_wrath =
  		if (gkcommand == 26) localkey = "impulse 56";	// 525
  		if (gkcommand == 27) localkey = "+button7";	// 527
  		if (gkcommand == 28) localkey = "impulse 81";	// 527
+ 		if (gkcommand == 29) localkey = "impulse 89";	// 528
 
  		if (!releasedmouse)
  			return;
@@ -868,6 +708,7 @@ string(float keynum) keynumtostring_wrath =
  		if (gkcommand == 25) localkey = "\"impulse 55\"";
  		if (gkcommand == 26) localkey = "\"impulse 56\"";	// 525
  		if (gkcommand == 28) localkey = "\"impulse 81\"";	// 527
+ 		if (gkcommand == 29) localkey = "\"impulse 89\"";	// 528
 
 		setkeybind_bindmap(keybind, localkey, 0);
 		string bindcmd;		
@@ -1187,13 +1028,25 @@ string(float keynum) keynumtostring_wrath =
  	txt_pos = pos + fixed_vector('128 10 0');
 
  	vector FONT_SIZE;
+
  	if ((index >= 7) && (index <= 9))
- 		FONT_SIZE = '10 10 0';
+	{
+	if (smallbuttons == 1)
+ 	FONT_SIZE = ('10 10 0');
+	else
+ 	FONT_SIZE = ('16 16 0');
+	}
+
  	else
  		FONT_SIZE = BTT_FONT_SIZE;
 
- 	if ((index >= 500) && (index <= 527))
- 		FONT_SIZE = '10 10 0';
+ 	if ((index >= 500) && (index <= 528))
+	{
+	if (smallbuttons == 1)
+ 	FONT_SIZE= ('10 10 0');
+	else
+ 	FONT_SIZE = ('16 16 0');
+	}
 
  	txt_len = stringwidth(txt, true, FONT_SIZE);
  	txt_pos_x -= (txt_len / 2);
@@ -1203,7 +1056,7 @@ string(float keynum) keynumtostring_wrath =
  	pos2 = pos + FONT_SIZE;
  	pos2_x = pos_x + txt_len;
 
- 	if ((index >= 250) && (index <= 274))
+ 	if ((index >= 250) && (index <= 277))
  	{
  		float selectedres;
  		vid_rx = cvar("vid_width");
@@ -1233,6 +1086,7 @@ string(float keynum) keynumtostring_wrath =
  		if ((vid_rx == 2560) && (vid_ry == 1080)) selectedres = 272;
  		if ((vid_rx == 3440) && (vid_ry == 1440)) selectedres = 273;
  		if ((vid_rx == 5120) && (vid_ry == 2160)) selectedres = 274;
+ 		if ((vid_rx == 4096) && (vid_ry == 2160)) selectedres = 275;
 
  		if (index == selectedres)
  		{
@@ -1248,7 +1102,7 @@ string(float keynum) keynumtostring_wrath =
 
  	vector text_lenght, filllip;
 
- 	if ((index >= 250) && (index <= 274))
+ 	if ((index >= 250) && (index <= 277))
  	{
  		if (check_mouse_d(pos, pos2))
  		{
@@ -1308,7 +1162,7 @@ string(float keynum) keynumtostring_wrath =
 
  	if ((selected_option == index) && (mouseactive == 1))
  	{
- 		if ((index >= 500) && (index <= 527))
+ 		if ((index >= 500) && (index <= 528))
  			cb = '5 5 5';
  		else
  			cb = '4 4 2';
@@ -1329,7 +1183,7 @@ string(float keynum) keynumtostring_wrath =
  	else
  	{
  		bfont = FONT_SIZE;
- 		if ((index >= 500) && (index <= 527))
+ 		if ((index >= 500) && (index <= 528))
  			cb = '1 1 1';
  		else
  			cb = '2 1.5 1.5';
@@ -1337,14 +1191,14 @@ string(float keynum) keynumtostring_wrath =
  		filllip = '0 0 0';
  	}
 
- 	if ((index >= 250) && (index <= 274))
+ 	if ((index >= 250) && (index <= 277))
  	{
  		text_lenght_x = txt_len;
  		text_lenght_y = bfont_y;
  		drawfill(txt_pos + '0 0 0', text_lenght + filllip, '0.5 0.5 0.5', 0.25, 0);
  	}
 
- 	if ((index >= 500) && (index <= 527))
+ 	if ((index >= 500) && (index <= 528))
  	{
  		text_lenght_x = txt_len;
  		text_lenght_y = 12;
@@ -1363,11 +1217,18 @@ string(float keynum) keynumtostring_wrath =
  {
  	local float txt_len, alpha;
  	local vector txt_pos, bfont, cb;
- 	txt_pos = pos + fixed_vector('128 10 0');
- 	txt_len = stringwidth(txt, true, BTT_FONT_SIZE);
+ 	txt_pos = pos + fixed_vector ('128 10 0');
+
+	vector localfontsize;
+	if (menutype != M_TYPE_VIDEO)
+		localfontsize = BTT_FONT_SIZE; 
+	else
+		localfontsize = fixed_vector('12 12 0');	
+
+ 	txt_len = stringwidth(txt, true, localfontsize);
  	txt_pos_x -= (txt_len / 2);
 
- 	bfont = BTT_FONT_SIZE;
+ 	bfont = (localfontsize);
  	cb = '0.5 0.5 0.25';
  	alpha = 0.75;
  	drawstring(txt_pos, txt, bfont, cb, alpha, 0);
@@ -1400,12 +1261,16 @@ string(float keynum) keynumtostring_wrath =
  	local float txt_len, alpha;
  	local vector txt_pos, bfont, cb;
  	txt_pos = pos + fixed_vector('128 10 0');
- 	txt_len = stringwidth(txt, true, '10 10 0');
+	if (smallbuttons == 1)
+ 	bfont = fixed_vector('10 10 0');
+	else
+ 	bfont = fixed_vector('16 16 0');
+
+ 	txt_len = stringwidth(txt, true,bfont);
  	txt_pos_x -= (txt_len / 2);
 
- 	bfont = '10 10 0';
 
- 	if (selected_option == index)
+ 	if ((selected_option == index) && (index > 0))
  	{
  		cb = '9 9 0.9';
  		alpha = 1;
@@ -1421,7 +1286,7 @@ string(float keynum) keynumtostring_wrath =
 
  };
 
- 
+ void(float commandnumber)order_fill;
 void drawfilldraggeable (vector pos, vector size, vector col, float alph, float rflag, float draggable_index, float order_a, float order_b, float fixed_x)
 { 
 	 vector lmouse_pos;
@@ -1471,10 +1336,10 @@ void drawfilldraggeable (vector pos, vector size, vector col, float alph, float 
  	local float txt_len, alpha;
  	local vector txt_pos, bfont, cb, text_lenght;
  	txt_pos = pos + fixed_vector('128 10 0');
- 	txt_len = stringwidth(txt, true, BTT_FONT_SIZE);
+ 	txt_len = stringwidth(txt, true, (BTT_FONT_SIZE));
  	txt_pos_x -= (txt_len / 2);
 
- 	bfont = BTT_FONT_SIZE;
+ 	bfont =  (BTT_FONT_SIZE);
  	cb = '1 1 0.5';
  	alpha = 1;
  	drawstring(txt_pos, txt, bfont, cb, alpha, 0);
@@ -1492,10 +1357,10 @@ void drawfilldraggeable (vector pos, vector size, vector col, float alph, float 
  	local float txt_len, alpha;
  	local vector txt_pos, bfont, cb;
  	txt_pos = pos + fixed_vector('128 10 0');
- 	txt_len = stringwidth(txt, true, '8 8 8');
+ 	txt_len = stringwidth(txt, true,  fixed_vector('8 8 8'));
  	txt_pos_x -= (txt_len / 2);
 
- 	bfont = '12 12 0';
+ 	bfont =  fixed_vector('12 12 0');
  	cb = '0.5 0.5 0.25';
  	alpha = 0.75;
  	drawstring(txt_pos, txt, bfont, cb, alpha, 0);
@@ -1512,6 +1377,148 @@ dprint(strcat(filename, " DELETED \n"));
 else
 dprint(strcat(filename, " notfound \n"));
 } 
+
+
+void(string repeatedprofilename) remove_all_repeated_data = {
+	string frk = strcat("profiles/", repeatedprofilename, ".frk");
+	wrath_fremove(frk);
+
+	string versionfile = strcat("profiles/", repeatedprofilename, "/menu.version");
+	string frikparmskp1 = strcat("profiles/", repeatedprofilename, "/frikparms.kp1");
+	string shrinetxt = strcat("profiles/", repeatedprofilename, "/shrine.txt");
+	string tethertxt = strcat("profiles/", repeatedprofilename, "/tether.txt");
+	string tetherclienttxt = strcat("profiles/", repeatedprofilename, "/tetherclient.txt");
+	wrath_fremove(versionfile);
+	wrath_fremove(frikparmskp1);
+	wrath_fremove(shrinetxt);
+	wrath_fremove(tethertxt);
+	wrath_fremove(tetherclienttxt);
+
+	local string auto_sav, tether_sav, shrine_sav;
+	auto_sav = strcat("profiles/", repeatedprofilename, "/autosave.sav");
+	tether_sav = strcat("profiles/", repeatedprofilename, "/tether.sav");
+	shrine_sav = strcat("profiles/", repeatedprofilename, "/shrine.sav");
+	wrath_fremove(auto_sav);
+	wrath_fremove(tether_sav);
+	wrath_fremove(shrine_sav);
+
+	local string hub1map, e1m1map, e1m2map, e1m3map, e1m4map, e1m5map;
+	hub1map = strcat("profiles/", repeatedprofilename, "/maps/hub1.sav");
+	e1m1map = strcat("profiles/", repeatedprofilename, "/maps/e1m1.sav");
+	e1m2map = strcat("profiles/", repeatedprofilename, "/maps/e1m2.sav");
+	e1m3map = strcat("profiles/", repeatedprofilename, "/maps/e1m3.sav");
+	e1m4map = strcat("profiles/", repeatedprofilename, "/maps/e1m4.sav");
+	e1m5map = strcat("profiles/", repeatedprofilename, "/maps/e1m5.sav");
+	wrath_fremove(hub1map);
+	wrath_fremove(e1m1map);
+	wrath_fremove(e1m2map);
+	wrath_fremove(e1m3map);
+	wrath_fremove(e1m4map);
+	wrath_fremove(e1m5map);
+
+	local string hub1stat, e1m1stat, e1m2stat, e1m3stat, e1m4stat, e1m5stat;
+	hub1stat = strcat("profiles/", repeatedprofilename, "/maps/hub1.stats");
+	e1m1stat = strcat("profiles/", repeatedprofilename, "/maps/e1m1.stats");
+	e1m2stat = strcat("profiles/", repeatedprofilename, "/maps/e1m2.stats");
+	e1m3stat = strcat("profiles/", repeatedprofilename, "/maps/e1m3.stats");
+	e1m4stat = strcat("profiles/", repeatedprofilename, "/maps/e1m4.stats");
+	e1m5stat = strcat("profiles/", repeatedprofilename, "/maps/e1m5.stats");
+	wrath_fremove(hub1stat);
+	wrath_fremove(e1m1stat);
+	wrath_fremove(e1m2stat);
+	wrath_fremove(e1m3stat);
+	wrath_fremove(e1m4stat);
+	wrath_fremove(e1m5stat);
+
+	local string hub1map_shrine, e1m1map_shrine, e1m2map_shrine,e1m3map_shrine, e1m4map_shrine, e1m5map_shrine;
+	hub1map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/hub1.sav");
+	e1m1map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m1.sav");
+	e1m2map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m2.sav");
+	e1m3map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m3.sav");
+	e1m4map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m4.sav");
+	e1m5map_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m5.sav");
+	wrath_fremove(hub1map_shrine);
+	wrath_fremove(e1m1map_shrine);
+	wrath_fremove(e1m2map_shrine);
+	wrath_fremove(e1m3map_shrine);
+	wrath_fremove(e1m4map_shrine);
+	wrath_fremove(e1m5map_shrine);
+
+	local string hub1stat_shrine, e1m1stat_shrine, e1m2stat_shrine, e1m3stat_shrine, e1m4stat_shrine, e1m5stat_shrine;
+	hub1stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/hub1.stats");
+	e1m1stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m1.stats");
+	e1m2stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m2.stats");
+	e1m3stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m3.stats");
+	e1m4stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m4.stats");
+	e1m5stat_shrine = strcat("profiles/", repeatedprofilename, "/shrine/maps/e1m5.stats");
+	wrath_fremove(hub1stat_shrine);
+	wrath_fremove(e1m1stat_shrine);
+	wrath_fremove(e1m2stat_shrine);
+	wrath_fremove(e1m3stat_shrine);
+	wrath_fremove(e1m4stat_shrine);
+	wrath_fremove(e1m5stat_shrine);
+
+	local string hub1map_autosave, e1m1map_autosave, e1m2map_autosave, e1m3map_autosave, e1m4map_autosave, e1m5map_autosave;
+	hub1map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/hub1.sav");
+	e1m1map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m1.sav");
+	e1m2map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m2.sav");
+	e1m3map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m3.sav");
+	e1m4map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m4.sav");
+	e1m5map_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m5.sav");
+	wrath_fremove(hub1map_autosave);
+	wrath_fremove(e1m1map_autosave);
+	wrath_fremove(e1m2map_autosave);
+	wrath_fremove(e1m3map_autosave);
+	wrath_fremove(e1m4map_autosave);
+	wrath_fremove(e1m5map_autosave);
+
+	local string hub1stat_autosave, e1m1stat_autosave, e1m2stat_autosave, e1m3stat_autosave, e1m4stat_autosave, e1m5stat_autosave;
+	hub1stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/hub1.stats");
+	e1m1stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m1.stats");
+	e1m2stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m2.stats");
+	e1m3stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m3.stats");
+	e1m4stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m4.stats");
+	e1m5stat_autosave = strcat("profiles/", repeatedprofilename, "/autosave/maps/e1m5.stats");
+	wrath_fremove(hub1stat_autosave);
+	wrath_fremove(e1m1stat_autosave);
+	wrath_fremove(e1m2stat_autosave);
+	wrath_fremove(e1m3stat_autosave);
+	wrath_fremove(e1m4stat_autosave);
+	wrath_fremove(e1m5stat_autosave);
+
+	local string hub1map_tether, e1m1map_tether, e1m2map_tether, e1m3map_tether, e1m4map_tether, e1m5map_tether;
+	hub1map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/hub1.sav");
+	e1m1map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m1.sav");
+	e1m2map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m2.sav");
+	e1m3map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m3.sav");
+	e1m4map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m4.sav");
+	e1m5map_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m5.sav");
+	wrath_fremove(hub1map_tether);
+	wrath_fremove(e1m1map_tether);
+	wrath_fremove(e1m2map_tether);
+	wrath_fremove(e1m3map_tether);
+	wrath_fremove(e1m4map_tether);
+	wrath_fremove(e1m5map_tether);
+
+	local string hub1stat_tether, e1m1stat_tether, e1m2stat_tether, e1m3stat_tether, e1m4stat_tether, e1m5stat_tether;
+	hub1stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/hub1.stats");
+	e1m1stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m1.stats");
+	e1m2stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m2.stats");
+	e1m3stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m3.stats");
+	e1m4stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m4.stats");
+	e1m5stat_tether = strcat("profiles/", repeatedprofilename, "/tether/maps/e1m5.stats");
+	wrath_fremove(hub1stat_tether);
+	wrath_fremove(e1m1stat_tether);
+	wrath_fremove(e1m2stat_tether);
+	wrath_fremove(e1m3stat_tether);
+	wrath_fremove(e1m4stat_tether);
+	wrath_fremove(e1m5stat_tether);
+
+	local string cprofiledir;
+	cprofiledir = strcat("profiles/", repeatedprofilename);
+	rmtree(cprofiledir);
+	
+};
 void() remove_all_data = { read_currentprofileslot();
 
 	string frk = strcat("profiles/", profilename, ".frk");
@@ -1536,69 +1543,117 @@ void() remove_all_data = { read_currentprofileslot();
 	wrath_fremove(tether_sav);
 	wrath_fremove(shrine_sav);
 
-	local string hub1map, e1m1map, e1m2map;
+	local string hub1map, e1m1map, e1m2map, e1m3map, e1m4map, e1m5map;
 	hub1map = strcat("profiles/", profilename, "/maps/hub1.sav");
 	e1m1map = strcat("profiles/", profilename, "/maps/e1m1.sav");
 	e1m2map = strcat("profiles/", profilename, "/maps/e1m2.sav");
+	e1m3map = strcat("profiles/", profilename, "/maps/e1m3.sav");
+	e1m4map = strcat("profiles/", profilename, "/maps/e1m4.sav");
+	e1m5map = strcat("profiles/", profilename, "/maps/e1m5.sav");
 	wrath_fremove(hub1map);
 	wrath_fremove(e1m1map);
 	wrath_fremove(e1m2map);
+	wrath_fremove(e1m3map);
+	wrath_fremove(e1m4map);
+	wrath_fremove(e1m5map);
 
-	local string hub1stat, e1m1stat, e1m2stat;
+	local string hub1stat, e1m1stat, e1m2stat, e1m3stat, e1m4stat, e1m5stat;
 	hub1stat = strcat("profiles/", profilename, "/maps/hub1.stats");
 	e1m1stat = strcat("profiles/", profilename, "/maps/e1m1.stats");
 	e1m2stat = strcat("profiles/", profilename, "/maps/e1m2.stats");
+	e1m3stat = strcat("profiles/", profilename, "/maps/e1m3.stats");
+	e1m4stat = strcat("profiles/", profilename, "/maps/e1m4.stats");
+	e1m5stat = strcat("profiles/", profilename, "/maps/e1m5.stats");
 	wrath_fremove(hub1stat);
 	wrath_fremove(e1m1stat);
 	wrath_fremove(e1m2stat);
+	wrath_fremove(e1m3stat);
+	wrath_fremove(e1m4stat);
+	wrath_fremove(e1m5stat);
 
-	local string hub1map_shrine, e1m1map_shrine, e1m2map_shrine;
+	local string hub1map_shrine, e1m1map_shrine, e1m2map_shrine,e1m3map_shrine, e1m4map_shrine, e1m5map_shrine;
 	hub1map_shrine = strcat("profiles/", profilename, "/shrine/maps/hub1.sav");
 	e1m1map_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m1.sav");
 	e1m2map_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m2.sav");
+	e1m3map_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m3.sav");
+	e1m4map_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m4.sav");
+	e1m5map_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m5.sav");
 	wrath_fremove(hub1map_shrine);
 	wrath_fremove(e1m1map_shrine);
 	wrath_fremove(e1m2map_shrine);
+	wrath_fremove(e1m3map_shrine);
+	wrath_fremove(e1m4map_shrine);
+	wrath_fremove(e1m5map_shrine);
 
-	local string hub1stat_shrine, e1m1stat_shrine, e1m2stat_shrine;
+	local string hub1stat_shrine, e1m1stat_shrine, e1m2stat_shrine, e1m3stat_shrine, e1m4stat_shrine, e1m5stat_shrine;
 	hub1stat_shrine = strcat("profiles/", profilename, "/shrine/maps/hub1.stats");
 	e1m1stat_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m1.stats");
 	e1m2stat_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m2.stats");
+	e1m3stat_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m3.stats");
+	e1m4stat_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m4.stats");
+	e1m5stat_shrine = strcat("profiles/", profilename, "/shrine/maps/e1m5.stats");
 	wrath_fremove(hub1stat_shrine);
 	wrath_fremove(e1m1stat_shrine);
 	wrath_fremove(e1m2stat_shrine);
+	wrath_fremove(e1m3stat_shrine);
+	wrath_fremove(e1m4stat_shrine);
+	wrath_fremove(e1m5stat_shrine);
 
-	local string hub1map_autosave, e1m1map_autosave, e1m2map_autosave;
+	local string hub1map_autosave, e1m1map_autosave, e1m2map_autosave, e1m3map_autosave, e1m4map_autosave, e1m5map_autosave;
 	hub1map_autosave = strcat("profiles/", profilename, "/autosave/maps/hub1.sav");
 	e1m1map_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m1.sav");
 	e1m2map_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m2.sav");
+	e1m3map_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m3.sav");
+	e1m4map_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m4.sav");
+	e1m5map_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m5.sav");
 	wrath_fremove(hub1map_autosave);
 	wrath_fremove(e1m1map_autosave);
 	wrath_fremove(e1m2map_autosave);
+	wrath_fremove(e1m3map_autosave);
+	wrath_fremove(e1m4map_autosave);
+	wrath_fremove(e1m5map_autosave);
 
-	local string hub1stat_autosave, e1m1stat_autosave, e1m2stat_autosave;
+	local string hub1stat_autosave, e1m1stat_autosave, e1m2stat_autosave, e1m3stat_autosave, e1m4stat_autosave, e1m5stat_autosave;
 	hub1stat_autosave = strcat("profiles/", profilename, "/autosave/maps/hub1.stats");
 	e1m1stat_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m1.stats");
 	e1m2stat_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m2.stats");
+	e1m3stat_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m3.stats");
+	e1m4stat_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m4.stats");
+	e1m5stat_autosave = strcat("profiles/", profilename, "/autosave/maps/e1m5.stats");
 	wrath_fremove(hub1stat_autosave);
 	wrath_fremove(e1m1stat_autosave);
 	wrath_fremove(e1m2stat_autosave);
+	wrath_fremove(e1m3stat_autosave);
+	wrath_fremove(e1m4stat_autosave);
+	wrath_fremove(e1m5stat_autosave);
 
-	local string hub1map_tether, e1m1map_tether, e1m2map_tether;
+	local string hub1map_tether, e1m1map_tether, e1m2map_tether, e1m3map_tether, e1m4map_tether, e1m5map_tether;
 	hub1map_tether = strcat("profiles/", profilename, "/tether/maps/hub1.sav");
 	e1m1map_tether = strcat("profiles/", profilename, "/tether/maps/e1m1.sav");
 	e1m2map_tether = strcat("profiles/", profilename, "/tether/maps/e1m2.sav");
+	e1m3map_tether = strcat("profiles/", profilename, "/tether/maps/e1m3.sav");
+	e1m4map_tether = strcat("profiles/", profilename, "/tether/maps/e1m4.sav");
+	e1m5map_tether = strcat("profiles/", profilename, "/tether/maps/e1m5.sav");
 	wrath_fremove(hub1map_tether);
 	wrath_fremove(e1m1map_tether);
 	wrath_fremove(e1m2map_tether);
+	wrath_fremove(e1m3map_tether);
+	wrath_fremove(e1m4map_tether);
+	wrath_fremove(e1m5map_tether);
 
-	local string hub1stat_tether, e1m1stat_tether, e1m2stat_tether;
+	local string hub1stat_tether, e1m1stat_tether, e1m2stat_tether, e1m3stat_tether, e1m4stat_tether, e1m5stat_tether;
 	hub1stat_tether = strcat("profiles/", profilename, "/tether/maps/hub1.stats");
 	e1m1stat_tether = strcat("profiles/", profilename, "/tether/maps/e1m1.stats");
 	e1m2stat_tether = strcat("profiles/", profilename, "/tether/maps/e1m2.stats");
+	e1m3stat_tether = strcat("profiles/", profilename, "/tether/maps/e1m3.stats");
+	e1m4stat_tether = strcat("profiles/", profilename, "/tether/maps/e1m4.stats");
+	e1m5stat_tether = strcat("profiles/", profilename, "/tether/maps/e1m5.stats");
 	wrath_fremove(hub1stat_tether);
 	wrath_fremove(e1m1stat_tether);
 	wrath_fremove(e1m2stat_tether);
+	wrath_fremove(e1m3stat_tether);
+	wrath_fremove(e1m4stat_tether);
+	wrath_fremove(e1m5stat_tether);
 
 	local string cprofiledir;
 	cprofiledir = strcat("profiles/", profilename);
@@ -1702,6 +1757,7 @@ float() current_local_profilenames =
  void() deleteprofile = 
  { 
 	remove_save_maps();
+	remove_all_data();
 	local float readparms;
  	local string readtext, local_profilename1,local_profilename2,local_profilename3,local_profilename4,local_profilename5,local_profilename6,local_profilename7;
 	readparms = fopen_wrath("profiles/profilenames.txt", FILE_READ);	//open what file to use (THIS TIME IN READ MODE)
@@ -1745,7 +1801,7 @@ float() current_local_profilenames =
  	{writethis = local_profilename7;fputs(writeparms, writethis);fputs(writeparms, "\n");}
  	fclose_wrath(writeparms);
 	
-	remove_all_data();
+
 	
 	profilesammount = current_local_profilenames();
 	write_currentprofileslot();	

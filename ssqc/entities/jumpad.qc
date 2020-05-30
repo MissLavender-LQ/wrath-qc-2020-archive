@@ -7,6 +7,20 @@ void() trigger_jumpad_touch = { local float flighttime, dist, grav;
 	local vector org;
 	if (other.nojump == 1)
 		return;
+		
+	if(!self.stoptime)	
+		other.stoptime = time + jumpad_noinput_time;	
+	else
+		other.stoptime = time +self.stoptime;
+		other.lungefree = time + 2;
+	
+	if(!(other.flags & FL_IGNOREINPUT))
+	other.flags += FL_IGNOREINPUT;
+
+	stuffcmd(other, "cl_forwardspeed 0\n");
+	stuffcmd(other, "cl_backspeed 0\n");
+	stuffcmd(other, "cl_sidespeed 0\n");
+		
 	if (self.using != 1)
 		return;
 
@@ -36,8 +50,8 @@ void() trigger_jumpad_touch = { local float flighttime, dist, grav;
 
 	org = other.origin;
 
-	if (other.classname == "player")
-		sound(other, CHAN_ITEM, "jump.ogg", 1, ATTN_NORM);
+	//if (other.classname == "player")
+	//	sound(other, CHAN_AUTO, "jump.ogg", 1, ATTN_NORM);
 
 	// figure out how long it will take to hit the point considering gravity
 	grav = cvar("sv_gravity");

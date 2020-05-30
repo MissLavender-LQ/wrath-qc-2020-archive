@@ -250,6 +250,8 @@ void() Hud_Messages_Draw = { local string image;
 		image = "gfx/hud/msg_relic_e1m3.tga";
 	if (self.msg == 53)
 		image = "gfx/hud/msg_relic_e1m4.tga";
+	if (self.msg == 54)
+		image = "gfx/hud/msg_relic_e1m5.tga";
 
 	if (self.msg == 101)
 		image = "gfx/hud/msg_artifactA.tga";
@@ -275,7 +277,7 @@ void() Hud_Messages_Draw = { local string image;
 	hidehud = getstatf(STAT_THWOFG);
 	local vector msgsize;
 
-	if ((self.msg >= 50) && (self.msg <= 53))
+	if ((self.msg >= 50) && (self.msg <= 54))
 		msgsize = '512 32 0';
 	else
 		msgsize = '256 32 0';
@@ -292,6 +294,7 @@ void(float newent) Hud_Messages = { self.msg = ReadShort();
 		vid_height = cvar("vid_conheight");
 		ar_y = hmsgpos_y + (hud_messages *hms) + (540 - vid_height);
 		self.imagepos = ar;
+		if (self.msg < 255)
 		hud_messages += 1;
 		self.msgalpha = 0;
 		self.iflag = 0;
@@ -353,23 +356,35 @@ void(float newent) Hud_Messages = { self.msg = ReadShort();
 				case_fixed(fw_key6), " Secondary Attack"));
 			remove(self);
 		}
-		if (self.msg == 260)
-		{
-			///////////// Key "Artifact");
-			tokenize(findkeysforcommand("impulse 81", 0));
-			if (argv(0) != "-1")
-				string fw_key28 = keynumtostring(stof(argv(0)));
-			else
-				fw_key28 = " ";
-			centerprint(strcat("Press ", case_fixed(fw_key28), " to Use Soul Tether"));
-			remove(self);
-		}
-		
 		if (self.msg == 259)
 		{
 			centerprint(strcat("Hold ", case_fixed(fw_key6), " then release at the top of your jump"));
 			remove(self);
 		}
+		if (self.msg == 260)
+		{
+			tokenize(findkeysforcommand("impulse 81", 0));
+			if (argv(0) != "-1")
+				string fw_key28 = keynumtostring(stof(argv(0)));
+			else
+				fw_key28 = " ";
+			centerprint(strcat("Press ", case_fixed(fw_key28), " to Use Soul Tether (save game) "));
+			remove(self);
+		}
+		
+		if (self.msg == 261)
+		{
+			tokenize(findkeysforcommand("impulse 89", 0));
+			if (argv(0) != "-1")
+				string fw_key29 = keynumtostring(stof(argv(0)));
+			else
+				fw_key29 = " ";
+			centerprint(strcat("Press ", case_fixed(fw_key29), " to Return to Soul Tether (load game)"));
+			remove(self);
+		}
+
+
+
 		else
 		{
 			self.draw2d = Hud_Messages_Draw;

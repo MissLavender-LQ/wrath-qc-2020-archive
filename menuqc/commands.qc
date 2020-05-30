@@ -8,12 +8,225 @@
  float oldprofileslot;
 
  void() menuprofile_select;
+
+ void(float local_option) order_fill = { 
+
+ 	switch (local_option)
+ 	{
+		 		case 101:
+ 			string sens, sensv;
+ 			float senv;
+ 			if (senm > 1)
+ 				senv = senm - 0.1;
+ 			else
+ 				senv = 1;
+ 			sensv = ftos(senv);
+ 			sens = strcat("sensitivity ", sensv, " \n");
+ 			cmd(sens);
+ 			break;
+ 		case 102:
+ 			if (senm < 10)
+ 				senv = senm + 0.1;
+ 			else
+ 				senv = 10;
+ 			sensv = ftos(senv);
+ 			sens = strcat("sensitivity ", sensv, " \n");
+ 			cmd(sens);
+ 			break;
+
+ 		case 103:
+ 			string acels, acelsv;
+ 			float acelv;
+ 			if (acel > 0)
+ 				acelv = acel - 0.1;
+ 			else
+ 				acelv = 0;
+ 			acelsv = ftos(acelv);
+ 			acels = strcat("m_accelerate ", acelsv, " \n");
+ 			cmd(acels);
+ 			break;
+ 		case 104:
+ 			if (acel < 10)
+ 				acelv = acel + 0.1;
+ 			else
+ 				acelv = 10;
+ 			acelsv = ftos(acelv);
+ 			acels = strcat("m_accelerate ", acelsv, " \n");
+ 			cmd(acels);
+ 			break;
+			
+ 		case 114:
+ 			string macels, macelsv;
+ 			float macelv;
+ 			if (macel > 0)
+ 				macelv = macel - 0.01;
+ 			else
+ 				macelv = 0;
+ 			macelsv = ftos(macelv);
+ 			macels = strcat("saved5 ", macelsv, " \n");
+ 			cmd(macels);
+ 			break;
+ 		case 115:
+ 			if (macel < 1)
+ 				macelv = macel + 0.01;
+ 			else
+ 				macelv = 1;
+ 			macelsv = ftos(macelv);
+ 			macels = strcat("saved5 ", macelsv, " \n");
+ 			cmd(macels);
+ 			break;
+			
+ 			//////////// VOLUME BUTTONS
+ 		case 201:
+ 			string mvolumes, mvolumesv;
+ 			float mvolumev;
+ 			if (mvol >= 0.05)
+ 				mvolumev = mvol - 0.05;
+ 			else
+ 				mvolumev = 0;
+ 			mvolumesv = ftos(mvolumev);
+ 			mvolumes = strcat("mastervolume ", mvolumesv, " \n");
+ 			cmd(mvolumes);
+ 			break;
+ 		case 202:
+ 			if (mvol < 1)
+ 				mvolumev = mvol + 0.05;
+ 			else
+ 				mvolumev = 1;
+ 			mvolumesv = ftos(mvolumev);
+ 			mvolumes = strcat("mastervolume ", mvolumesv, " \n");
+ 			cmd(mvolumes);
+ 			break;
+ 		case 203:
+ 			string effvolumes, effvolumesv;
+ 			float effvolumev;
+ 			if (effvol >= 0.05)
+ 				effvolumev = effvol - 0.05;
+ 			else
+ 				effvolumev = 0;
+ 			effvolumesv = ftos(effvolumev);
+ 			effvolumes = strcat("volume ", effvolumesv, " \n");
+ 			cmd(effvolumes);
+ 			break;
+ 		case 204:
+ 			if (effvol < 1)
+ 				effvolumev = effvol + 0.05;
+ 			else
+ 				effvolumev = 1;
+ 			effvolumesv = ftos(effvolumev);
+ 			effvolumes = strcat("volume ", effvolumesv, " \n");
+ 			cmd(effvolumes);
+ 			break;
+ 		case 205:
+ 			string bgmvolumes, bgmvolumesv;
+ 			float bgmvolumev;
+ 			if (bgmvol >= 0.05)
+ 				bgmvolumev = bgmvol - 0.05;
+ 			else
+ 				bgmvolumev = 0;
+ 			bgmvolumesv = ftos(bgmvolumev);
+ 			bgmvolumes = strcat("bgmvolume ", bgmvolumesv, " \n");
+ 			cmd(bgmvolumes);
+ 			break;
+ 		case 206:
+ 			if (bgmvol < 1)
+ 				bgmvolumev = bgmvol + 0.05;
+ 			else
+ 				bgmvolumev = 1;
+ 			bgmvolumesv = ftos(bgmvolumev);
+ 			bgmvolumes = strcat("bgmvolume ", bgmvolumesv, " \n");
+ 			cmd(bgmvolumes);
+ 			break;
+ 		case 291:
+ 			string bright_s, bright_c;
+ 			float bright_f;
+ 			if (brightlev > 0.05)
+ 				bright_f = brightlev - 0.05;
+ 			else
+ 				bright_f = 0;
+ 			bright_s = ftos(bright_f);
+ 			bright_c = strcat("r_hdr_scenebrightness ", bright_s, " \n");
+ 			cmd(bright_c);
+ 			break;
+ 		case 292:
+ 			if (brightlev < 2)
+ 				bright_f = brightlev + 0.05;
+ 			else
+ 				bright_f = 2;
+ 			bright_s = ftos(bright_f);
+ 			bright_c = strcat("r_hdr_scenebrightness ", bright_s, " \n");
+ 			cmd(bright_c);
+ 			break;
+ 		case 293:
+ 			string gamma_s, gamma_c;
+ 			float gamma_f;
+ 			if (gammalev > 0.15)
+ 				gamma_f = gammalev - 0.05;
+ 			else
+ 				gamma_f = 0.1;
+ 			gamma_s = ftos(gamma_f);
+ 			gamma_c = strcat("v_gamma ", gamma_s, " \n");
+ 			cmd(gamma_c);
+ 			break;
+ 		case 294:
+ 			if (gammalev < 2)
+ 				gamma_f = gammalev + 0.05;
+ 			else
+ 				gamma_f = 2;
+ 			gamma_s = ftos(gamma_f);
+ 			gamma_c = strcat("v_gamma ", gamma_s, " \n");
+ 			cmd(gamma_c);
+ 			break;
+ 		case 295:
+ 			string cont_s, cont_c;
+ 			float cont_f;
+ 			if (contlev > 0.2)
+ 				cont_f = contlev - 0.2;
+ 			else
+ 				cont_f = 0.2;
+ 			cont_s = ftos(cont_f);
+ 			cont_c = strcat("v_contrast ", cont_s, " \n");
+ 			cmd(cont_c);
+ 			break;
+ 		case 296:
+ 			if (contlev < 2)
+ 				cont_f = contlev + 0.05;
+ 			else
+ 				cont_f = 2;
+ 			cont_s = ftos(cont_f);
+ 			cont_c = strcat("v_contrast ", cont_s, " \n");
+ 			cmd(cont_c);
+ 			break;
+ 			//////////// VIDEO BUTTONS
+			case 297:
+ 			string fov_s, fov_c;
+ 			float fov_f;
+ 			if (fovlev > 80)
+ 				fov_f = fovlev - 1;
+ 			else
+ 				fov_f = 80;
+ 			fov_s = ftos(fov_f);
+ 			fov_c = strcat("fov ", fov_s, " \n");
+ 			cmd(fov_c);
+ 			break;
+ 		case 298:
+ 			if (fovlev < 120)
+ 				fov_f = fovlev + 1;
+ 			else
+ 				fov_f = 120;
+ 			fov_s = ftos(fov_f);
+ 			fov_c = strcat("fov ", fov_s, " \n");
+ 			cmd(fov_c);
+ 			break;
+	}
+};
+
  void(float local_option, float isenter) check_keys = { if ((!mouseactive) && (isenter == 1))
  		return;
 
  	if (local_option > 0)
  		localsound("sounds/menu.wav");
- 	if ((local_option >= 250) && (local_option <= 274))
+ 	if ((local_option >= 250) && (local_option <= 275))
  		menutype = M_TYPE_CONFIRMRESOLUTION;
  	//	if((selected_option >= 274) && (selected_option <= 276))
  	//	menutype = M_TYPE_CONFIRMRESOLUTION;
@@ -23,7 +236,7 @@
 
  	if (local_option == 322)
  		menutype = M_TYPE_CONFIRMFULLSCREEN;
- 	if ((local_option >= 500) && (local_option <= 527))
+ 	if ((local_option >= 500) && (local_option <= 528))
  	{
  		keybind = 0;
  		mousereleased = 0;
@@ -51,8 +264,10 @@
  			//menutype = M_YNQ;
  			break;
  		case 4:
+			remove_all_repeated_data (gah);
  			confirm_profile();
  			menutype = M_TYPE_SELECT_DIFFICULT;
+			selected_option = 0;
  			break;
  		case 5:
 			if(profileslot < 1)
@@ -132,6 +347,9 @@
  			break;
  		case 11:
  			menutype = M_TYPE_CONTROLS;
+ 				last_selected_option = 0;
+ 				mouseactive = 1;
+ 				selected_option = 0;
  			break;
  		case 12:
  			menutype = M_TYPE_VIDEO;
@@ -317,11 +535,13 @@
  			break;
  		case 107:
  			float checked3;
- 			checked3 = cvar("cl_rollangle");
+ 			checked3 = cvar("saved7");
  			if (checked3 == 2)
- 				cmd("cl_rollangle 0\n");
+ 				{cmd("saved7 0\n");
+ 				cmd("cl_rollangle 0\n");}
  			else
- 				cmd("cl_rollangle 2\n");
+ 				{cmd("saved7  2\n");
+ 				cmd("cl_rollangle 2\n");}
  			break;
  		case 108:
  			float checked4;
@@ -365,6 +585,57 @@
  			else
  				cmd("cl_decals 1\n");
  			break;
+			
+ 		case 114:
+ 			string macels, macelsv;
+ 			float macelv;
+ 			if (macel > 0)
+ 				macelv = macel - 0.01;
+ 			else
+ 				macelv = 0;
+ 			macelsv = ftos(macelv);
+ 			macels = strcat("saved5 ", macelsv, " \n");
+ 			cmd(macels);
+ 			break;
+ 		case 115:
+ 			if (macel < 1)
+ 				macelv = macel + 0.01;
+ 			else
+ 				macelv = 1;
+ 			macelsv = ftos(macelv);
+ 			macels = strcat("saved5 ", macelsv, " \n");
+ 			cmd(macels);
+ 			break;
+			
+ 		case 116:
+ 			float checked_itemflash;
+ 			checked_itemflash = cvar("saved6");
+ 			if (checked_itemflash == 1)
+ 				cmd("saved6 0\n");
+ 			else
+ 				cmd("saved6 1\n");
+ 			break;
+
+ 		case 117:
+ 			float checked_alwaysrun;
+ 			checked_alwaysrun = cvar("cl_alwaysrun");
+ 			cmd("impulse 83\n");
+ 			if (checked_alwaysrun == 1)
+ 				cmd("cl_alwaysrun 0\n");
+ 			else
+ 				cmd("cl_alwaysrun 1\n");
+ 			break;
+
+ 		case 118:
+ 			float checked_togglerun;
+ 			checked_togglerun = cvar("cl_togglerun");
+ 			cmd("impulse 83\n");
+ 			if (checked_togglerun == 1)
+ 				cmd("cl_togglerun 0\n");
+ 			else
+ 				cmd("cl_togglerun 1\n");
+ 			break;
+
  			//////////// VOLUME BUTTONS
  		case 201:
  			string mvolumes, mvolumesv;
@@ -530,14 +801,18 @@
  			cmd("vid_width 5120\n");
  			cmd("vid_height 2160\n");
  			break;
+ 			case 275:
+ 			cmd("vid_width 4096\n");
+ 			cmd("vid_height 2160\n");
+ 			break;
  			
- 		case 275:
+ 		case 278:
  			menutype = M_TYPE_RESOLUTION;
  			cmd("vid_restart\n");
  			restart_consize();
  			refresh_mouse();
  			break;
- 		case 276:
+ 		case 279:
  			string vid_wres_s, vid_wres_s2;
  			vid_wres_s = ftos(vid_wres);
  			vid_wres_s2 = strcat("vid_width ", vid_wres_s, " \n");
@@ -548,6 +823,38 @@
  			cmd(vid_hres_s2);
  			menutype = M_TYPE_RESOLUTION;
  			break;
+
+
+ 		case 280:
+ 			float checked_vsync1;
+ 			checked_vsync1 = cvar("vid_forcerefreshrate");
+ 			if (checked_vsync1 == 1)
+ 				cmd("vid_forcerefreshrate 0\n");
+ 			else
+ 				cmd("vid_forcerefreshrate 1\n");
+ 			break;
+ 		case 281:
+ 			cmd("vid_refreshrate 50\n");
+ 			break;
+ 		case 282:
+ 			cmd("vid_refreshrate 59\n");
+ 			break;
+ 		case 283:
+ 			cmd("vid_refreshrate 60\n");
+ 			break;
+ 		case 284:
+ 			cmd("vid_refreshrate 75\n");
+ 			break;
+ 		case 285:
+ 			cmd("vid_refreshrate 120\n");
+ 			break;
+ 		case 286:
+ 			cmd("vid_refreshrate 144\n");
+ 			break;
+ 		case 287:
+ 			cmd("vid_refreshrate 240\n");
+ 			break;
+
  		case 290:
  			float checked6;
  			checked6 = cvar("vid_vsync");
@@ -636,6 +943,25 @@
  			fov_c = strcat("fov ", fov_s, " \n");
  			cmd(fov_c);
  			break;
+		 //////// FPS CAP
+ 		case 710:
+ 			cmd("cl_maxfps 60\n");
+ 			break;
+ 		case 711:
+ 			cmd("cl_maxfps 120\n");
+ 			break;
+ 		case 712:
+ 			cmd("cl_maxfps 144\n");
+ 			break;
+ 		case 713:
+ 			cmd("cl_maxfps 240\n");
+ 			break;
+ 		case 714:
+ 			cmd("cl_maxfps 500\n");
+ 			break;	
+ 		case 715:
+ 			cmd("cl_maxfps 0\n");
+ 			break;	
  			//////// PIXEL SCALING
  		case 700:
  			cmd("r_viewscale 1\n");
@@ -708,7 +1034,7 @@
  			cmd("saved2 1\n");
  			break;
  		case 317:
- 			cmd("gl_texturemode gl_linear\n");
+ 			cmd("gl_texturemode gl_linear_mipmap_linear\n");
  			cmd("saved2 2\n");
  			break;
  		case 318:

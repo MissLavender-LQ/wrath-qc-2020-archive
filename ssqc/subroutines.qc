@@ -24,6 +24,17 @@ float() crandom2 = { local float r, r2, rtrn;
 		rtrn = r * 1;
 	return rtrn;
 };
+
+float() crandom3 = 
+{ 
+float r = random();
+if (r > 0.5)
+return 1;
+else
+return -1;
+
+};
+
 void() SUB_Null = {};
 
 void() SUB_Remove = { remove(self);
@@ -69,7 +80,21 @@ void(entity ent, vector tdest, float tspeed, void() func) SUB_CalcMoveEnt = { lo
 	SUB_CalcMove(tdest, tspeed, func);
 	self = stemp;
 };
+void(entity e, vector org) fake_light =
+{
+e.effects = 512;
+vector vlight  = getlight(org);
 
+e.colormod_x = (vlight_x * 1.2) - 0.05;
+e.colormod_y = (vlight_y * 1.2) - 0.05;
+e.colormod_z = (vlight_z * 1.2) - 0.05;
+
+};
+vector (entity bmodel) b_org =
+{
+vector origin = 0.5 *(bmodel.absmax + bmodel.absmin);
+return origin;
+}
 void(vector tdest, float tspeed, void() func) SUB_CalcMove = { local vector vdestdelta;
 	local float len, traveltime;
 	if (!tspeed)
@@ -439,9 +464,29 @@ void(void() thinkst) SUB_CheckRefire = { if (skill != 3)
 void(vector start, vector end, float noents, entity attacker) wtraceline = { local float s;
 	s = attacker.solid;
 	if (attacker.solid == SOLID_SLIDEBOX)
+	{
 		attacker.solid = SOLID_BBOX;
+	}
 	traceline(start, end, noents, attacker);
-	if (s == SOLID_SLIDEBOX)
+	
+	if (attacker.solid == SOLID_BBOX)
+	attacker.solid = s;
+};
+
+vector railbbox;
+void(vector start, vector end, float noents, entity attacker) railtraceline = { local vector maxbbox, minbbox;
+	maxbbox = railbbox;
+	minbbox_x = maxbbox_x *-1;
+	minbbox_y = maxbbox_y *-1;
+	minbbox_z = maxbbox_z *-1;
+	local float s;
+	s = attacker.solid;
+	if (attacker.solid == SOLID_SLIDEBOX)
+		attacker.solid = SOLID_BBOX;
+
+	tracebox(start, minbbox, maxbbox, end, noents, attacker);
+	//	traceline(start,end, noents, attacker);
+	if(attacker != world)
 		attacker.solid = s;
 };
 
@@ -453,13 +498,13 @@ void(vector start, vector end, float noents, entity attacker) wbtraceline = { lo
 	minbbox_z = maxbbox_z *-1;
 	local float s;
 	s = attacker.solid;
-	if (attacker.solid == SOLID_SLIDEBOX)
+	if ((attacker.solid == SOLID_SLIDEBOX) && (attacker != world))
 		attacker.solid = SOLID_BBOX;
 
 	tracebox(start, minbbox, maxbbox, end, noents, attacker);
 	//	traceline(start,end, noents, attacker);
-	if (s == SOLID_SLIDEBOX)
-		attacker.solid = s;
+	if(attacker != world)
+	attacker.solid = s;
 };
 vector shotbbox;
 
@@ -496,9 +541,21 @@ void() move_gibs = { if ((self.oldgroundentity != world) && (self.flags &FL_ONGR
 	}
 };
 
+.float alphatime;
+
+void() alphafade3 = 
+{ 
+	self.alpha = self.alpha - 0.2;
+	if (self.alpha < 0)
+		self.think = SUB_Remove;
+	else
+		self.think = alphafade3;
+	self.nextthink = time + 0.01;
+};
+
 void() alphafade2 = { if (self.wrathflags &FL_TOSS)
 		move_gibs();
-	self.alpha = self.alpha - 0.05;
+	self.alpha = self.alpha - ((1 / self.alphatime) / 20);
 	if (self.alpha < 0)
 		self.think = SUB_Remove;
 	else
@@ -508,6 +565,8 @@ void() alphafade2 = { if (self.wrathflags &FL_TOSS)
 
 void() alphafade = { if (self.wrathflags &FL_TOSS)
 		move_gibs();
+	if(!self.alphatime)
+	self.alphatime = 1;
 	if (!self.alpha)
 		self.alpha = 1;
 	self.nextthink = time + 0.01;
@@ -534,6 +593,20 @@ void(entity e, vector sz) setsizeitem = { local vector s2;
 	setsize(e, s2, sz);
 };
 
+.vector size_bbox;
+.vector nsize_bbox;
+void(entity e, vector sz) setsizeitem2 = { local vector s2;
+	s2_x = sz_x *-1;
+	s2_y = sz_y *-1;
+	s2_z = sz_z *-1;
+//	setsize(e, s2, sz);
+	e.nsize_bbox = s2;
+	e.size_bbox = sz;
+};
+void(entity e, vector s2, vector sz) setsize2 = {
+	e.nsize_bbox = s2;
+	e.size_bbox = sz;
+};
 void() toggle_use = { if (self.using == 1)
 		self.using = 0;
 	else
@@ -596,7 +669,7 @@ void() paste_old_data = { if (self.classname == "enemy_spawner")
 	if (self.classname == "coffer_key")
 	{
 		self.modelflags = 8;
-		self.items = IT_KEY4;
+		self.items = IT_COFFERKEY1;
 		setmodel(self, "models/items/coffer_key1.md3");
 		setsize(self, coffer_key_nsize, coffer_key_size);
 		self.scale = 1;

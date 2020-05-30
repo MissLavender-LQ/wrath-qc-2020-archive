@@ -46,6 +46,17 @@ const float VF_CL_VIEWANGLES_Z	= 36;	//(float)
 
 const float VF_PERSPECTIVE      = 200;
 
+#define VF_FOG_DENSITY        202 //(float)
+#define VF_FOG_COLOR        203 //(vector)
+#define VF_FOG_COLOR_R        204 //(float)
+#define VF_FOG_COLOR_G        205 //(float)
+#define VF_FOG_COLOR_B        206 //(float)
+#define VF_FOG_ALPHA        207 //(float)
+#define VF_FOG_START        208 //(float)
+#define VF_FOG_END           209 //(float)
+#define VF_FOG_HEIGHT        210 //(float)
+#define VF_FOG_FADEDEPTH    211 //(float)
+
 const float STAT_HEALTH		= 0;
 const float STAT_WEAPONMODEL	= 2;
 const float STAT_AMMO		= 3;
@@ -169,4 +180,7 @@ const float DRAWFLAG_2XMODULATE = 3;
 const float DRAWFLAG_SCREEN = 4;
 const float DRAWFLAG_MIPMAP = 0x100; // only for R_BeginPolygon
 
+
+
+#define CLIENTCOMMAND_GET_FOG							"get_fog"
 ////////////////end of qc file

@@ -1,6 +1,6 @@
 void()monster_army2 =
 {
-	monster_mercenary();
+	monster_wretch();
 };
 void()monster_knight =
 {

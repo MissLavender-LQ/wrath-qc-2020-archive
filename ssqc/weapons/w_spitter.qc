@@ -3,7 +3,6 @@
 .vector vvv2;
 .vector vvv1;
 //void(float damage, float type) spawn_touchblood2;
-void(float m) BecomeExplosion;
 
 void() idle_spitter = { if (self.playerdeadtime > time)
 	{
@@ -166,26 +165,40 @@ void() spit_touch = { local vector org;
 
 	if (other.takedamage)
 	{
-		if (self.classname == "spleet")
-			tdmg = spitterdamg;
+		
+		if(other.classname == "player")
+		{
+			if (self.classname == "spleet")
+				tdmg = spitterdamg_mp;
+			else
+				tdmg = spitterdamg2_mp;
+		}	
 		else
-			tdmg = spitterdamg2;
+		{
+			if (self.classname == "spleet")
+				tdmg = spitterdamg;
+			else
+				tdmg = spitterdamg2;
+		}	
 		if (other.flags &FL_MONSTER)
 		{
-			if (other.classname == "afflicted")
+	
+			if (other.classname == "monster_afflicted")
 				spawn_touchblood2(9, 2);
-			else if (other.classname == "wraith")
+			else if (other.classname == "monster_wraith")
 				spawn_touchblood2(9, 4);
-			else
+			else if (other.classname != "monster_oppressor")
 				spawn_touchblood2(9, 1);
 
 			local float r;
 			r = random();
 			if (r < 1)
 			{
-				if (other.classname == "afflicted")
+				if (other.classname == "monster_afflicted")
 					explo_blood_sprite(3, org);
-				else if (other.classname == "wraith")
+				else if (other.classname == "monster_oppressor")
+					spawn_touchblood2(9, 5);
+				else if (other.classname == "monster_wraith")
 					explo_blood_sprite(4, org);
 				else
 				{
@@ -238,7 +251,7 @@ void(float type, float forg) W_FireSpitter = { local vector tagorg;
 		setmodel(newmis, "models/projectiles/proj_fang1.md3");
 		newmis.classname = "spleet";
 		self.ammo_spitter -= 1;
-		newmis.velocity = normalize(self.cursor_trace_endpos - newmis.origin) *spittervel;
+		newmis.velocity = normalize(cursor_trace_endpos_fixed (self) - newmis.origin) *spittervel;
 		//	newmis.attack_finished  = time + 5;
 		//	newmis.think = spiral_teeth;
 		//	newmis.nextthink = time + 5;	//0.05;
@@ -254,7 +267,7 @@ void(float type, float forg) W_FireSpitter = { local vector tagorg;
 		setmodel(newmis, "models/projectiles/proj_fang2.md3");
 		newmis.classname = "spleet2";
 		self.ammo_spitter -= 2;
-		newmis.velocity = normalize(self.cursor_trace_endpos - newmis.origin) *spittervel2;
+		newmis.velocity = normalize(cursor_trace_endpos_fixed (self) - newmis.origin) *spittervel2;
 	}
 
 	if (self.ammo_spitter <= 0)
@@ -365,8 +378,12 @@ void() vgear_think = { self.frame = self.owner.vgearframe;
 		self.skin = 8;
 	else
 		self.skin = self.owner.ammo_spitter;
+	
+	if(self.owner.weapon != IT_SPITTER)
+	self.think = SUB_Remove;
+	else
 	self.think = vgear_think;
-	self.nextthink = time;
+	self.nextthink = time + 0.05;
 
 };
 

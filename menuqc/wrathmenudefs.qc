@@ -16,6 +16,7 @@ float volm;
 float senm;
 
 float acel;
+float macel;
 
 float mvol;
 float bgmvol;

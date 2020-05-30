@@ -8,6 +8,10 @@ float FL_RESPAWN = 2;
 float FL_SHOOTER = 4;
 float FL_TOSS = 8;
 float FL_SPAWNER = 16;
+float FL_GIB = 32;
+float FL_BBOX = 64;
+float FL_MESSAGE = 128;
+float FL_WONGROUND = 256;
 
 .vector oldangles;
 .float nojump;
@@ -27,6 +31,7 @@ string string_null;	//nullstring,nothingshouldbeheldhere
 entity newmis;	//launch_spikesetsthisafterspawningit
 entity activator;	//theentitythatactivatedatriggerorbrush
 entity damage_attacker;	//setbyT_Damage
+entity single_player;
 //float	framecount;
 float skill;
 .float timelightning1;
@@ -35,7 +40,8 @@ float skill;
 .float death_time_sound;
 .float deathanim;
 .float deathframe;
-
+.float lifetime;
+.float time2;
 //.float		worldtype;	// 0=medieval 1=metal 2=base
 
 //
@@ -142,6 +148,7 @@ float globalfake_illumination;
 .float ammo_coachgun;
 .float ammo_bombs;
 .float ammo_cannon;
+.float ammo_lance;
 .float ammo_spitter;
 .float ammo_retcher;
 .float ammo_spitter;
@@ -174,6 +181,7 @@ float globalfake_illumination;
 .float rarmorvalue;
 .float darmorvalue;
 
+
 vector artifact_size;
 vector dark_helm_size;
 vector dark_armor_size;
@@ -182,7 +190,6 @@ vector helm_size;
 vector armor_size;
 vector shard_size;
 vector coffer_key_size;
-
 vector artifact_nsize;
 vector dark_helm_nsize;
 vector dark_armor_nsize;
@@ -191,7 +198,6 @@ vector helm_nsize;
 vector armor_nsize;
 vector shard_nsize;
 vector coffer_key_nsize;
-
 vector heart_size;
 vector chalice_size;
 vector vial_size;
@@ -212,6 +218,9 @@ vector slag_nsize;
 vector spitter_nsize;
 vector retcher_nsize;
 vector coach_nsize;
+vector retcher_proj_size;
+vector shells_size_invader;
+
 
 //
 //player&ai
@@ -305,6 +314,10 @@ void() CheckFuncWaterDeath;
 .float vvweapon_scale;
 .vector vvweaponangles;
 
+.float centered_cgvweapon_x;
+.float centered_cgvweapon_y;
+.float centered_cgvweapon_z;
+.vector centered_cgweaponangles;
 .float cgvweapon_x;
 .float cgvweapon_y;
 .float cgvweapon_z;
@@ -314,29 +327,47 @@ void() CheckFuncWaterDeath;
 .float svweapon_x;
 .float svweapon_y;
 .float svweapon_z;
-.float svweapon_scale;
 .vector sweaponangles;
+.float centered_svweapon_x;
+.float centered_svweapon_y;
+.float centered_svweapon_z;
+.float svweapon_scale;
+.vector centered_sweaponangles;
 
 .float pvweapon_x;
 .float pvweapon_y;
 .float pvweapon_z;
-.float pvweapon_scale;
 .vector pweaponangles;
+.float centered_pvweapon_x;
+.float centered_pvweapon_y;
+.float centered_pvweapon_z;
+.vector centered_pweaponangles;
+.float pvweapon_scale;
 
 .float rvweapon_x;
 .float rvweapon_y;
 .float rvweapon_z;
-.float rvweapon_scale;
 .vector rweaponangles;
+.float centered_rvweapon_x;
+.float centered_rvweapon_y;
+.float centered_rvweapon_z;
+.vector centered_rweaponangles;
+.float rvweapon_scale;
 
 .float cvweapon_x;
 .float cvweapon_y;
 .float cvweapon_z;
-.float cvweapon_scale;
 .vector cweaponangles;
+.float centered_cvweapon_x;
+.float centered_cvweapon_y;
+.float centered_cvweapon_z;
+.vector centered_cweaponangles;
+.float cvweapon_scale;
 
 .float coachgun_damage1;
 .float coachgun_damage2;
+.float coachgun_damage1_mp;
+.float coachgun_damage2_mp;
 .float coachgun_time1;
 .float coachgun_time2;
 .float coachgun_spread1;
@@ -351,6 +382,25 @@ void() CheckFuncWaterDeath;
 .float precoachgunclip;
 
 .float shotgunclip;
+.float charge_shotgun;
+.float shotgun_damage1;
+.float shotgun_damage1_mp;
+.float shotgun_time1;
+.float shotgun_time2;
+.float shotgun_spread1;
+.string shotgun_model;
+.float buckshot_count;
+.float charge_shotgun_count;
+.float shotgun_clip;
+.float shotgun_proj_speed;
+.float shotgun_proj_dmg;
+.float shotgun_proj_dmg_mp;
+float proj_shotgun_drunkfactorv;
+float proj_shotgun_drunkfactorh;
+float proj_shotgun_timing;
+vector proj_shotgun_bbox;
+
+
 
 .float voidbombs_damage1;
 .float voidbombs_damage2;
@@ -359,8 +409,10 @@ void() CheckFuncWaterDeath;
 .string voidbombs_model;
 //.float voidbombs_wait;
 
-.float slagcannon_damage1;
-.float slagcannon_damage2;
+float slagcannon_damage1;
+float slagcannon_damage2;
+float slagcannon_damage1_mp;
+float slagcannon_damage2_mp;
 .float slagcannon_time1;
 .float slagcannon_time2;
 .float holdcannon;
@@ -369,18 +421,39 @@ void() CheckFuncWaterDeath;
 .float slagcannonspread;
 .float holdslagtime1;
 .float holdslagtime2;
-.float slagcannonangle;
-.float slagcannonangle2;
 
-.string slagcannon_model;
+vector bboxslag;
+vector bboxslag2;
 
-.float flamethrower_damage1;
-.float flamethrower_damage1a;
-.float flamethrower_damage2;
-.float flamethrower_damage2a;
+float slagspeed;
+float slagspeed2;
+float slagsplashradius;
+float slagsplashdamage;
+float slagsplashdamage_mp;
+float slagsplashradius2;
+float slagsplashdamage2;
+float slagsplashdamage2_mp;
+float slagrocketjump;
+
+
 .float flamethrower_time1;
 .float flamethrower_time2;
 .string flamethrower_model;
+
+
+.vector lvweapon;
+.vector centered_lvweapon;
+.float lvweapon_scale;
+.vector lweaponangles;
+.vector centered_lweaponangles;
+.float lance_damage;
+.float lance_damage2;
+.float lance_damage_mp;
+.float lance_damage2_mp;
+.float lance_time;
+.float lance_time2;
+.float lance_alpha_time;
+.float lance_alpha_value;
 
 //string cmonster1;
 //string cmonster2;
@@ -429,6 +502,9 @@ float TrinketofRespite_time;
 .float Aegis;
 .float Aegis_time;
 
+.float Attar;
+.float Attar_time;
+
 ////coffer 
 
 .float coffer;
@@ -454,7 +530,7 @@ float devscreen;	// On/off for the flashlight
 .float melee_kill_time;
 .float melee_kill_uber;
 .float melee_charging;
-
+.float warped_time ;
 .float lastweapon;
 
 .float fall_state;
@@ -485,7 +561,7 @@ float devscreen;	// On/off for the flashlight
 ///////////////////////////////////end of qc file
 
 .float respawnable;
-
+.float damagetopain;
 .float classmonster;
 .float classmonster1;
 .float classmonster2;
@@ -499,6 +575,7 @@ float devscreen;	// On/off for the flashlight
 .void() olduse;
 .void() oldthink;
 .void() oldtouch;
+.float oldpflags;
 .float oldsolid;
 .float oldeffects;
 .float oldwait;
@@ -506,3 +583,121 @@ float devscreen;	// On/off for the flashlight
 .float olddelay;
 .string oldtarget;
 .string oldtargetname;
+
+entity obj_entity1;
+entity obj_entity2;
+entity obj_entity3;
+entity obj_entity4;
+entity obj_entity5;
+entity obj_entity6;
+entity obj_entity7;
+entity obj_entity8;
+entity obj_entity9;
+entity obj_entity10;
+
+
+void() objerror_messages =
+{
+	entity pl = find(world, classname, "player");
+	
+	if(obj_entity1 != world)	string obj_message1 = strcat ((obj_entity1.classname), " ", vtos (obj_entity1.origin)," no targetname \n", "\n");
+	if(obj_entity2 != world)	string obj_message2 = strcat ((obj_entity2.classname), " ", vtos (obj_entity2.origin)," no targetname \n", "\n");
+	if(obj_entity3 != world)	string obj_message3 = strcat ((obj_entity3.classname), " ", vtos (obj_entity3.origin)," no targetname \n", "\n");
+	if(obj_entity4 != world)	string obj_message4 = strcat ((obj_entity4.classname), " ", vtos (obj_entity4.origin)," no targetname \n", "\n");
+	if(obj_entity5 != world)	string obj_message5 = strcat ((obj_entity5.classname), " ", vtos (obj_entity5.origin)," no targetname \n", "\n");
+	if(obj_entity6 != world)	string obj_message6 = strcat ((obj_entity6.classname), " ", vtos (obj_entity6.origin)," no targetname \n", "\n");
+	if(obj_entity7 != world)	string obj_message7 = strcat ((obj_entity7.classname), " ", vtos (obj_entity7.origin)," no targetname \n", "\n");
+	if(obj_entity8 != world)	string obj_message8 = strcat ((obj_entity8.classname), " ", vtos (obj_entity8.origin)," no targetname \n", "\n");
+	if(obj_entity9 != world)	string obj_message9 = strcat ((obj_entity9.classname), " ", vtos (obj_entity9.origin)," no targetname \n", "\n");
+	if(obj_entity10 != world)	string obj_message10 = strcat ((obj_entity10.classname), " ", vtos (obj_entity10.origin)," no targetname \n");
+	
+	string obj_messagea = strcat (obj_message1,obj_message2,obj_message3,obj_message4,obj_message5);
+	string obj_messageb = strcat (obj_message6,obj_message7,obj_message8,obj_message9,obj_message10);
+
+	string obj_message  = strcat (obj_messagea, obj_messageb);
+	//centerprint (pl, obj_message);
+	bprint (obj_message1);
+	bprint (obj_message2);
+	bprint (obj_message3);
+	bprint (obj_message4);
+	bprint (obj_message5);
+	bprint (obj_message6);
+	bprint (obj_message7);
+	bprint (obj_message8);
+	bprint (obj_message9);
+	bprint (obj_message10);
+};
+
+
+void() wrath_objerror =
+{
+	if(obj_entity1 == world)
+	{
+		obj_entity1 = self;
+		self.think = objerror_messages;
+		self.nextthink = time + 3;
+		return;
+	}
+	if(obj_entity2 == world)
+	{
+		obj_entity2 = self;
+		return;	
+	}
+	if(obj_entity3 == world)
+	{
+		obj_entity3 = self;
+		return;	
+	}
+	if(obj_entity4 == world)
+	{
+		obj_entity4 = self;
+		return;	
+	}
+	if(obj_entity5 == world)
+	{
+		obj_entity5 = self;
+		return;	
+	}
+	if(obj_entity6 == world)
+	{
+		obj_entity6 = self;
+		return;	
+	}
+	if(obj_entity7 == world)
+	{
+		obj_entity7 = self;
+		return;	
+	}
+	if(obj_entity8 == world)
+	{
+		obj_entity8 = self;
+		return;	
+	}
+	if(obj_entity9 == world)
+	{
+		obj_entity9 = self;
+		return;	
+	}
+	if(obj_entity10 == world)
+	{
+		obj_entity10 = self;
+		return;	
+	}
+};
+
+vector (entity player) cursor_trace_endpos_fixed =
+{
+	vector t_endpos, org;
+	t_endpos = player.cursor_trace_endpos;
+	org = player.origin;
+	float distance = vlen (org - t_endpos);
+	if(distance > 128)
+		return t_endpos;
+	else
+	{
+		makevectors(player.v_angle);
+		vector t_dest = player.origin + player.view_ofs + v_forward *2048;
+		traceline((player.origin + player.view_ofs), t_dest, MOVE_WORLDONLY, player);
+		return trace_endpos;
+	}
+}

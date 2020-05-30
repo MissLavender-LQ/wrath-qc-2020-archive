@@ -11,6 +11,10 @@ void(float mapname_list) read_frik_stats = { local float nLength;
 		currentmaplocal = "maps/e1m1.bsp";
 	if (mapname_list == 3)
 		currentmaplocal = "maps/e1m2.bsp";
+	if (mapname_list == 4)
+		currentmaplocal = "maps/e1m4.bsp"; // fix this when e1m3 is released
+	if (mapname_list == 5)
+		currentmaplocal = "maps/e1m5.bsp"; // fix this when e1m3 is released
 	namecomplete = substring(currentmaplocal, 5, 100);
 	nLength = strlen(namecomplete);
 	namewbsp = substring(namecomplete, 0, nLength - 4);
@@ -73,7 +77,18 @@ void() show_journal_ui = { string ui_image, ui_image2;
 			posimage += nofixed_vector('0 32 0');
 		}
 
-		float found_secrets_local, total_secrets_local;
+		if (visited_maps & LE_E1M4)
+		{
+			DImage3(posimage, "gfx/journal/labels/label_e1m4.tga", 1, '1 1 1', '128 16 0');
+			DImage4(posimage, "gfx/journal/labels/label_e1m4_active.tga", 1, '1 1 1', '128 16 0', 304); // fix this when e1m3 is released
+			posimage += nofixed_vector('0 32 0');
+		}
+		if (visited_maps & LE_E1M5)
+		{
+			DImage3(posimage, "gfx/journal/labels/label_e1m5.tga", 1, '1 1 1', '128 16 0');
+			DImage4(posimage, "gfx/journal/labels/label_e1m5_active.tga", 1, '1 1 1', '128 16 0', 305); // fix this when e1m3 is released
+			posimage += nofixed_vector('0 32 0');
+		}		float found_secrets_local, total_secrets_local;
 
 		found_secrets_local = getstati(STAT_SECRETS);
 		total_secrets_local = getstati(STAT_TOTALSECRETS);
@@ -100,6 +115,10 @@ void() show_journal_ui = { string ui_image, ui_image2;
 				DImage3(('224 70 0' + '256 24 0' + '32 168 0'), "gfx/journal/pages/relic_e1m1", 1, '1 1 1', '64 64 0');
 			if (hasrelics & RL_E1M2)
 				DImage3(('224 70 0' + '256 24 0' + '7 97 0'), "gfx/journal/pages/relic_e1m2", 1, '1 1 1', '64 64 0');
+			if (hasrelics & RL_E1M4)
+				DImage3(('224 70 0' + '256 24 0' + '111 168 0'), "gfx/journal/pages/relic_e1m4", 1, '1 1 1', '64 64 0');
+			if (hasrelics & RL_E1M5)
+				DImage3(('224 70 0' + '256 24 0' + '71 49 0'), "gfx/journal/pages/relic_e1m5", 1, '1 1 1', '64 64 0');
 
 			if (mapname == "maps/hub1.bsp")
 			{
@@ -203,7 +222,86 @@ void() show_journal_ui = { string ui_image, ui_image2;
 				posimage2 += nofixed_vector('0 32 0');
 			}
 		}
+		if ((journal_page_maps == 4) && (visited_maps & LE_E1M4))
+		{
+			ui_image2 = "gfx/journal/pages/page_e1m4.tga";
+			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
+			posimage2 = '224 70 0' + '256 268 0' + '126 3 0';
 
+			DImage3(('224 70 0' + '293 268 0'), "gfx/journal/stats_level.tga", 1, '1 1 1', '64 64 0');
+
+			if (hasrelics & RL_E1M4)
+				hasrelic = "1";
+			else
+				hasrelic = "0";
+
+			if (hasrelics & RL_E1M4)
+				DImage3(('224 70 0' + '272 80 0'), "gfx/journal/pages/relic_e1m4_large", 1, '1 1 1', '184 184 0');
+
+			if (mapname == "maps/e1m4.bsp")
+			{
+				DstringJournal(posimage2, strcat(ftos(killed_monsters_local), "/", ftos(total_monsters_local)), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, strcat(ftos(found_secrets_local), "/", ftos(total_secrets_local)), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, strcat(hasrelic, "/1"), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 16 0');
+				DstringJournal(posimage2, strcat(strTime), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 32 0');
+			}
+			else
+			{
+				read_frik_stats(4);
+				DstringJournal(posimage2, line1, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, line2, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, line3, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 16 0');
+				DstringJournal(posimage2, line4, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 32 0');
+			}
+		}
+		if ((journal_page_maps == 5) && (visited_maps & LE_E1M5))
+		{
+			ui_image2 = "gfx/journal/pages/page_e1m5.tga";
+			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
+			posimage2 = '224 70 0' + '256 268 0' + '126 3 0';
+
+			DImage3(('224 70 0' + '293 268 0'), "gfx/journal/stats_level.tga", 1, '1 1 1', '64 64 0');
+
+			if (hasrelics & RL_E1M5)
+				hasrelic = "1";
+			else
+				hasrelic = "0";
+
+			if (hasrelics & RL_E1M5)
+				DImage3(('224 70 0' + '272 80 0'), "gfx/journal/pages/relic_e1m5_large", 1, '1 1 1', '184 184 0');
+
+			if (mapname == "maps/e1m5.bsp")
+			{
+				DstringJournal(posimage2, strcat(ftos(killed_monsters_local), "/", ftos(total_monsters_local)), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, strcat(ftos(found_secrets_local), "/", ftos(total_secrets_local)), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, strcat(hasrelic, "/1"), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 16 0');
+				DstringJournal(posimage2, strcat(strTime), 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 32 0');
+			}
+			else
+			{
+				read_frik_stats(5);
+				DstringJournal(posimage2, line1, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, line2, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 15 0');
+				DstringJournal(posimage2, line3, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 16 0');
+				DstringJournal(posimage2, line4, 1, 1, colorimg, ' 10 10 0');
+				posimage2 += nofixed_vector('0 32 0');
+			}
+		}
 		DImage3(('51 336 0' + '224 70 0'), "gfx/journal/taba_active.tga", 1, '1 1 1', '88 48 0');
 		DImage4(('51 336 0' + '224 70 0'), "gfx/journal/taba_active.tga", 1, '1 1 1', '88 48 0', 200);
 		DImage4(('144 336 0' + '224 70 0'), "gfx/journal/tabb_active.tga", 1, '1 1 1', '96 56 0', 201);
@@ -263,6 +361,13 @@ void() show_journal_ui = { string ui_image, ui_image2;
 			posimage += nofixed_vector('0 32 0');
 		}
 
+		if (jitems_armory & IT_CANNON)
+		{
+			DImage3b(posimage, "gfx/journal/labels/label_cannon.tga", 1, '1 1 1', '128 16 0');
+			DImage4(posimage, "gfx/journal/labels/label_cannon_active.tga", 1, '1 1 1', '128 16 0', 336);
+			posimage += nofixed_vector('0 32 0');
+		}
+
 		/*if(firstscroll  == 1)
 		{
 		DImage3  (('224 70 0' + '128 32 0'),"gfx/journal/arrow_up", 1, '1 1 1', '32 40 0');
@@ -305,6 +410,12 @@ void() show_journal_ui = { string ui_image, ui_image2;
 		if (journal_page_armory == 5)
 		{
 			ui_image2 = "gfx/journal/pages/page_retcher.tga";
+			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
+		}
+
+		if (journal_page_armory == 6)
+		{
+			ui_image2 = "gfx/journal/pages/page_cannon.tga";
 			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
 		}
 
@@ -385,6 +496,20 @@ void() show_journal_ui = { string ui_image, ui_image2;
 		{
 			DImage3b(posimage, "gfx/journal/labels/label_stricken.tga", 1, '1 1 1', '128 16 0');
 			DImage4(posimage, "gfx/journal/labels/label_stricken_active.tga", 1, '1 1 1', '128 16 0', 308);
+			posimage += nofixed_vector('0 32 0');
+		}
+
+		if (jitems_bestiary & JB_I)
+		{
+			DImage3b(posimage, "gfx/journal/labels/label_wretch.tga", 1, '1 1 1', '128 16 0');
+			DImage4(posimage, "gfx/journal/labels/label_wretch_active.tga", 1, '1 1 1', '128 16 0', 309);
+			posimage += nofixed_vector('0 32 0');
+		}
+
+		if (jitems_bestiary & JB_J)
+		{
+			DImage3b(posimage, "gfx/journal/labels/label_oppressor.tga", 1, '1 1 1', '128 16 0');
+			DImage4(posimage, "gfx/journal/labels/label_oppressor_active.tga", 1, '1 1 1', '128 16 0', 310);
 		}
 
 		if (firstscroll == 1)
@@ -450,6 +575,16 @@ void() show_journal_ui = { string ui_image, ui_image2;
 			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
 		}
 
+		if (journal_page_bestiary == 9)
+		{
+			ui_image2 = "gfx/journal/pages/page_wretch.tga";
+			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
+		}
+		if (journal_page_bestiary == 10)
+		{
+			ui_image2 = "gfx/journal/pages/page_oppressor.tga";
+			DImage3(('224 70 0' + '256 24 0'), ui_image2, 1, '1 1 1', '216 304 0');
+		}
 		DImage3(('264 328 0' + '224 70 0'), "gfx/journal/tabc_active.tga", 1, '1 1 1', '88 64 0');
 		DImage4(('51 336 0' + '224 70 0'), "gfx/journal/taba_active.tga", 1, '1 1 1', '88 48 0', 200);
 		DImage4(('144 336 0' + '224 70 0'), "gfx/journal/tabb_active.tga", 1, '1 1 1', '96 56 0', 201);
@@ -626,9 +761,15 @@ void() show_journal_ui = { string ui_image, ui_image2;
 		///////////// Key "Use Soul Tether");
 		tokenize(findkeysforcommand("impulse 81", 0));
 		if (argv(0) != "-1")
-			string fw_key28 = keynumtostring(stof(argv(0)));
+			string fw_key29 = keynumtostring(stof(argv(0)));
 		else
-			fw_key28 = " ";
+			fw_key29 = " ";
+		///////////// Key "Load Soul Tether");
+		tokenize(findkeysforcommand("impulse 89", 0));
+		if (argv(0) != "-1")
+			string fw_key30 = keynumtostring(stof(argv(0)));
+		else
+			fw_key30 = " ";
 
 		posimage = '224 70 0' + '82 80 0';
 		scroll_variation3_y += -32 * journal_scroll;
@@ -673,6 +814,8 @@ void() show_journal_ui = { string ui_image, ui_image2;
 		DstringJournal(posimage2, strcat("Use Artifact...............", case_fixed(fw_key22)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');
 		DstringJournal(posimage2, strcat("Use Soul Tether........", case_fixed(fw_key28)), 1, 1, colorimg, ' 10 10 0');
+		posimage2 += nofixed_vector('0 12 0');
+		DstringJournal(posimage2, strcat("Load game Menu........", case_fixed(fw_key29)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');
 		DstringJournal(posimage2, strcat("Journal......................", case_fixed(fw_key21)), 1, 1, colorimg, ' 10 10 0');
 		posimage2 += nofixed_vector('0 12 0');

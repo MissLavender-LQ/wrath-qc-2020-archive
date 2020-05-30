@@ -117,6 +117,8 @@ const float STAT_TETHERTIME = 90;
 
 const float STAT_DARM = 93;
 const float STAT_RARM = 94;
+const float STAT_RD_CA = 95;
+
 
 float IT_COACHGUN = 1;
 float IT_SHOTGUN = 2;
@@ -124,20 +126,22 @@ float IT_SPITTER = 4;
 float IT_RETCHER = 8;
 float IT_CANNON = 16;
 float IT_MELEE = 32;
-float IT_ROCKET_LAUNCHER = 64;
+float IT_LANCE = 64;
 float IT_EXTRA_WEAPON = 128;
 float IT_VIEWMODEL = 512;
 float IT_ROCKETS = 1024;
 float IT_CELLS = 2048;
 float IT_CANNON2 = 4096;
-float IT_ARMOR1 = 8192;
-float IT_ARMOR2 = 16384;
+float IT_COFFERKEY1 = 65536;
+float IT_COFFERKEY2 = 8192;
+float IT_COFFERKEY3 = 16384;
 float IT_ARMOR3 = 32768;
 float IT_SUPERHEALTH = 65536;
 float IT_KEY1 = 131072;
 float IT_KEY2 = 262144;
 float IT_KEY3 = 256;
-float IT_KEY4 = 65536;
+
+
 float IT_SUIT = 2097152;
 float IT_QUAD = 4194304;
 
@@ -198,6 +202,7 @@ float JM_W = 8388608;
 6 = heretic
 7 = executioner
 8 = stricken
+9 = wretch
 */
 float JB_A = 1;
 float JB_B = 2;
@@ -254,7 +259,7 @@ float LE_HUB4 = 8388608;
 1 = first artifact
 2 = first time to open inventory
 4 =  first soul tether
-8 =
+8 =  first use of soul tether
 16 =
 32 = 
 64 =

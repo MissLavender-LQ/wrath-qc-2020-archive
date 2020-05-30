@@ -590,6 +590,8 @@ void() urn_die = { local vector tagorg;
 
 	if (self.urn_artifacts == 2)
 		drop_item(tagorg, "apparatus", 1, self);
+	if (self.urn_artifacts == 4)
+		drop_item(tagorg, "attar", 1, self);
 	if (self.urn_artifacts == 5)
 		drop_item(tagorg, "theter", 1, self);
 	if (self.urn_artifacts == 6)
@@ -679,4 +681,70 @@ void() breakable_urn_large = { self.gibmodel1 = ("models/destruct/urns/urn64_gib
 	self.th_die = urn_die;
 	self.takedamage = DAMAGE_YES;
 };
+
+.entity lastchain;
+.float degrees_chain_constant;
+.float degrees_chain;
+.float hard_degrees;
+.float distancetotarget;
+.float fixed_angles;
+void()create_chain =
+{
+	self.count ++;
+	self.degrees_chain += self.degrees_chain_constant;
+	local entity chain;
+	chain = spawn();
+	setmodel (chain, "models/chain.md3");
+	chain.scale = 2;
+	chain.effects = EF_NODEPTHTEST;
+	chain.angles = self.lastchain.angles + '0 0 90';
+	chain.angles_x = self.hard_degrees - self.degrees_chain;
+	chain.origin = tag_origin("tag_chain", self.lastchain);
+	self.lastchain = chain;
+
+	if(self.count < self.cnt)
+		self.think = create_chain;
+	else
+		self.think = SUB_Null;
+	self.nextthink = time + 0.005;
+};
+void() info_chain_spot =
+{
+	setmodel (self, "models/chain.md3");
+}
+void() info_chain_think =
+{
+	entity t = find(world, targetname, self.target);
+	self.height = 34;
+	setsize (self, '0 0 0', '0 0 0');
+	self.distancetotarget =  vlen (self.origin - t.origin);
+	self.scale = 2;
+	self.angles = vectoangles (normalize(self.origin - t.origin));
+	//self.angles_y += 180;
+	self.lastchain = self;
+	self.cnt = vlen (self.origin - t.origin);
+
+	float rel = vlen(self.origin - t.origin) / (self.height);
+	self.hard_degrees = (self.height  / self.distancetotarget) *  180 + self.angles_x;
+	float a = self.height;
+	float b = self.cnt /2;
+	float radio= ((pow(a,2)) + (pow(b,2))) / (2*a); 
+	float circunferencia = 2 * PI * radio;
+	float angulos = (acos(((self.cnt * self.cnt) - (radio*radio)- (radio*radio)) / (-2*radio*radio)) )* RAD2DEG;
+	float arco=  (2* PI * radio * angulos) / 360;
+	self.cnt = (arco / 5.2) - 1;
+	self.degrees_chain_constant =  angulos /self.cnt;
+	self.think = create_chain;
+	self.nextthink = time + 0.5;
+}
+void() info_chain =
+{
+	precache_model ("models/chain.md3");
+	setmodel (self, "models/chain.md3");
+	self.solid = SOLID_TRIGGER;
+	self.think = info_chain_think;
+	self.nextthink = time + 0.5;
+};
+
+
 /////////////////end of qc file

@@ -2,6 +2,7 @@
 
 progsdefs.qc                                             // Definitions
 dpextensions.qc
+nodegraph/definitions.qc
 ../shared.qc
 ../shared_menu.qc
 wrathdefs.qc
@@ -18,6 +19,7 @@ frik_file.qc
 func_readable.qc
 player/radial.qc
 player/player.qc
+//player/model.qc                                         
 player/client.qc                                           // Client subroutines
 player/use.qc
 
@@ -30,6 +32,7 @@ weapons/w_cannon.qc
 weapons/w_spitter.qc
 weapons/w_retcher.qc
 weapons/w_shotgun.qc
+weapons/w_lance.qc
 weapons/w_viewmodel.qc
 
 
@@ -52,25 +55,20 @@ entities/portal.qc
 
 monsters/ai.qc
 monsters/monsters.qc
-monsters/opressor.qc
-monsters/afflicted.qc
-monsters/mercenary.qc
-monsters/widow.qc
-monsters/wraith.qc
-monsters/executioner.qc
-//monsters/fallen.qc
+monsters/monster_afflicted.qc
+monsters/monster_widow.qc
+monsters/monster_wraith.qc
+monsters/monster_executioner.qc
 
-
-monsters/monster_template.qc
 monsters/monster_invader.qc
 monsters/monster_wretch.qc
-monsters/monster_pelican.qc
 monsters/monster_stricken.qc
 monsters/monster_heretic.qc
-//monsters/monster_fallen.qc
-//monsters/monster_widow.qc
-monsters/fallen.qc
+monsters/monster_fallen.qc
+monsters/monster_oppressor.qc
 
 monsters/spawner.qc
 ///////
 monsters/dummy.qc
+
+nodegraph/nodegraph.qc

@@ -164,25 +164,33 @@ void(float keynumber) quitkey = { string cent, dozen, unit, slotdigits;
 	self.slot_keys = slotkeynumber;
 };
 
-void(float keynumber) quitrelic = { string thous, cent, dozen, unit, slotdigits;
-	float thous_s, cent_s, dozen_s, unit_s, currentslotkeyvalue, multiplier, slotkeynumber;
+void(float keynumber) quitrelic = { string dthous, thous, cent, dozen, unit, slotdigits;
+	float dthous_s, thous_s, cent_s, dozen_s, unit_s, currentslotkeyvalue, multiplier, slotkeynumber;
 	slotdigits = ftos(self.slot_relics);
-	thous = substring(slotdigits, 0, 1);
-	cent = substring(slotdigits, 1, 1);
-	dozen = substring(slotdigits, 2, 1);
-	unit = substring(slotdigits, 3, 1);
+	dthous = substring(slotdigits, 0, 1);
+	thous = substring(slotdigits, 1, 1);
+	cent = substring(slotdigits, 2, 1);
+	dozen = substring(slotdigits, 3, 1);
+	unit = substring(slotdigits, 4, 1);
 
+	dthous_s = stof(dthous);
 	thous_s = stof(thous);
 	cent_s = stof(cent);
 	dozen_s = stof(dozen);
 	unit_s = stof(unit);
 
 	slotkeynumber = self.slot_relics;
+	if (keynumber == dthous_s)
+	{
+		currentslotkeyvalue = (keynumber *10000);
+		slotkeynumber = (slotkeynumber - currentslotkeyvalue);
+		slotkeynumber = slotkeynumber * 10;
+	}
+
 	if (keynumber == thous_s)
 	{
 		currentslotkeyvalue = (keynumber *1000);
-		slotkeynumber = (slotkeynumber - currentslotkeyvalue);
-		slotkeynumber = slotkeynumber * 10;
+		slotkeynumber = (slotkeynumber - (currentslotkeyvalue + cent_s * 100 + dozen_s *10 + unit_s)) + (cent_s *1000)  + (dozen_s *100) + (unit_s *10);
 	}
 
 	if (keynumber == cent_s)
@@ -216,7 +224,9 @@ void(float keynumber) quitrelic = { string thous, cent, dozen, unit, slotdigits;
 .float pillar_c_activated;
 .float pillar_d_activated;
 .float pillar_e_activated;
-.entity keyson;
+.entity keyson1;
+.entity keyson2;
+.entity keyson3;
 .entity ykeyson;
 .entity bkeyson;
 .entity rkeyson;
@@ -247,16 +257,24 @@ void() Use_Func = { local vector source;
 	{
 		if (trace_ent.keyrequired)
 		{
-			if (!(self.items &IT_KEY4))
+			if (!(self.items &IT_COFFERKEY1))
 			{
-				Hud_message(37, other.origin, other);
+				Hud_message(37, self.origin, self);
 				sound(trace_ent, CHAN_VOICE, trace_ent.noise2, 1, 0.5);
 				return;
 			}
 			else
 			{
-				self.items -= IT_KEY4;
-				self.keyson.wrathflags -= FL_RESPAWN;
+			
+				if(self.items & IT_COFFERKEY3)
+					{self.items -= IT_COFFERKEY3;self.keyson3.wrathflags -= FL_RESPAWN;}
+				else
+				{
+					if(self.items & IT_COFFERKEY2)
+						{self.items -= IT_COFFERKEY2;self.keyson2.wrathflags -= FL_RESPAWN;}
+					else
+						{self.items -= IT_COFFERKEY1; self.keyson1.wrathflags -= FL_RESPAWN;}
+				}	
 			}
 		}
 
@@ -321,6 +339,8 @@ void() Use_Func = { local vector source;
 		sound(trace_ent, CHAN_AUTO, "objects/hub1_pillar.ogg", 1, 0.25);
 		trace_ent.owner.pillar_e_activated = 1;
 		trace_ent.usable = 0;
+		self.relics -= RL_E1M5;
+		quitrelic(5);		
 		return;
 	}
 
@@ -425,14 +445,14 @@ void() Use_Func = { local vector source;
 
 		/*if (trace_ent.keyrequired == 4)
 		{
-			if (!(self.items &IT_KEY4))
+			if (!(self.items &IT_COFFERKEY1))
 			{
 				sound(trace_ent, CHAN_VOICE, trace_ent.noise2, 1, 0.5);
 				Hud_message(37, self.origin, self);
 				return;
 			}
 			else
-				self.items -= IT_KEY4;
+				self.items -= IT_COFFERKEY1;
 			self.keyson.wrathflags -= FL_RESPAWN;
 		}
 		*/

@@ -11,7 +11,7 @@ void() door_wait = { self.state = STATE_TOP;
 	self.think = door_return;
 };
 void() door_fire;
-void() door_blocked = { if (other.classname == "fallen")
+void() door_blocked = { if (other.classname == "monster_fallen")
 		other.solid = SOLID_CORPSE;
 	T_Damage(other, self, self, self.dmg);
 
@@ -24,13 +24,17 @@ void() door_blocked = { if (other.classname == "fallen")
 	else
 	door_fire(); */
 };
-
+.float fake_lighted;
 void() door_done = { sound(self, CHAN_VOICE, self.noise2, self.volume, self.atten);
 	self.state = STATE_BOTTOM;
 	if (!self.notouch)
 		self.usable = 1;
 	self.solid = SOLID_BSP;
-
+	/*if(self.fake_lighted != 1)
+	{
+	self.colormod = '0 0 0';
+	self.effects = 0;
+	}*/
 };
 
 void() door_return = { self.state = STATE_DOWN;
@@ -59,6 +63,56 @@ void() door_puse = { SUB_UseTargets();
 	door_fire();
 };
 .float metaldoor;
+
+void() lighter_think =
+{
+	if( (self.owner.velocity != '0 0 0'))
+		fake_light(self.owner, self.origin + '0 0 0');
+	self.think = lighter_think;
+	self.nextthink = time + 0.05;
+}
+.vector fake_origin;
+.string attached_model;
+void(entity ownr) spawn_lighter =
+{
+	local entity lighter;
+	lighter = spawn();
+	setmodel (lighter, "models/misc/null.md3");
+	lighter.solid = SOLID_TRIGGER;
+	setsize (self,'0 0 0', '3 3 3');
+	lighter.owner = ownr;
+	lighter.origin = lighter.owner.fake_origin+ '0 0 8';
+	lighter.movetype = MOVETYPE_FOLLOW;
+	lighter.aiment = lighter.owner;
+	lighter.view_ofs = lighter.origin - lighter.owner.origin; // relative origin
+	//hole.v_angle = hole.angles - bmodel.angles; // relative angles
+	fake_light(lighter.owner, lighter.origin + '0 0 0');
+	lighter.think = lighter_think;
+	lighter.nextthink = time + 0.025;
+
+};
+
+void() attached_think =
+{
+	self.think = lighter_think;
+	self.nextthink = time + 0.025;
+};
+
+void(entity ownr) spawn_attached_model =
+{
+	local entity attachedmodel;
+	attachedmodel = spawn();
+	setmodel (attachedmodel, self.owner.attached_model);
+	attachedmodel.solid = SOLID_NOT;
+	setsize (self,'0 0 0', '3 3 3');
+	attachedmodel.owner = ownr;
+	attachedmodel.origin = attachedmodel.owner.fake_origin ;
+	attachedmodel.movetype = MOVETYPE_FOLLOW;
+	attachedmodel.aiment = attachedmodel.owner;
+	attachedmodel.view_ofs = attachedmodel.origin - attachedmodel.owner.origin; // relative origin
+	attachedmodel.think = attached_think;
+	attachedmodel.nextthink = time + 0.025;
+};
 void() func_door = { if (self.keyrequired == 4)
 	{
 		if (!self.noise)
@@ -104,7 +158,7 @@ void() func_door = { if (self.keyrequired == 4)
 	if (!self.lip)
 		self.lip = 0;
 	if (!self.notouch)
-		self.usable = 1;
+			self.usable = 1;
 
 	self.blocked = door_blocked;
 	self.state = STATE_BOTTOM;
@@ -120,6 +174,20 @@ void() func_door = { if (self.keyrequired == 4)
 
 	if (self.keyrequired)
 		self.usable = 1;
+	vector voffset;
+	voffset_z= (self.absmax_z - self.absmin_z) / 2; 
+	if(self.fake_lighted == 1)
+	{
+	self.fake_origin = 0.5 *(self.absmax + self.absmin);
+	self.fake_origin_z = self.absmax_z;
+
+	spawn_lighter(self);
+	}
+	if(self.attached_model != string_null)
+	{
+	spawn_attached_model (self);
+	}
+
 };
 
 ///////////////////////////////////end of qc file

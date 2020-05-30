@@ -35,7 +35,6 @@ void() check_vectorcolors =
 	vectorwhite = '8 -1 -1';
 	
 };
-
  void(float a, float b) m_draw = { time = gettime();
  
   
@@ -68,12 +67,27 @@ void() check_vectorcolors =
 
  	vid_x = cvar("vid_conwidth");
  	vid_y = cvar("vid_conheight");
+ 	float rvid_x = cvar("vid_width");
+ 	float rvid_y = cvar("vid_height");
 
  	/*	if(vid_x / vid_y == 16/9)
  		{*/
- 	vx_rel = ((vid_x / 960));
- 	vy_rel = ((vid_y / 540));
- 	/*	}
+ 		vid_rx = cvar("vid_width");
+ 		vid_ry = cvar("vid_height");
+
+ 		if (((vid_rx == 2560) && (vid_ry == 1440))||((vid_rx == 2560) && (vid_ry == 1080))||((vid_rx == 3440) && (vid_ry == 1440))||((vid_rx == 5120) && (vid_ry == 2160)))
+		{	
+	 	vx_rel = ((vid_x / 1134));
+		vy_rel = ((vid_y / 540));
+		//smallbuttons = 0;
+		}
+		else
+		{
+		vx_rel = ((vid_x / 960));
+		vy_rel = ((vid_y / 540));
+		//smallbuttons = 1;
+		}
+		/*	}
 
  		if(vid_x / vid_y == 4/3)
  		{

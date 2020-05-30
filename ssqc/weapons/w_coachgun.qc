@@ -22,8 +22,71 @@ void() idle_coachgun = { if (self.playerdeadtime > time)
 	self.think = idle_coachgun;
 	self.nextthink = time + 0.1;
 };
-
-void() wsfire_coachgun1 = { self.vweaponframe += 1;
+void(vector org, vector dir, float order, entity ownerproj) launch_projectile_coachgun;
+void() wsfire_coachgun1 =
+{
+	self.vweaponframe += 1;
+	if(self.vweaponframe == 18)
+	{
+		self.vweaponglowmod = '1 1 1';	
+		vector dir;
+		string snd;
+		makevectors (self.v_angle);
+		snd = strcat ("weapons/coachgun/fire2_", ftos (floor(random() * 2) + 1),".ogg");
+		sound (self, CHAN_WEAPON, snd, 1, ATTN_NORM);
+		self.punchangle_x = -2;
+		dir = aim (self, 100000);
+		vector tagorg;
+		if (self.ammo_coachgun == 1)
+		{
+			tagorg = tag_origin("tag_proja",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 1,self);	
+			self.ammo_coachgun -= 1;
+		}
+		if (self.ammo_coachgun == 2)
+		{
+			tagorg = tag_origin("tag_proja",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 1,self);	
+			tagorg = tag_origin("tag_projb",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 2,self);	
+			self.ammo_coachgun -= 2;
+		}
+		if (self.ammo_coachgun > 2)
+		{
+			tagorg = tag_origin("tag_proja",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 1,self);	
+			tagorg = tag_origin("tag_projb",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 2,self);	
+			tagorg = tag_origin("tag_projc",self.vweapon);
+			launch_projectile_coachgun (tagorg, dir, 3,self);	
+			self.ammo_coachgun -= 3;
+		}
+		self.effects += EF_MUZZLEFLASH;
+		local entity muzzle;
+		local string muzzlemodel;
+		muzzlemodel = "models/weapons/coachgun/flash_big.md3";
+		muzzle = spawn();
+		muzzle.owner = self;
+		setmodel (muzzle, muzzlemodel);
+		muzzle.viewmodelforclient = self;
+		setattachment(muzzle,self.vweapon,"tag_muzzle2");
+		muzzle.angles_z = random() * 360;
+		muzzle.think = SUB_Remove;
+		muzzle.nextthink = time + 0.05;
+	}	
+	if((self.vweaponframe > 18) && (self.vweaponglowmod_x > 0))
+	{
+		self.vweaponglowmod_x -= 0.05; 
+		self.vweaponglowmod_y -= 0.05; 
+		self.vweaponglowmod_z -= 0.05;
+	}
+	if(self.vweaponframe >= 41)
+		self.think = idle_coachgun;
+	else
+	self.think = wsfire_coachgun1;		
+	self.nextthink = time +  0.05;	
+};
+/*void() wsfire_coachgun1bac = { self.vweaponframe += 1;
 	if (self.vweaponframe == 18)
 	{
 		self.vweaponglowmod = '1 1 1';
@@ -73,7 +136,7 @@ void() wsfire_coachgun1 = { self.vweaponframe += 1;
 		self.think = wsfire_coachgun1;
 	self.nextthink = time + 0.05;
 };
-
+*/
 void() wsfire_coachgun = { self.vweaponglowmod = '0.5 0.5 0.5';
 	self.vweaponframe = 17;
 	self.think = wsfire_coachgun1;
