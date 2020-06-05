@@ -115,15 +115,18 @@ void() check_tether_inmap = { local entity tm;
 		strunzone(profilename);
 };
 .float tether_global;
-.float lifetime;
-
+void() nowater_type; 
 .float tether_model_client;
 void() artifact_client_remove3;
+void()message_garbage_collector;
 void() write_tether = { 
 
+	nowater_type();
 	Kill_Tether();
 	write_tether2(0);
-	Hud_message(24, self.origin, self);
+
+	message_garbage_collector ();
+
 	read_currentprofileslot();
 	local string campaignloc;
 	campaignloc = strcat("profiles/", profilename, "/tether.txt");
@@ -193,6 +196,7 @@ void() write_tether = {
 	stuffcmd(self, saveloc);
 	stuffcmd(self, "scratch1 0\n");
 
+
 	if (!(self.savedlist &SAVED_TETHER))
 		self.savedlist += SAVED_TETHER;
 	local float savestotalnumber;
@@ -239,5 +243,215 @@ void() TrinketofRespite_selected = { self.radialruning = 1;
 	self.radial_time = time + 21;
 	sprint(self, "Trinket of Respite selected\n");
 };
+.float attar_timem;
 
+.entity exenemy;
+void ()ai_face;
+void()fmck_maker_touch;
+.float turret;
+void() stricken_preattack1;
+
+void()deactivate_turret2;
+void()deactivate_turret;
+void() FindNearestEnemy;
+void() remove_attar_enemy =
+{
+	self.owner.enemy = self.exenemy;
+	self.owner.friendly_monster = 0;	
+	if(self.owner.classname == "monster_stricken")
+	{
+		self.owner.turret = self.owner.oldturret;
+		if(self.owner.turret == 1)
+		self.owner.th_run = stricken_preattack1;
+		else
+		self.owner.th_run = stricken_run1;
+	}
+
+	if(self.owner.health > 0)
+	{
+		local entity oself = self;
+		self = self.owner;
+		FoundTarget();
+		local entity pl;
+		pl = find(world, classname, "player");
+		self.enemy = pl;
+		ai_face();
+		self.think = self.th_run;
+		self.nextthink = time;	
+		self.goalentity = self.enemy;
+		self = oself;
+	}
+	
+	self.think = alphafade;	
+	self.nextthink = time;	
+};
+void() spawn_attar_enemy_think =
+{
+	if(self.owner.health <= 0)
+	{
+	self.think = alphafade;	
+	self.nextthink = time;
+	return;
+	}
+	if(self.frame < 4)
+		self.frame ++;
+
+	if(self.lifetime < time)
+	{
+		self.alphatime = 1;		
+		self.think = remove_attar_enemy;
+	}
+	else
+	self.think = spawn_attar_enemy_think;
+	self.nextthink = time + 0.05;
+};
+
+
+void() find_next_enemy =
+{
+next_enemy();
+self.nextthink = time;
+self.think = self.th_run;
+}
+void(entity ownr)spawn_attar_enemy =
+{
+local entity mark;
+mark = spawn();
+mark.owner = ownr;
+ownr.attached_cloud = mark;
+setmodel(mark,"models/artifacts/effects/confounding_attar_enemy.md3");
+mark.nextthink = time + 0.01;
+mark.lifetime = time + attar_effect_time;
+mark.think = spawn_attar_enemy_think;
+setattachment (mark,ownr,"");		
+}
+
+
+void(entity friend) Create_friendly_monster = 
+{
+	friend.friendly_monster = 1;
+	if(friend.enemy)
+	friend.exenemy = friend.enemy; 
+
+	friend.enemy = 0;
+	friend.attar_timem = time  + 1;
+	if(friend.classname == "monster_heretic")
+	{
+	if(friend.movetype != MOVETYPE_STEP)
+	friend.movetype = MOVETYPE_STEP;
+	}
+	friend.think = find_next_enemy;
+	friend.nextthink = time;
+	spawn_attar_enemy(friend);
+	local entity oself;
+	oself = self;
+	self = friend;
+	ai_face();
+	self = oself;
+};
+void() search_monster =
+{
+	local vector source;
+	local entity head;
+	source = self.origin;
+	head = findradius(source, attar_bbox_x);
+	while (head)
+	{
+		if ((head.classentity ==  "monsters") && (head.friendly_monster != 1) && (	head.warped_time < time))
+		{
+		Create_friendly_monster(head);
+		}
+		head = head.chain;
+	}
+};
+void()fmck_maker_touch;
+void() AttarExplode =
+{
+	if(self.frame < 4)
+		self.frame ++;
+	search_monster();
+	if(time > self.lifetime)
+	{
+		self.think = alphafade;	
+		self.alphatime = 1.5;		
+	}
+	else
+		self.think = AttarExplode;
+	self.nextthink = time + 0.1;
+};
+.float alreadytouched1;
+void() attar_touch =
+{
+//pointparticles(particleeffectnum("retcherdecal"), self.origin, '0 0 0', 1);
+if ((other == self.owner))
+	return;	// don't explode on owner
+if((other == world) || (other.flags & FL_MONSTER) || (other.solid == SOLID_BSP))
+	{	
+	sound(self, CHAN_AUTO, "items/artifacts/artifactD_end.ogg", 1, 0.25);
+	setmodel(self, "models/artifacts/effects/confounding_attar_cloud.md3");	
+	self.movetype = 0;
+	self.solid = SOLID_TRIGGER;
+	setsize (self, attar_bboxn, attar_bbox);
+	self.angles_x = 0;
+	self.angles_z = 0;
+	self.lifetime = time + attar_time;
+	self.touch = fmck_maker_touch ;
+	self.nextthink =time + 0.1;
+	self.think =  AttarExplode;		
+	}
+};
+
+void() attar_think_fly =
+{
+	local vector source;
+	local entity head;
+	source = self.origin;
+	head = findradius(source, 16);
+	local float fm;
+	while (head)
+	{
+		if ((head.classentity ==  "monsters") && (head.friendly_monster != 1))
+		{
+		fm = 1;		
+		}
+		head = head.chain;	
+	}
+	if(fm == 1)
+		self.think = attar_touch;
+	else
+		self.think = attar_think_fly; 
+	self.nextthink = time + 0.05;	
+}
+void() Attar_selected =
+{
+	if(!self.Attar)
+	return;
+	local entity missile;
+	missile = spawn ();
+	self.Attar --;
+	self.radial_time = time + 1;
+	missile.owner = self;
+	missile.movetype = MOVETYPE_BOUNCE;
+	missile.solid = SOLID_TRIGGER;
+	missile.classname = "grenade";
+	sound(self, CHAN_AUTO, "items/artifacts/artifactD_use.ogg", 1, 0.25);
+	makevectors (self.v_angle);
+	if (self.v_angle_x)
+		missile.velocity = v_forward*attar_vel + v_up * attar_velz + crandom()*v_right*1 + crandom()*v_up*1;
+	else
+	{
+		//missile.velocity = aim(self, 10000);
+		missile.velocity = normalize(self.cursor_trace_endpos - missile.origin) *attar_vel;
+		//missile.velocity = missile.velocity * attar_vel;
+		missile.velocity_z += attar_velz;
+	}
+	missile.angles = vectoangles(missile.velocity);
+	missile.gravity = attar_grav;
+	missile.touch = attar_touch;
+	missile.think = attar_think_fly; 
+	missile.nextthink = time + 0.05;
+	setmodel (missile, "models/artifacts/effects/confounding_attar_proj.md3");
+	setsize(missile, attar_pbboxn,attar_pbbox);
+	setorigin (missile, self.origin);
+};
 ///////////////////////////////////end of qc file

@@ -331,6 +331,16 @@ void(vector pos, string pic, float alph, vector coloracion, vector siz, float in
 			alph = 1;
 			coloracion = '1 1 1';
 		}
+		if ((journal_page_maps == 4) && (index == 304))
+		{
+			alph = 1;
+			coloracion = '1 1 1';
+		}
+		if ((journal_page_maps == 5) && (index == 305))
+		{
+			alph = 1;
+			coloracion = '1 1 1';
+		}
 	}
 
 	if (journal_chapter == 2)
@@ -447,6 +457,11 @@ void(vector pos, string pic, float alph, vector coloracion, vector siz, float in
 		}
 
 		if ((journal_page_bestiary == 9) && (index == 309))
+		{
+			alph = 1;
+			coloracion = '1 1 1';
+		}
+		if ((journal_page_bestiary == 10) && (index == 310))
 		{
 			alph = 1;
 			coloracion = '1 1 1';

@@ -62,18 +62,21 @@ void() delete_shrine = { local float writeparms;
 
 .float playerdeadtime;
 void() PlayerDeathThink;
-void() Player_Die = { delete_shrine();
+void(entity ownr) client_garbage_collector;
+void() Player_Die = { 
+	delete_shrine();
 	if (self.health >= 0)
 		self.health = -1;
+	remove(self.vweapon);
 	self.use = SUB_Null;
 	self.solid = SOLID_CORPSE;
 	self.takedamage = 0;
 	self.think = PlayerDeathThink;
-	self.nextthink = time + 0.1;
+	self.nextthink = time;
 	self.playerdeadtime = time + 100000000;
 	self.deadflag = DEAD_DEAD;
 	self.deadwaiting = time + 0.1;
-	remove(self.vweapon);
+
 	if (self.waterlevel >= 3)
 		playersound("player/die_underwater", 2);
 	else
@@ -96,6 +99,14 @@ void(entity attacker, float dmg) Player_Pain = { if (self.pain_finished > time)
 };
 
 void() PlayerDeathThink = { local float forward;
+
+	if (self.deadflag == DEAD_DEAD)
+	{
+		client_garbage_collector(self);
+		self.deadflag = DEAD_RESPAWNABLE;
+		return;
+	}
+
 	if ((self.flags &FL_ONGROUND))
 	{
 		forward = vlen(self.velocity);
@@ -127,17 +138,11 @@ void() PlayerDeathThink = { local float forward;
 	localcmd("r_glsl_saturation 0\n");
 	localcmd("v_cshift\n");
 
-	if (self.deadflag == DEAD_DEAD)
-	{
-		//if (self.button2 || self.button1 || self.button0)
-		//	return;
-		self.deadflag = DEAD_RESPAWNABLE;
-		return;
-	}
+
 
 	self.think = SUB_Null;
 	self.nextthink = time;
-	if (deathmatch)
+	if (deathmatch == 1)
 	{
 		self.deadmenuflag = 0;
 
@@ -154,7 +159,9 @@ void() PlayerDeathThink = { local float forward;
 		PutClientInServer();
 	}
 };
-
+.float extraongroundtime;
+.float onground_time;
+.float jumptime;
 void() PlayerJump = { if (self.flags &FL_WATERJUMP)
 		return;
 	if (self.waterlevel >= 2)
@@ -197,11 +204,14 @@ void() PlayerJump = { if (self.flags &FL_WATERJUMP)
 	//	local string snd;
 	//	snd = strcat ("player/jump", ftos (fsnd),".ogg");
 	//	sound (self, CHAN_VOICE, snd, 1, ATTN_NORM);
+	self.jumptime = time + 0,2;
 	self.velocity_z += 270;
+	self.onground_time = 0;
 };
 .float underwater_time;
 .float jumpinwater;
 .float jumpinwatertime;
+.float fakewatertype;
 void() WaterMove = { if (self.movetype == MOVETYPE_NOCLIP)
 		return;
 	if (self.health < 0)
@@ -217,7 +227,10 @@ void() WaterMove = { if (self.movetype == MOVETYPE_NOCLIP)
 		self.underwater_time = 0;
 	}
 
-	if (self.waterlevel != 3)
+	if (self.DrownerApp_time > time)
+	self.air_finished = time + 12;
+
+	if (self.waterlevel != 3) 
 	{
 		if (self.air_finished < time)
 			playersound("player/hurt_underwater", 3);
@@ -256,19 +269,19 @@ void() WaterMove = { if (self.movetype == MOVETYPE_NOCLIP)
 		return;
 	}
 
-	if (self.watertype == CONTENT_LAVA)
+	if ((self.watertype == CONTENT_LAVA) || (self.fakewatertype == CONTENT_LAVA))
 	{
 		// do damage
 		if (self.dmgtime < time)
 		{
 			if (self.radsuit_finished > time)
-				self.dmgtime = time + 1;
+				self.dmgtime = time + lava_damage_time * 5;
 			else
-				self.dmgtime = time + 0.2;
-			T_Damage(self, world, world, 10 *self.waterlevel);
+				self.dmgtime = time + lava_damage_time;
+			T_Damage(self, world, world, lava_damage);
 		}
 	}
-	else if (self.watertype == CONTENT_SLIME)
+	else if ((self.watertype == CONTENT_SLIME)|| (self.fakewatertype == CONTENT_SLIME))
 	{
 		// do damage
 		if (self.dmgtime < time && self.radsuit_finished < time)
@@ -340,7 +353,10 @@ void() CheckWaterJump = { local vector start, end;
 float(entity targ) crouchcheck = { makevectors(self.v_angle);
 	tracebox(self.origin, VEC_HULL_MIN, '16 16 0', self.origin + '0 0 48', FALSE, self);
 	if (trace_fraction == 1)	//hits nothing go ahead
+		{
+		self.origin_z += 16; setorigin(self,self.origin);
 		return TRUE;
+		}
 	if (!trace_ent.takedamage)	//hits world or nondamagable object
 		return FALSE;
 	return FALSE;
@@ -348,7 +364,11 @@ float(entity targ) crouchcheck = { makevectors(self.v_angle);
 
 void() Crouch_Off = { if (self.crouch && (crouchcheck(self)))	//get up
 	{
-		self.flags = self.flags + FL_JUMPRELEASED;
+		
+		if(self.groundentity.solid == SOLID_BBOX)
+		self.velocity_z  += 270;
+		if(!(self.flags & FL_JUMPRELEASED))
+		self.flags += FL_JUMPRELEASED;
 		setsize(self, '-16 -16 -32', '16 16 32');	//changes the size of the player to the normal size
 		self.crouch = 0;
 		self.attemptcrouch = 0;
@@ -487,7 +507,63 @@ void() autosave = { read_currentprofileslot();
 .float strafetime;
 .float melee_lunge;
 void() wraith_side1;
-void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
+
+.float realmaxspeed;
+.float maxspeedtime;
+.float stoptime;
+.float stopflag;
+.float onmonsterjumptime;
+.float alwaysrun;
+.float togglerun;
+.float walkingbutton;
+.float toggle_finished;
+void() check_custom_cvars;
+void() refresh_custom_cvars;
+.float buttonrelease7;
+.float lift_touch_time;
+.float on_lift;
+.float gameplayfix_stepdown;
+void() PlayerPreThink = 
+{ 		
+
+	/*
+	if(self.lift_touch_time > time)
+	{
+		if(self.on_lift == 1)
+		{
+			stuffcmd(self, "sv_gameplayfix_downtracesupportsongroundflag 1\n");
+			self.on_lift = 2;
+		}
+	}
+	else
+	{
+		if((self.on_lift != 0) && (self.velocity_z == 0))
+		{
+			stuffcmd(self, "sv_gameplayfix_downtracesupportsongroundflag 0\n");
+			self.on_lift = 0;
+		}
+	}
+	if((self.movement_x == 0) && (self.movement_y == 0)&& (self.gameplayfix_stepdown != 1)) 
+	{
+	self.gameplayfix_stepdown = 1;
+	stuffcmd(self, "sv_gameplayfix_nogravityonground 1\n");
+	}
+
+	if((self.movement_x != 0) ||(self.movement_y != 0)&& (self.gameplayfix_stepdown == 1)) 
+	{
+	self.gameplayfix_stepdown = 0;
+	stuffcmd(self, "sv_gameplayfix_nogravityonground 0\n");
+	}
+	*/
+	//string viewxanglesfactor = strcat ((vtos (self.movement)), (" movement\n"));
+	//bprint (viewxanglesfactor);
+
+
+	if((self.stoptime < time) && (self.flags & FL_IGNOREINPUT))
+	{
+	self.flags -= FL_IGNOREINPUT;
+	}
+	if ((self.autosavetime > time) && (self.impulse))
 		self.impulse = 0;
 
 	if ((self.autosavetime < time) && (!(self.menuactive)))
@@ -553,7 +629,48 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 
 	if (!self.crouch)
 	{
-		if ((self.button7) && (self.flags & FL_ONGROUND))
+	
+		float walking, button7pressed;
+		{
+			if(self.togglerun != 1)
+			{
+				if(self.button7)
+					button7pressed = 1;	
+				else
+					button7pressed = 0;		
+			}
+			else
+			{	
+				if(!self.button7)
+					self.buttonrelease7 = 1;
+				if ((self.button7) && (self.buttonrelease7 == 1))
+				{
+					if(self.walkingbutton != 1)
+						self.walkingbutton= 1;
+					else
+						self.walkingbutton= 0;
+					self.buttonrelease7 = 0;
+				}
+			button7pressed = self.walkingbutton;
+			}
+		}
+	
+		if (self.alwaysrun == 1)
+		{
+			 if (button7pressed == 1)
+				walking = 1;
+			else
+				walking = 0;
+		}
+		else
+		{
+			 if (button7pressed == 1) 
+				walking = 0;
+			else
+				walking = 1;
+		}
+
+		if ((walking == 1))
 		{
 			if (!(self.effects &256))
 			{
@@ -561,21 +678,27 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 				stuffcmd(self, "cl_bobmodel 0\n");
 				stuffcmd(self, "cl_leanmodel 0\n");
 				stuffcmd(self, "cl_followmodel 0\n");
+				stuffcmd(self, "cl_smoothviewheight 0\n");
 			}
 
 			self.maxspeed = 0.75;
 		}
 		else
 		{
+			if((self.flags & FL_ONGROUND) && (self.maxspeed != 1))
+			{
 			if (self.heretic_sloweffectime > time)
 				self.maxspeed = 0.75;
 			else
 				self.maxspeed = 1;
+			}
+
 			if (self.effects &256)
 			{
 				stuffcmd(self, "cl_bobmodel 1\n");
 				stuffcmd(self, "cl_leanmodel 1\n");
 				stuffcmd(self, "cl_followmodel 1\n");
+				stuffcmd(self, "cl_smoothviewheight 0\n");
 				self.effects -= 256;
 			}
 		}
@@ -586,6 +709,8 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 
 	if ((time > self.lspeedtime) && (self.slowmouse == 1) && (self.heretic_sloweffectime < time))
 		quickmovement();
+	if(self.flags & FL_ONGROUND)
+	self.onground_time = time + 0.2;
 
 	makevectors(self.v_angle);	// is this still used
 	if ((self.fwatershifttime > time) && (self.nowatershift != 0))
@@ -621,6 +746,10 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 			self.timeflyc = rint(time - self.timefly);
 			if (self.movetype != MOVETYPE_FLY)
 				self.movetype = MOVETYPE_FLY;
+			stuffcmd (self, "alias +button4  \"+movedown\" \n");
+			stuffcmd (self, "alias -button4  \"-movedown\" \n");
+			stuffcmd (self, "alias +jump  \"+moveup\" \n");
+			stuffcmd (self, "alias -jump  \"-moveup\" \n");
 		}
 		else
 		{
@@ -628,9 +757,18 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 			{
 				if (self.movetype != MOVETYPE_NOCLIP)
 				{
-					self.movetype = MOVETYPE_WALK;
-					self.timefly = 0;
-					self.timeflyc = 0;
+				self.radialactive = 0;
+				self.timefly = 0;
+				self.timeflyc = 0;
+				self.movetype = MOVETYPE_WALK;
+				stuffcmd (self, "alias +button4  \"\" \n");
+				stuffcmd (self, "alias -button4  \"\" \n");
+				stuffcmd (self, "alias +jump  \"\" \n");
+				stuffcmd (self, "alias -jump  \"\" \n");
+				stuffcmd (self, "-jump \n");
+				stuffcmd (self, "-jump \n");
+				stuffcmd (self, "-moveup \n");
+				stuffcmd (self, "-movedown \n");
 				}
 			}
 		}
@@ -644,8 +782,26 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 	if (self.waterlevel == 2)
 		CheckWaterJump();
 
-	self.velocity_x = self.velocity_x *self.maxspeed;
-	self.velocity_y = self.velocity_y *self.maxspeed;
+	if ((self.button2) && (!self.crouch))
+	{
+		PlayerJump();
+	}
+	else
+		self.flags = self.flags | FL_JUMPRELEASED;
+
+	if ((self.watertype == CONTENT_LAVA) || (self.fakewatertype == CONTENT_LAVA))
+	{
+		self.velocity_x = self.velocity_x *self.realmaxspeed * lava_speed;
+		self.velocity_y = self.velocity_y *self.realmaxspeed * lava_speed;
+	}
+	else
+	{
+		if ((time > self.melee_jump_time) && (time > self.jumptime)) 
+		{
+			self.velocity_x = self.velocity_x *self.realmaxspeed;
+			self.velocity_y = self.velocity_y *self.realmaxspeed;
+		}
+	}
 
 	if ((!(self.button4)) && (self.crouch))
 	{
@@ -657,10 +813,19 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 		Crouch_On();
 	}
 
+
+
+	if((self.flags & FL_ONGROUND) && (self.groundentity.flags & FL_MONSTER) && (self.onmonsterjumptime < time) )
+	{
+		self.onmonsterjumptime = time  + 0.3;
+		self.velocity_z  += random(50,70);
+		self.velocity_x  += random(90, 120) * crandom2() ;
+		self.velocity_y  += random(90, 120) * crandom2();
+	}
 	if ((self.heretic_sloweffectime > time))
 	{
-		if ((self.crouch == 1) && (self.flags &FL_ONGROUND) && (self.maxspeed != 0.4875))
-			self.maxspeed = 0.4875;	// multiplier of the velocity of the player	
+		if ((self.crouch == 1) && (self.flags &FL_ONGROUND) && (self.maxspeed != 0.5))
+			self.maxspeed = 0.5;	// multiplier of the velocity of the player	
 	}
 	else
 	{
@@ -675,13 +840,9 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 		self.noshake = 0;
 	}
 
+	
 	UpdateViewOfs();
-	if ((self.button2) && (!self.crouch))
-	{
-		PlayerJump();
-	}
-	else
-		self.flags = self.flags | FL_JUMPRELEASED;
+
 	if ((self.radial_time < time) && (self.radialruning == 1))
 	{
 		//self.radialactive = 0;
@@ -721,7 +882,7 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 
 		/*if (skill >= 1)
 		{
-			if ((self.cursor_trace_ent.classname == "wraith") && (self.cursor_trace_ent.enemy == self) && (self.cursor_trace_ent.strafetime < time))
+			if ((self.cursor_trace_ent.classname == "monster_wraith") && (self.cursor_trace_ent.enemy == self) && (self.cursor_trace_ent.strafetime < time))
 			{
 				self.cursor_trace_ent.strafetime = time + 1;
 				self.cursor_trace_ent.think = wraith_side1;
@@ -734,6 +895,25 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 			self.crosshairflag -= 2;
 	}
 
+	if (time > self.maxspeedtime)
+	{
+		if(self.maxspeed < self.realmaxspeed)
+		{
+			self.realmaxspeed -= sliding_ammount_d;
+		}	
+		if(self.maxspeed > self.realmaxspeed)
+		{
+			self.realmaxspeed += sliding_ammount_i;
+		}	
+		self.maxspeedtime =  time + 1/sliding_fps;
+	}
+
+
+//self.realmaxspeed  = self.maxspeed;
+
+//	if(self.flags & FL_ONGROUND)
+//	self.onground_time = time + self.extraongroundtime;
+
 	//find_nearest_waypoint(self, world);
 };
 
@@ -741,6 +921,14 @@ void() PlayerPreThink = { if ((self.autosavetime > time) && (self.impulse))
 
 .float nomelee;
 .float checkweaponflag;
+void() nowater_type =
+{
+self.waterlevel = 0;
+self.fakewatertype = 0;
+self.zerogtime = 0;
+self.fwatershifttime = 0;
+self.fwatershift = 0;
+}
 
 void() check_weapons = { self.checkweaponflag = 1;
 };
@@ -748,8 +936,8 @@ void() check_weapons = { self.checkweaponflag = 1;
 .float tether_model_client;
 .float shrine_model_client;
 .float artifact_model_client;
+.float sigil_model_client;
 .float v_nextthink;
-.float lifetime;
 .entity artifact_client2;
 
 void() artifact_client_remove2 = { if (self.owner.shrine_model_client == 1)
@@ -837,6 +1025,46 @@ void() artifact_client_think = { self.alpha += 0.1;
 	self.nextthink = time + 0.05;
 
 };
+
+void() sigil_client_remove = 
+{ 	
+	if (self.owner.timefly < time)
+	{
+		self.alpha -= 0.1;
+	}
+	else
+	{
+		local float maxalpha;
+		maxalpha = 1;
+		if (self.alpha < maxalpha)
+			self.alpha += 0.1;
+	}
+	if (self.alpha <= 0.1)
+	{
+		self.think = SUB_Remove;
+		self.owner.sigil_model_client = 0;
+	}
+	else
+		self.think = sigil_client_remove;
+
+	self.nextthink = time + 0.05;
+};
+
+
+void() sigil_client_think = 
+{ 
+	self.alpha += 0.1;
+	local float maxalpha;
+	maxalpha = 1;
+
+	if (self.alpha < maxalpha)
+		self.think = sigil_client_think;
+	else
+		self.think = sigil_client_remove;
+	self.nextthink = time + 0.05;
+
+};
+
 .float Shrine_time;
 void() ArtifactClientModel =	//ArtifactClientModel
 	{
@@ -860,8 +1088,23 @@ void() ArtifactClientModel =	//ArtifactClientModel
 		}
 
 
+		local entity sigil_client;
+		if((self.timefly > time) && (self.sigil_model_client == 0))
+		{
+			sigil_client = spawn();
+			sigil_client.owner = self;
+			sigil_client.effects = 256;
+			sigil_client.viewmodelforclient = self;
+			setorigin(sigil_client, '0 0 0');
+			sigil_client.oldangles = self.angles;
+			sigil_client.frame = 0;
+			sigil_client.alpha = 0.01;
+			self.sigil_model_client = 1;
+			setmodel(sigil_client, "models/artifacts/active/sigil_flight_active.md3");
+			sigil_client.think = sigil_client_think;
+			sigil_client.nextthink = time;
+		}
 		local entity artifact_client;
-
 		if (self.radial_time > time)
 		{
 			if ((self.artifact_model_client == 0) && ((self.Aegis_time > time) || (self.LifeSiphon_time > time) || (self.DrownerApp_time > time) || (self.Tether_time > time)))
@@ -890,7 +1133,7 @@ void() ArtifactClientModel =	//ArtifactClientModel
 				if (self.DrownerApp_time > time)
 				{
 					self.artifact_model_client = 4;
-					setmodel(artifact_client, "models/artifacts/active/drowners_apparatus_active.md3");
+					setmodel(artifact_client, "models/misc/null.md3");
 				}
 				artifact_client.lifetime = time + 30;
 				artifact_client.think = artifact_client_think;
@@ -900,6 +1143,7 @@ void() ArtifactClientModel =	//ArtifactClientModel
 	};
 .float fakewatertype;
 .float check_centered;
+.float lungefree;
 void() PlayerPostThink = { 
 if (self.deadflag)
 		return;
@@ -1111,7 +1355,8 @@ if (self.deadflag)
 	}
 
 	//////////////////////	
-
+	if ((self.flags &FL_ONGROUND) && (self.lungefree > time))
+	self.lungefree = 0;
 	if ((self.flags &FL_ONGROUND) && (self.melee_released > 0) && (!self.button3) && (time > self.melee_jump_time))
 		self.melee_released = 0;
 	if ((self.fakewatertype) && (self.watertype_time < time))
@@ -1148,7 +1393,7 @@ if (self.deadflag)
 		self.jump_flag = 0;
 	}
 
-	if (!(self.flags &FL_ONGROUND))
+	if ((!(self.flags &FL_ONGROUND)) && (self.movetype == MOVETYPE_WALK))
 	{
 		if (self.flags &FL_INWATER)
 			self.fall_state = FALSE;
@@ -1163,8 +1408,8 @@ if (self.deadflag)
 	}
 
 	//	local string viewxanglesfactor;
-
-	//	viewxanglesfactor = strcat ((ftos (self.v_angle_x)), (" died\n"));
+	//float speed_f = vlen(self.velocity);
+	//string viewxanglesfactor = strcat ((ftos (speed_f)), (" movement\n"));
 	//bprint (viewxanglesfactor);
 
 	//local string lmessage;
@@ -1191,6 +1436,20 @@ void() monster_relocator = { local entity monster;
 		monster = monster.chain;	//links every monstergram found so they all go BOOM!
 	}
 };
+void(entity ownr) client_garbage_collector = { local entity garbage;
+	garbage = findradius(self.origin, 1000000);
+	while (garbage)	//Loops through everything put in the missile entit
+	{
+		if ((garbage.wrathflags &FL_GARBAGE) && (garbage.owner == ownr))
+		{
+			remove(garbage);
+		}
+
+		garbage = garbage.chain;	//links every garbagegram found so they all go BOOM!
+	}
+	//spawn_dead_model(ownr.origin, ownr.angles);
+};
+
 void() garbage_collector = { local entity garbage;
 	garbage = findradius(self.origin, 1000000);
 	while (garbage)	//Loops through everything put in the missile entit
@@ -1202,12 +1461,19 @@ void() garbage_collector = { local entity garbage;
 
 		garbage = garbage.chain;	//links every garbagegram found so they all go BOOM!
 	}
-
-	/*
-
-	*/
-
 };
+void() message_garbage_collector = { local entity garbage;
+	garbage = findradius(self.origin, 1000000);
+	while (garbage)	//Loops through everything put in the missile entit
+	{
+		if (garbage.wrathflags &FL_MESSAGE)
+		{
+			remove(garbage);
+		}
+		garbage = garbage.chain;	//links every garbagegram found so they all go BOOM!
+	}
+};
+
 void() respawn_entities = { local entity respawneable;
 	respawneable = findradius(self.origin, 1000000);
 	while (respawneable)	//Loops through everything put in the missile entit
@@ -1269,6 +1535,8 @@ void(entity e) changeparms2 = { parm1 = e.items;
 	parm25 = e.journal_jmessagesm;
 	parm26 = e.foundedrelics;
 	parm27 = e.centerprint_messages;
+	parm28 = e.Attar;
+
 };
 void(entity e) GotoNextMap = { stuffcmd(e, "bf 0 0 0 2 0\n");
 	local float loadingmap;
@@ -1296,7 +1564,7 @@ void(entity e) GotoNextMap = { stuffcmd(e, "bf 0 0 0 2 0\n");
 
 };
 string currentmap;
-void(entity e) write_exploredmap = { read_currentprofileslot();
+void(entity e) write_exploredmap = {read_currentprofileslot();
 	local string saveloc, savestats;
 	saveloc = strcat("save data/profiles/", profilename, "/maps/", currentmap, "\n");
 
@@ -1328,6 +1596,27 @@ void(entity e) write_exploredmap = { read_currentprofileslot();
 		else
 			hasrelic = "0";
 	}
+	if (world.model == "maps/e1m3.bsp")
+	{
+		if (e.foundedrelics &RL_E1M3)
+			hasrelic = "1";
+		else
+			hasrelic = "0";
+	}
+	if (world.model == "maps/e1m4.bsp")
+	{
+		if (e.foundedrelics &RL_E1M4)
+			hasrelic = "1";
+		else
+			hasrelic = "0";
+	}
+	if (world.model == "maps/e1m5.bsp")
+	{
+		if (e.foundedrelics &RL_E1M5)
+			hasrelic = "1";
+		else
+			hasrelic = "0";
+	}
 
 	writethis = strcat(hasrelic, "/1");
 	fputs(save_stats, writethis);fputs(save_stats, "\n");
@@ -1343,23 +1632,29 @@ void(entity e) write_exploredmap = { read_currentprofileslot();
 
 	///////
 };
+.float totallungetime;
 void() changelevel_touch = { if (self.wait > time)
 		return;
 	if (other.classname != "player")
+		return;
+	message_garbage_collector ();
+	nowater_type();
+	if (time < other.totallungetime)
 		return;
 	local float invrtmsb;
 	if (stof(cvar_string("m_pitch")) < 0)
 		invrtmsb = 1;
 	else
 		invrtmsb = 0;
+	garbage_collector();
 
-	if(invrtmsb)
+/*	if(invrtmsb)
 	stuffcmd(other, "m_pitch -0.001\n");
 	else
 	stuffcmd(other, "m_pitch 0\n");
 	
 	stuffcmd(other, "m_yaw 0\n");
-	garbage_collector();
+*/	
 	if (!self.location)
 		other.location = 0;
 	else
@@ -1376,7 +1671,7 @@ void() changelevel_touch = { if (self.wait > time)
 	namewbsp = substring(namecomplete, 0, nLength - 4);
 	currentmap = namewbsp;
 
-	other.items = other.items - (other.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
+	other.items = other.items - (other.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
 	other.slot_keys = 0;
 	SUB_UseTargets();
 
@@ -1593,6 +1888,7 @@ void() FriktoParms = { local float readparms;
 	readtext = fgets(readparms);parm25 = stof(readtext);
 	readtext = fgets(readparms);parm26 = stof(readtext);
 	readtext = fgets(readparms);parm27 = stof(readtext);
+	readtext = fgets(readparms);parm28 = stof(readtext);
 
 	fclose(readparms);
 	/*
@@ -1621,7 +1917,7 @@ void() ParmstoFrik = { local float writeparms;
 	local string writethis, saveloc;
 	read_currentprofileslot();
 	self.slot_keys = 0;
-	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
+	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
 	saveloc = strcat("profiles/", profilename, "/frikparms.kp1");
 	writeparms = fopen(saveloc, FILE_WRITE);	//open what file to use in write mode
 	writethis = ftos(parm1);fputs(writeparms, writethis);fputs(writeparms, "\n");
@@ -1651,18 +1947,21 @@ void() ParmstoFrik = { local float writeparms;
 	writethis = ftos(parm25);fputs(writeparms, writethis);fputs(writeparms, "\n");
 	writethis = ftos(parm26);fputs(writeparms, writethis);fputs(writeparms, "\n");
 	writethis = ftos(parm27);fputs(writeparms, writethis);fputs(writeparms, "\n");
+	writethis = ftos(parm28);fputs(writeparms, writethis);fputs(writeparms, "\n");
 	fclose(writeparms);
 };
 
 void() SetChangeParms = { if (self.health <= 0)
 	{
+		self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
+		self.slot_keys = 0;
 		SetNewParms();
 		return;
 	}
 
 	// remove items
 	self.slot_keys = 0;
-	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
+	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
 	// cap super health
 	if (self.health > 100)
 		self.health = 100;
@@ -1695,6 +1994,7 @@ void() SetChangeParms = { if (self.health <= 0)
 	parm25 = self.journal_jmessagesm;
 	parm26 = self.foundedrelics;
 	parm27 = self.centerprint_messages;
+	parm28 = self.Attar;
 };
 
 void() SetNewParms = { if (!self.nomelee)
@@ -1733,9 +2033,9 @@ void() SetNewParms = { if (!self.nomelee)
 	parm25 = 0;
 	parm26 = 0;
 	parm27 = 0;
+	parm28 = 0;	//self.Attar = 0;
 
-	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
-	self.slot_keys = 0;
+
 };
 
 void() DecodeLevelParms = { self.items = parm1;
@@ -1765,6 +2065,7 @@ void() DecodeLevelParms = { self.items = parm1;
 	self.journal_jmessagesm = parm25;
 	self.foundedrelics = parm26;
 	self.centerprint_messages = parm27;
+	self.Attar = parm28;
 
 };
 
@@ -1772,8 +2073,30 @@ void() DecodeLevelParms = { self.items = parm1;
 void()recount_monsters;
 void() RestoreGame = {
 	self.check_centered = 1;
-	if (cvar("cvar_restoregame") != 1)
+	single_player = self;
+	localcmd("v_cshift\n");
+	stuffcmd(self, "slowmo 1\n");
+	stuffcmd(self, "r_glsl_saturation 1\n");
+
+	if (cvar("cvar_restoregame") == 2)
+	{
+	//message_garbage_collector ();
+	//Hud_message(24, self.origin, self);
+	localcmd("set cvar_restoregame 0\n");
 		return;
+	}
+	if (cvar("cvar_restoregame") == 3)
+	{
+	//message_garbage_collector ();
+	//Hud_message(26, self.origin, self);
+	localcmd("set cvar_restoregame 0\n");
+	return;
+	}
+				
+	if (cvar("cvar_restoregame") != 1)
+	{
+		return;
+	}
 	//	SetChangeParms();
 	monster_relocator();
 	FriktoParms();
@@ -1790,23 +2113,50 @@ void() RestoreGame = {
 	self.max_health = 100;	// My health (and my max) is 100
 	self.takedamage = DAMAGE_AIM;	// I can be fired at
 	self.solid = SOLID_SLIDEBOX;	// Things sort of 'slide' past me
-	self.movetype = MOVETYPE_WALK;	// Yep, I want to walk.
+	if (self.timefly <= time)
+	{
+		self.radialactive = 0;
+		self.movetype = MOVETYPE_WALK;	// Yep, I want to walk.
+		stuffcmd (self, "alias +button4  \"\" \n");
+		stuffcmd (self, "alias -button4  \"\" \n");
+		stuffcmd (self, "alias +jump  \"\" \n");
+		stuffcmd (self, "alias -jump  \"\" \n");
+		stuffcmd (self, "-jump \n");
+		stuffcmd (self, "-jump \n");
+		stuffcmd (self, "-moveup \n");
+		stuffcmd (self, "-movedown \n");
+	}
+	else
+	{
+		self.timeflyc = rint(time - self.timefly);
+		if (self.movetype != MOVETYPE_FLY)
+			self.movetype = MOVETYPE_FLY;
+		stuffcmd (self, "alias +button4  \"+movedown\" \n");
+		stuffcmd (self, "alias -button4  \"-movedown\" \n");
+		stuffcmd (self, "alias +jump  \"+moveup\" \n");
+		stuffcmd (self, "alias -jump  \"-moveup\" \n");
+	}
+
 	self.flags = FL_CLIENT;	// Yes, I'm a client.
 	self.origin = spawn_spot.origin;	// + '0 0 10';	// Move to the spawnspot location
 	self.angles = spawn_spot.angles;	// Face the angle the spawnspot indicates
 	self.fixangle = TRUE;	// Turn this way immediately
-	setmodel(self, "");	// Set my player to the player model
-	setmodel(self, "models/enemies/fallen/fallen1.md3");
+	setmodel(self, "models/misc/null.md3");	// Set my player to the player model
+	//setmodel(self, "models/enemies/fallen/fallen1.md3");
 	setsize(self, '-16 -16 -32', '16 16 32');
 	self.view_ofs = '0 0 22';	// Center my view
 	self.velocity = '0 0 0';	// Stop any old movement
 	self.coachgunclip = 0;
 	//	self.ammo_coachgun = 0;
+	stuffcmd(self, "cl_forwardspeed 416\n");
+	stuffcmd(self, "cl_backspeed 416\n");
+	stuffcmd(self, "cl_sidespeed 416\n");
 	self.air_finished = time + 12;
 	self.attack_finished = time;
 	self.th_pain = Player_Pain;
 	self.th_die = Player_Die;
 	self.maxspeed = 1;
+	self.realmaxspeed = 1;
 	self.fwatershift = TRUE;	// catch runaway cshifts (changlevel/respawn while in func_water)
 	self.oldgravity = 0;	// use unmodified sv_gravity
 	Check_FrikFile();
@@ -1857,8 +2207,9 @@ void() RestoreGame = {
 	self.autosavetime = time + 0.5;
 	self.autosaved = 0;
 	self.menuactive = 0;
-	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
+	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
 	self.slot_keys = 0;
+	refresh_custom_cvars();
 };
 
 void() check_spotted_maps = { if (world.model == "maps/hub1.bsp")
@@ -1901,13 +2252,21 @@ void() check_spotted_maps = { if (world.model == "maps/hub1.bsp")
 void() PutClientInServer = { local entity spawn_spot;	// This holds where we want to spawn
 	spawn_spot = SelectSpawnPoint();
 	self.nomelee = spawn_spot.nomelee;
-	DecodeLevelParms();
 
+
+	if (deathmatch == 1)
+	{
+	self.health =  100;	
+	SetNewParms();
+	}
+	DecodeLevelParms();
 	self.classname = "player";	// I'm a player!
+	single_player = self;
 	if (spawn_spot.health)
 		self.health = spawn_spot.health;
 	if (self.health < 1)
 		self.health = 1;
+	recount_monsters();	
 	self.max_health = 100;	// My health (and my max) is 100
 	self.takedamage = DAMAGE_AIM;	// I can be fired at
 	self.solid = SOLID_SLIDEBOX;	// Things sort of 'slide' past me
@@ -1916,8 +2275,8 @@ void() PutClientInServer = { local entity spawn_spot;	// This holds where we wan
 	self.origin = spawn_spot.origin;	// + '0 0 10';	// Move to the spawnspot location
 	self.angles = spawn_spot.angles;	// Face the angle the spawnspot indicates
 	self.fixangle = TRUE;	// Turn this way immediately
-	setmodel(self, "");	// Set my player to the player model
-	setmodel(self, "models/enemies/fallen/fallen1.md3");
+	setmodel(self, "models/misc/null.md3");	// Set my player to the player model
+	//setmodel(self, "models/enemies/fallen/fallen1.md3");
 	setsize(self, '-16 -16 -32', '16 16 32');
 	self.view_ofs = '0 0 22';	// Center my view
 	self.velocity = '0 0 0';	// Stop any old movement
@@ -1926,6 +2285,7 @@ void() PutClientInServer = { local entity spawn_spot;	// This holds where we wan
 	self.th_pain = Player_Pain;
 	self.th_die = Player_Die;
 	self.maxspeed = 1;
+	self.realmaxspeed = 1;
 	self.fwatershift = TRUE;	// catch runaway cshifts (changlevel/respawn while in func_water)
 	self.oldgravity = 0;	// use unmodified sv_gravity
 	Check_FrikFile();
@@ -1953,9 +2313,15 @@ void() PutClientInServer = { local entity spawn_spot;	// This holds where we wan
 		self.items -= IT_MELEE;
 		self.weapon = 0;
 	}
-
+	stuffcmd (self, "alias +button4  \"\" \n");
+	stuffcmd (self, "alias -button4  \"\" \n");
+	stuffcmd (self, "alias +jump  \"\" \n");
+	stuffcmd (self, "alias -jump  \"\" \n");
 	////lbeams
 	self.charge_shotgun = 1;
+	stuffcmd(self, "cl_forwardspeed 416\n");
+	stuffcmd(self, "cl_backspeed 416\n");
+	stuffcmd(self, "cl_sidespeed 416\n");
 	stuffcmd(self, "scratch3 1\n");
 	stuffcmd(self, "slowmo 1\n");
 	stuffcmd(self, "freelook 1\n");
@@ -1982,8 +2348,14 @@ void() PutClientInServer = { local entity spawn_spot;	// This holds where we wan
 	self.oldrelics_start = self.oldrelics;
 	self.autosavetime = time + 0.5;
 	self.menuactive = 0;
-	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_KEY4));
+	self.playerdeadtime = 0;
+	self.items = self.items - (self.items &(IT_KEY1 | IT_KEY2 | IT_KEY3 | IT_COFFERKEY1 | IT_COFFERKEY2| IT_COFFERKEY3));
 	self.slot_keys = 0;
+	if (deathmatch == 1)
+	self.health =  100;	
+	//spawn_player_model(self);
+	check_custom_cvars();
+	localcmd("set cvar_nodegraph 0\n");
 };
 
 void(entity targ, entity attacker) ClientObituary = { bprint(" died\n");

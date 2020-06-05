@@ -7,7 +7,9 @@ void() monster_executioner;
 
 
 
-void() check_spawner_counter = { local entity pl;
+void() check_spawner_counter = {
+
+/* local entity pl;
 	pl = find(world, classname, "player");
 	local float m_counter = self.count;
 
@@ -42,7 +44,7 @@ void() check_spawner_counter = { local entity pl;
 		return;	
 	}
 
-
+*/
 
 };
 
@@ -67,6 +69,7 @@ float() monster_counter =
 void() recount_monsters =
 {
 	total_monsters = killed_monsters +  monster_counter ();
+	entity pl = find(world, classname, "player");
 
 	local entity spawner;
 	spawner = findradius(self.origin, 1000000);
@@ -74,11 +77,36 @@ void() recount_monsters =
 	{
 		if (spawner.wrathflags &FL_SPAWNER)
 		{
-			spawner.think = check_spawner_counter;
-			spawner.nextthink = time + 0.1;
+		local float m_counter = spawner.count;
+			if (pl.oldrelics == 4)
+			{
+				if (spawner.classmonster5 > 0)
+					total_monsters = total_monsters + m_counter;
+			}
+			if (pl.oldrelics == 3)
+			{
+				if (spawner.classmonster4 > 0)
+					total_monsters = total_monsters + m_counter;
+			}
+			if (pl.oldrelics == 2)
+			{
+				if (spawner.classmonster3 > 0)
+					total_monsters = total_monsters + m_counter;
+			}
+			if (pl.oldrelics == 1)
+			{
+				if (spawner.classmonster2 > 0)
+					total_monsters = total_monsters + m_counter;
+			}
+			if (!pl.oldrelics)
+			{
+				if (spawner.classmonster1 > 0)
+					total_monsters = total_monsters + m_counter;
+			}
+
 		}
 
-		spawner = spawner.chain;	//links every garbagegram found so they all go BOOM!
+		spawner = spawner.chain;
 	}
 
 };
@@ -139,8 +167,8 @@ void() enemy_spawner_use = { if (self.warped != 1)
 			enemy.think = monster_invader;
 		if (self.local_classmonster == 3)
 			enemy.think = monster_wretch;
-		if (self.local_classmonster == 4)
-			enemy.think = monster_incisor;
+		//if (self.local_classmonster == 4)
+		//	enemy.think = monster_incisor;
 		if (self.local_classmonster == 5)
 			enemy.think = monster_widow;
 		if (self.local_classmonster == 6)
@@ -163,23 +191,10 @@ void() enemy_spawner_use = { if (self.warped != 1)
 		{
 			if (self.type == 1)
 				enemy.grosstime = time + 1.5;
+			enemy.warped_time = time + 3;	
 			enemy.warped = 1;
 			enemy.colormod = '5 0 0';
-			enemy.glowmod = '10 2 2';
-
-			/*		
-					WRAITH:
-				â¢ 59-68
-
-			EXECUTIONER:
-				â¢ 166-175
-
-			WIDOW:
-				â¢ 63-72
-
-			HERETIC:
-				â¢ 21-30
-			*/
+			//enemy.glowmod = '10 2 2';
 			enemy.frame = 88;
 			enemy.lastframewarp = 97;
 			if ((self.local_classmonster == 1) && (self.rise == 1))
@@ -188,6 +203,16 @@ void() enemy_spawner_use = { if (self.warped != 1)
 				enemy.lastframewarp = 123;
 			}
 			if (self.local_classmonster == 2)
+			{
+				enemy.frame = 21;
+				enemy.lastframewarp = 30;
+			}
+			if (self.local_classmonster == 3)
+			{
+				enemy.frame = 21;
+				enemy.lastframewarp = 30;
+			}
+			if (self.local_classmonster == 4)
 			{
 				enemy.frame = 21;
 				enemy.lastframewarp = 30;
@@ -208,6 +233,11 @@ void() enemy_spawner_use = { if (self.warped != 1)
 				enemy.frame = 21;
 				enemy.lastframewarp = 30;
 			}
+			if (self.local_classmonster == 9)
+			{
+				enemy.frame = 21;
+				enemy.lastframewarp = 30;
+			}
 			if (self.local_classmonster == 10)
 			{
 				enemy.frame = 166;
@@ -218,7 +248,7 @@ void() enemy_spawner_use = { if (self.warped != 1)
 				enemy.frame = 88;
 				enemy.lastframewarp = 97;
 			}
-			enemy.nextthink = time;
+			enemy.nextthink = time+ 0.05;
 		}
 		else
 			enemy.nextthink = time + 0.05;
@@ -262,6 +292,11 @@ void() enemy_spawner =
 		self.use = enemy_spawner_use;
 	self.think = check_spawner_counter;
 	self.nextthink = time + 0.25;
+	if (!self.targetname)
+	{				
+		self.think = wrath_objerror;
+		self.nextthink = time + random();
+	}
 	//if(self.respawnable)
 	//copy_old_data (self);
 };
@@ -339,6 +374,11 @@ void() enemy_spawner_warp =
 		self.use = enemy_spawner_warp_use;
 	self.think = check_spawner_counter;
 	self.nextthink = time + 1;
+	if (!self.targetname)
+	{				
+		self.think = wrath_objerror;
+		self.nextthink = time + random();
+	}
 };
 
 void() trigger_aggro_touch = { if (other.classname != "player")

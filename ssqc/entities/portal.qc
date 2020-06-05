@@ -20,7 +20,7 @@ void() animate_pillar = { self.frame++;
 		local entity pl;
 		pl = find(world, classname, "player");
 		pl.used_relicsinhub++;
-		if (pl.used_relicsinhub == 2)
+		if (pl.used_relicsinhub == 4)
 		{
 			pl.splashtime = time + 5;
 		}

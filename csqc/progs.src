@@ -10,6 +10,7 @@ draw.qc
 frik_file.qc
 radial.qc
 hud_messages.qc
+precaches.qc
 main.qc
 journal.qc
 hud.qc

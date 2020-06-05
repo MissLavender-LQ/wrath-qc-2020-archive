@@ -1,6 +1,36 @@
 /////////////////////////////////////////////
 ////////////CLIENT FRIK_FILE////////////
 /////////////////////////////////////////////
+float sliding_fps;
+float sliding_ammount_d;
+float sliding_ammount_i;
+float jumpad_noinput_time;
+float lava_speed;
+float lava_damage;
+float lava_damage_time;
+void() check_player= 
+{ 
+	local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("player.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	sliding_fps = stof(readtext);
+	readtext = fgets(readfrik);
+	sliding_ammount_d = stof(readtext);
+	readtext = fgets(readfrik);
+	sliding_ammount_i = stof(readtext);
+	readtext = fgets(readfrik);
+	jumpad_noinput_time = stof(readtext);
+	readtext = fgets(readfrik);
+	lava_speed = stof(readtext);
+	readtext = fgets(readfrik);
+	lava_damage = stof(readtext);
+	readtext = fgets(readfrik);
+	lava_damage_time = stof(readtext);
+	fclose(readfrik);
+};
+
+
 float lunge_vel;
 float lunge_velz;
 float lunge_velzog;
@@ -56,38 +86,10 @@ void() check_vmodel = { local float readfrik;
 	self.vvweaponangles_z = stof(readtext);
 	fclose(readfrik);
 };
-.float charge_shotgun;
 
-.float shotgun_damage1;
-.float shotgun_time1;
-.float shotgun_time2;
-.float shotgun_spread1;
-.string shotgun_model;
-.string shotgun_muzzleflash_model;
-.float shotgun_muzzleflash_scale;
-.vector shotgun_muzzle_pos1;
-.float buckshot_count;
-.float charge_shotgun_count;
-.float shotgun_clip;
-.float shotgun_proj_speed;
-.float shotgun_proj_dmg;
-float proj_shotgun_drunkfactorv;
-float proj_shotgun_drunkfactorh;
-float proj_shotgun_timing;
-vector proj_shotgun_bbox;
-void() check_shotgun = { local float readfrik;
+void() check_shotgun_pos = { local float readfrik;
 	local string readtext;
-	readfrik = fopen_wrath("weapons/shotgun.txt", FILE_READ);
-	readtext = fgets(readfrik);
-	self.shotgun_damage1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_time1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_time2 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_spread1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_model = (readtext);
+	readfrik = fopen_wrath("weapons/shotgun_pos.txt", FILE_READ);
 	readtext = fgets(readfrik);
 	self.svweapon_x = stof(readtext);
 	readtext = fgets(readfrik);
@@ -95,23 +97,41 @@ void() check_shotgun = { local float readfrik;
 	readtext = fgets(readfrik);
 	self.svweapon_z = stof(readtext);
 	readtext = fgets(readfrik);
-	self.svweapon_scale = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_muzzleflash_model = (readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_muzzleflash_scale = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_muzzle_pos1_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_muzzle_pos1_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.shotgun_muzzle_pos1_z = stof(readtext);
-	readtext = fgets(readfrik);
 	self.sweaponangles_x = stof(readtext);
 	readtext = fgets(readfrik);
 	self.sweaponangles_y = stof(readtext);
 	readtext = fgets(readfrik);
 	self.sweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_svweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_svweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_svweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_sweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_sweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_sweaponangles_z = stof(readtext);
+	fclose(readfrik);
+};
+
+void() check_shotgun = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/shotgun.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	self.shotgun_damage1 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_damage1_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_time1 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_time2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.shotgun_spread1 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.svweapon_scale = stof(readtext);
 	readtext = fgets(readfrik);
 	shotbbox = stov(readtext);
 	readtext = fgets(readfrik);
@@ -123,6 +143,8 @@ void() check_shotgun = { local float readfrik;
 	readtext = fgets(readfrik);
 	self.shotgun_proj_dmg = stof(readtext);
 	readtext = fgets(readfrik);
+	self.shotgun_proj_dmg_mp = stof(readtext);
+	readtext = fgets(readfrik);
 	proj_shotgun_drunkfactorv = stof(readtext);
 	readtext = fgets(readfrik);
 	proj_shotgun_drunkfactorh = stof(readtext);
@@ -132,14 +154,47 @@ void() check_shotgun = { local float readfrik;
 	proj_shotgun_bbox = stov(readtext);
 	fclose(readfrik);
 };
-
+float coach_proj_vel;
+void() check_coachgun_pos = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/coachgun_pos.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	self.cgvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cgvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cgvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cgweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cgweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cgweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cgweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);	fclose(readfrik);
+};
 void() check_coachgun = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("weapons/coachgun.txt", FILE_READ);
 	readtext = fgets(readfrik);
 	self.coachgun_damage1 = stof(readtext);
 	readtext = fgets(readfrik);
+	self.coachgun_damage1_mp = stof(readtext);
+	readtext = fgets(readfrik);
 	self.coachgun_damage2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.coachgun_damage2_mp = stof(readtext);
 	readtext = fgets(readfrik);
 	self.coachgun_time1 = stof(readtext);
 	readtext = fgets(readfrik);
@@ -149,45 +204,11 @@ void() check_coachgun = { local float readfrik;
 	readtext = fgets(readfrik);
 	self.coachgun_spread2 = stof(readtext);
 	readtext = fgets(readfrik);
-	self.coachgun_model = (readtext);
-	readtext = fgets(readfrik);
-	self.cgvweapon_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.cgvweapon_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.cgvweapon_z = stof(readtext);
-	readtext = fgets(readfrik);
 	self.cgvweapon_scale = stof(readtext);
 	readtext = fgets(readfrik);
-	self.coachgun_muzzleflash_model = (readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzleflash_scale = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos1_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos1_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos1_z = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos2_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos2_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos2_z = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos3_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos3_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.coachgun_muzzle_pos3_z = stof(readtext);
-	readtext = fgets(readfrik);
-	self.cgweaponangles_x = stof(readtext);
-	readtext = fgets(readfrik);
-	self.cgweaponangles_y = stof(readtext);
-	readtext = fgets(readfrik);
-	self.cgweaponangles_z = stof(readtext);
-	readtext = fgets(readfrik);
 	coachbbox = stov(readtext);
+	readtext = fgets(readfrik);
+	coach_proj_vel = stof(readtext);
 	fclose(readfrik);
 };
 vector bboxretcher;
@@ -195,37 +216,30 @@ vector bboxretcher2;
 
 float retcherdamg;
 float retcherdamg2;
+float retcherdamg_mp;
+float retcherdamg2_mp;
 float retchersplashdamage;
 float retchersplashradius;
+float retchersplashdamage_mp;
+float retchersplashradius_mp;
 float retcheraoeradius;
 float retcheraoetime;
 float retcheraoedamage;
+float retcheraoedamage_mp;
 float retcheraoeframetime;
 float retcher_proj_velz;
 float retcher_proj_vel;
 float retcher_proj_grav;
 
-void() check_retcher = { local float readfrik;
+void() check_retcher_pos = { local float readfrik;
 	local string readtext;
-	readfrik = fopen_wrath("weapons/retcher.txt", FILE_READ);
-	readtext = fgets(readfrik);
-	retcherdamg = stof(readtext);
-	readtext = fgets(readfrik);
-	retcherdamg2 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.voidbombs_time1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.voidbombs_time2 = stof(readtext);
-	readtext = fgets(readfrik);	//read 4the text
-	self.voidbombs_model = (readtext);
+	readfrik = fopen_wrath("weapons/retcher_pos.txt", FILE_READ);
 	readtext = fgets(readfrik);
 	self.rvweapon_x = stof(readtext);
 	readtext = fgets(readfrik);
 	self.rvweapon_y = stof(readtext);
-	readtext = fgets(readfrik);	//read the 7text
-	self.rvweapon_z = stof(readtext);
 	readtext = fgets(readfrik);
-	self.rvweapon_scale = stof(readtext);
+	self.rvweapon_z = stof(readtext);
 	readtext = fgets(readfrik);
 	self.rweaponangles_x = stof(readtext);
 	readtext = fgets(readfrik);
@@ -233,13 +247,48 @@ void() check_retcher = { local float readfrik;
 	readtext = fgets(readfrik);
 	self.rweaponangles_z = stof(readtext);
 	readtext = fgets(readfrik);
+	self.centered_rvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_rvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_rvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_rweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_rweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.rweaponangles_z = stof(readtext);	fclose(readfrik);
+};
+
+void() check_retcher = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/retcher.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	retcherdamg = stof(readtext);
+	readtext = fgets(readfrik);
+	retcherdamg_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	retcherdamg2 = stof(readtext);
+	readtext = fgets(readfrik);
+	retcherdamg2_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	self.voidbombs_time1 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.voidbombs_time2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.rvweapon_scale = stof(readtext);
+	readtext = fgets(readfrik);
 	bboxretcher = stov(readtext);
 	readtext = fgets(readfrik);
 	bboxretcher2 = stov(readtext);
 	readtext = fgets(readfrik);
 	retchersplashdamage = stof(readtext);
 	readtext = fgets(readfrik);
+	retchersplashdamage_mp = stof(readtext);
+	readtext = fgets(readfrik);
 	retchersplashradius = stof(readtext);
+	readtext = fgets(readfrik);
+	retchersplashradius_mp = stof(readtext);
 	readtext = fgets(readfrik);
 	retcheraoeradius = stof(readtext);
 	readtext = fgets(readfrik);
@@ -247,8 +296,9 @@ void() check_retcher = { local float readfrik;
 	readtext = fgets(readfrik);
 	retcheraoedamage = stof(readtext);
 	readtext = fgets(readfrik);
+	retcheraoedamage_mp = stof(readtext);
+	readtext = fgets(readfrik);
 	retcheraoeframetime = stof(readtext);
-
 	readtext = fgets(readfrik);
 	retcher_proj_velz = stof(readtext);
 	readtext = fgets(readfrik);
@@ -258,29 +308,11 @@ void() check_retcher = { local float readfrik;
 
 	fclose(readfrik);
 };
-vector bboxslag;
-vector bboxslag2;
 
-float slagspeed;
-float slagspeed2;
-float slagsplashradius;
-float slagsplashdamage;
-float slagsplashradius2;
-float slagsplashdamage2;
 
-void() check_slagcannon = { local float readfrik;
+void() check_slagcannon_pos = { local float readfrik;
 	local string readtext;
-	readfrik = fopen_wrath("weapons/slagcannon.txt", FILE_READ);
-	readtext = fgets(readfrik);
-	self.slagcannon_damage1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannon_damage2 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannon_time1 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannon_time2 = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannon_model = (readtext);
+	readfrik = fopen_wrath("weapons/slagcannon_pos.txt", FILE_READ);
 	readtext = fgets(readfrik);
 	self.cvweapon_x = stof(readtext);
 	readtext = fgets(readfrik);
@@ -288,19 +320,46 @@ void() check_slagcannon = { local float readfrik;
 	readtext = fgets(readfrik);
 	self.cvweapon_z = stof(readtext);
 	readtext = fgets(readfrik);
-	self.cvweapon_scale = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannonspread = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannonangle = stof(readtext);
-	readtext = fgets(readfrik);
-	self.slagcannonangle2 = stof(readtext);
-	readtext = fgets(readfrik);
 	self.cweaponangles_x = stof(readtext);
 	readtext = fgets(readfrik);
 	self.cweaponangles_y = stof(readtext);
 	readtext = fgets(readfrik);
 	self.cweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_cweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	fclose(readfrik);
+};
+
+void() check_slagcannon = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/slagcannon.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	slagcannon_damage1 = stof(readtext);
+	readtext = fgets(readfrik);
+	slagcannon_damage1_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	slagcannon_damage2 = stof(readtext);
+	readtext = fgets(readfrik);
+	slagcannon_damage2_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	self.slagcannon_time1 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.slagcannon_time2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.cvweapon_scale = stof(readtext);
+	readtext = fgets(readfrik);
+	self.slagcannonspread = stof(readtext);
 	readtext = fgets(readfrik);
 	bboxslag = stov(readtext);
 	readtext = fgets(readfrik);
@@ -316,71 +375,196 @@ void() check_slagcannon = { local float readfrik;
 	readtext = fgets(readfrik);
 	slagsplashdamage = stof(readtext);
 	readtext = fgets(readfrik);
+	slagsplashdamage_mp = stof(readtext);
+	readtext = fgets(readfrik);
 	slagsplashdamage2 = stof(readtext);
+	readtext = fgets(readfrik);
+	slagsplashdamage2_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	slagrocketjump = stof(readtext);
 	fclose(readfrik);
 };
 vector bboxspitter;
 vector bboxspitter2;
 float spitterdamg;
 float spitterdamg2;
+float spitterdamg_mp;
+float spitterdamg2_mp;
 float spittervel;
 float spittervel2;
 float spitter_svpf;
 float spitter_svsf;
+void() check_spitter_pos = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/spitter_pos.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	self.pvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.pvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.pvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.pweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.pweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.pweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_pweaponangles_z = stof(readtext);	
+	fclose(readfrik);
+};
+
 void() check_spitter = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("weapons/spitter.txt", FILE_READ);
 	readtext = fgets(readfrik);
-	spitterdamg = stof(readtext);	//1
+	spitterdamg = stof(readtext);
 	readtext = fgets(readfrik);
-	spitterdamg2 = stof(readtext);	//2
+	spitterdamg_mp = stof(readtext);
 	readtext = fgets(readfrik);
-	self.flamethrower_time1 = stof(readtext);	//3         
+	spitterdamg2 = stof(readtext);
 	readtext = fgets(readfrik);
-	self.flamethrower_time2 = stof(readtext);	//4       
+	spitterdamg2_mp = stof(readtext);
 	readtext = fgets(readfrik);
-	self.flamethrower_model = (readtext);	//5
+	self.flamethrower_time1 = stof(readtext);      
 	readtext = fgets(readfrik);
-	self.pvweapon_x = stof(readtext);	//turn the text into the float u want (by using stof: string to float)//6 
+	self.flamethrower_time2 = stof(readtext);     
 	readtext = fgets(readfrik);
-	self.pvweapon_y = stof(readtext);	//7
+	self.pvweapon_scale = stof(readtext);
 	readtext = fgets(readfrik);
-	self.pvweapon_z = stof(readtext);	//8
+	bboxspitter = stov(readtext);
 	readtext = fgets(readfrik);
-	self.pvweapon_scale = stof(readtext);	//9  
+	bboxspitter2 = stov(readtext);
 	readtext = fgets(readfrik);
-	self.pweaponangles_x = stof(readtext);	//10
+	spittervel = stof(readtext);
 	readtext = fgets(readfrik);
-	self.pweaponangles_y = stof(readtext);	//11
+	spittervel2 = stof(readtext);
 	readtext = fgets(readfrik);
-	self.pweaponangles_z = stof(readtext);	//12
+	spitter_svpf = stof(readtext);
 	readtext = fgets(readfrik);
-	bboxspitter = stov(readtext);	//13
-	readtext = fgets(readfrik);
-	bboxspitter2 = stov(readtext);	//14
-	readtext = fgets(readfrik);
-	spittervel = stof(readtext);	//15
-	readtext = fgets(readfrik);
-	spittervel2 = stof(readtext);	//16
-	readtext = fgets(readfrik);
-	spitter_svpf = stof(readtext);	//17
-	readtext = fgets(readfrik);
-	spitter_svsf = stof(readtext);	//18
+	spitter_svsf = stof(readtext);
 	fclose(readfrik);
 };
 
+void() check_lance= { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/lance.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	self.lance_damage = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_damage_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_damage2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_damage2_mp = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lvweapon_scale = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_time = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_time2 = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lance_alpha_time = stof(readtext);
+	fclose(readfrik);
+};
+void() check_lance_pos= { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("weapons/lance_pos.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	self.lvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.lweaponangles_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lvweapon_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lvweapon_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lvweapon_z = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lweaponangles_x = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lweaponangles_y = stof(readtext);
+	readtext = fgets(readfrik);
+	self.centered_lweaponangles_z = stof(readtext);
+	fclose(readfrik);
+};
 void() Check_FrikFile = { check_melee();
 	check_coachgun();
+	check_coachgun_pos();
 	check_shotgun();
+	check_shotgun_pos();
 	check_retcher();
+	check_retcher_pos();
 	check_slagcannon();
+	check_slagcannon_pos();
 	check_spitter();
+	check_spitter_pos();
 	check_vmodel();
+	check_lance();
+	check_lance_pos();
+	check_player();
 };
 
 /////////////////////////////////////////////
 ////////////ITEMS FRIK_FILE/////////////
 /////////////////////////////////////////////
+
+
+float attar_vel;//projectile vel
+float attar_velz;//projectile angle
+float attar_grav;//projectile gravity
+vector attar_pbbox;//projectile bbox size
+vector attar_pbboxn;//projectile bbox size negative
+vector attar_bbox;//AOE bbox size
+vector attar_bboxn;//AOE bbox size negative
+float attar_time;//AOE duration
+float attar_effect_time;//affected enemy duration
+void() check_attar = 
+{ 
+	local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("artifacts/attar.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	attar_vel = stof(readtext);
+	readtext = fgets(readfrik);
+	attar_velz = stof(readtext);
+	readtext = fgets(readfrik);
+	attar_grav = stof(readtext);
+	readtext = fgets(readfrik);
+	attar_pbbox = stov(readtext);
+	readtext = fgets(readfrik);
+	attar_pbboxn = stov(readtext);
+	readtext = fgets(readfrik);
+	attar_bbox = stov(readtext);
+	readtext = fgets(readfrik);
+	attar_bboxn = stov(readtext);
+	readtext = fgets(readfrik);
+	attar_time = stof(readtext);
+	readtext = fgets(readfrik);
+	attar_effect_time = stof(readtext);
+	fclose(readfrik);
+};
+
+
+float shotgun_ammount;
 float coachgun_ammount;
 float fang_ammount;
 float retcher_ammount;
@@ -391,6 +575,8 @@ void() check_itemammount = { local float readfrik;
 	readtext = fgets(readfrik);
 	coachgun_ammount = stof(readtext);
 	readtext = fgets(readfrik);
+	shotgun_ammount = stof(readtext);
+	readtext = fgets(readfrik);
 	fang_ammount = stof(readtext);
 	readtext = fgets(readfrik);
 	retcher_ammount = stof(readtext);
@@ -399,7 +585,40 @@ void() check_itemammount = { local float readfrik;
 	readtext = fgets(readfrik);
 	fclose(readfrik);
 };
+/*		self.ammo_coachgun = max_ammo_coachgun;
+		self.ammo_shotgun = max_ammo_shotgun;
+		//self.ammo_bombs = 250;
+		self.ammo_spitter = max_ammo_spitter;
+		self.ammo_cannon = max_ammo_cannon;
+		self.ammo_retcher = max_ammo_retcher;
+		self.ammo_lance = max_ammo_lance;*/
 
+
+float max_ammo_coachgun;
+float max_ammo_shotgun;
+float max_ammo_spitter;
+float max_ammo_retcher;
+float max_ammo_cannon;
+float max_ammo_lance;
+
+void() check_maxammo = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("items/maxammo.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	max_ammo_coachgun = stof(readtext);
+	readtext = fgets(readfrik);
+	max_ammo_shotgun = stof(readtext);
+	readtext = fgets(readfrik);
+	max_ammo_spitter = stof(readtext);
+	readtext = fgets(readfrik);
+	max_ammo_retcher = stof(readtext);
+	readtext = fgets(readfrik);
+	max_ammo_cannon = stof(readtext);
+	readtext = fgets(readfrik);
+	max_ammo_lance = stof(readtext);
+	readtext = fgets(readfrik);
+	fclose(readfrik);
+};
 float artifact_lightlev;
 vector artifact_light_col;
 float dark_helm_lightlev;
@@ -455,8 +674,7 @@ void() check_itemlight = { local float readfrik;
 	fclose(readfrik);
 };
 
-vector retcher_proj_size;
-vector shells_size_invader;
+
 float coffer_item_bounce;
 float coffer_item_gravity;
 float coffer_item_vel;
@@ -558,6 +776,40 @@ void() check_itemsize = { local float readfrik;
 	shells_size_invader = stov(readtext);
 	fclose(readfrik);
 };
+vector flash_color;
+float flash_alpha;
+float flash_fade;
+
+void() check_itemflash = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("items/flash.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	flash_color = stov (readtext);
+	readtext = fgets(readfrik);
+	flash_alpha = stof (readtext);
+	readtext = fgets(readfrik);
+	flash_fade = stof (readtext);
+	fclose(readfrik);
+};
+
+vector sigil_flash_color;
+float sigil_flash_alpha;
+float sigil_flash_fade;
+
+void() check_itemsigil_flash = 
+{ 
+	local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("sigil/fly_flash.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	sigil_flash_color = stov (readtext);
+	readtext = fgets(readfrik);
+	sigil_flash_alpha = stof (readtext);
+	readtext = fgets(readfrik);
+	sigil_flash_fade = stof (readtext);
+	fclose(readfrik);
+};
+
 /////////////////////////////////////////////
 ////////////ENEMIES FRIK_FILE/////////
 /////////////////////////////////////////////
@@ -566,80 +818,10 @@ vector widownbbox;
 float widowhealth;
 float widowdamage;
 
-float wvel1;
-float wvel2;
-float wvel3;
-float wvel4;
-float wvel5;
-float wvel6;
-float wvel7;
-float wvel8;
-float wvel9;
-float wvel10;
-//float wvel11;
-//float wvel12;
-
-float wta1;
-float wta2;
-float wta3;
-float wta4;
-float wta5;
-float wta6;
-float wta7;
-float wta8;
-float wta9;
-float wta10;
-float wta11;
-float wta12;
-
-float atw1;
-float atw2;
-float atw3;
-float atw4;
-float atw5;
-float atw6;
-float atw7;
-float atw8;
-float atw9;
-float atw10;
-
 //float ata5;
 //float ata6;
 
-float rtw1;
-float rtw2;
-float rtw3;
-float rtw4;
-float rtw5;
-float rtw6;
-float rtw7;
-float rtw8;
-float rtw9;
-float rtw10;
-float rtw11;
-float rtw12;
-float rtw13;
-float rtw14;
-float rtw15;
 
-float rta1;
-float rta2;
-float rta3;
-float rta4;
-float rta5;
-
-vector mercbbox;
-float merchealth;
-float mercdamage;
-float mercblts;
-
-float mercpl;
-float mercpm;
-float mercph;
-
-float opppl;
-float opppm;
-float oppph;
 
 float widpl;
 float widpm;
@@ -649,160 +831,64 @@ float affpl;
 float affpm;
 float affph;
 
-float mercod;
-void() check_mer_vel = { local float readfrik;
-	local string readtext;
-	readfrik = fopen_wrath("enemies/mercenary_vel.txt", FILE_READ);
-	readtext = fgets(readfrik);
-	wvel1 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel2 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel3 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel4 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel5 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel6 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel7 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel8 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel9 = stof(readtext);
-	readtext = fgets(readfrik);
-	wvel10 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta1 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta2 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta3 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta4 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta5 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta6 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta7 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta8 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta9 = stof(readtext);
-	readtext = fgets(readfrik);
-	wta10 = stof(readtext);
-	readtext = fgets(readfrik);
-	mercbbox = stov(readtext);
-	readtext = fgets(readfrik);
-	merchealth = stof(readtext);
-	readtext = fgets(readfrik);
-	mercdamage = stof(readtext);
-	readtext = fgets(readfrik);
-	mercblts = stof(readtext);
-	readtext = fgets(readfrik);
-	mercpl = stof(readtext);
-	readtext = fgets(readfrik);
-	mercpm = stof(readtext);
-	readtext = fgets(readfrik);
-	mercph = stof(readtext);
-	readtext = fgets(readfrik);
-	mercod = stof(readtext);
-	fclose(readfrik);
-};
 
-float oppwvel1;
-float oppwvel2;
-float oppwvel3;
-float oppwvel4;
-float oppwvel5;
-float oppwvel6;
-float oppwvel7;
-float oppwvel8;
-float oppwvel9;
-float oppwvel10;
-float oppwvel11;
-float oppwvel12;
 
-float oppwta1;
-float oppwta2;
-float oppwta3;
-float oppwta4;
-float oppwta5;
-
-vector oppressorbbox;
-float oppressorhealth;
-float oppressordamage;
-vector oppressorpbbox;
-float oppressorpvel;
-
-float opp_dr_idle;
+float opp_health;
+vector opp_bbox;
+vector opp_bboxn;
+float opp_wvel;
+float opp_dmg;
+float opp_projvel;
+float opp_dr_run;
 float opp_dr_attack;
-float opp_dr_paina;
-float opp_dr_painb;
+float opp_dtp;
+float opp_rtp;
+float opp_near;
+float opp_mid;
+float opp_far;
+float opp_zzc;
+float opp_zzd;
+float opp_zzmd;
+//float opp_dr_idle;
+vector opp_proj_size;
 
 void() check_op_vel = { local float readfrik;
 	local string readtext;
-	readfrik = fopen_wrath("enemies/oppressor_vel.txt", FILE_READ);
-	readtext = fgets(readfrik);
-	oppwvel1 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel2 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel3 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel4 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel5 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel6 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel7 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel8 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel9 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel10 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel11 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwvel12 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwta1 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwta2 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwta3 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwta4 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppwta5 = stof(readtext);
-	readtext = fgets(readfrik);
-	oppressorhealth = stof(readtext);
-	readtext = fgets(readfrik);
-	oppressordamage = stof(readtext);
-	readtext = fgets(readfrik);
-	oppressorbbox = stov(readtext);
-	readtext = fgets(readfrik);
-	oppressorpbbox = stov(readtext);
-	readtext = fgets(readfrik);
-	oppressorpvel = stof(readtext);
-	readtext = fgets(readfrik);
-	opp_dr_idle = stof(readtext);
-	readtext = fgets(readfrik);
+	readfrik = fopen_wrath("enemies/oppressor.txt", FILE_READ);
+	readtext = fgets(readfrik); 
+	opp_health = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_bbox = stov(readtext);
+	readtext = fgets(readfrik); 
+	opp_bboxn = stov(readtext);
+	readtext = fgets(readfrik); 
+	opp_wvel = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_dmg = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_projvel = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_dr_run = stof(readtext);
+	readtext = fgets(readfrik); 
 	opp_dr_attack = stof(readtext);
-	readtext = fgets(readfrik);
-	opp_dr_paina = stof(readtext);
-	readtext = fgets(readfrik);
-	opp_dr_painb = stof(readtext);
-	readtext = fgets(readfrik);
-	opppl = stof(readtext);
-	readtext = fgets(readfrik);
-	opppm = stof(readtext);
-	readtext = fgets(readfrik);
-	oppph = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_dtp = stof(readtext); // damage needed to pain
+	readtext = fgets(readfrik);  
+	opp_rtp = stof(readtext); // dice roll to pain
+	readtext = fgets(readfrik); 
+	opp_near = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_mid = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_far = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_zzc = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_zzd = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_zzmd = stof(readtext);
+	readtext = fgets(readfrik); 
+	opp_proj_size = stov(readtext);
 	fclose(readfrik);
 };
 
@@ -836,6 +922,7 @@ float radiusexplosionafflicted;
 float damagedexplosionafflicted;
 float radiusdexplosionafflicted;
 float afflicted_damagetomonsters;
+float afflicted_pushfactor;
 
 void() check_af_vel = { local float readfrik;
 	local string readtext;
@@ -906,6 +993,8 @@ void() check_af_vel = { local float readfrik;
 	radiusdexplosionafflicted = stof(readtext);
 	readtext = fgets(readfrik);
 	afflicted_damagetomonsters = stof(readtext);	//  	
+	readtext = fgets(readfrik);
+	afflicted_pushfactor = stof(readtext);	//  	
 	fclose(readfrik);
 };
 
@@ -934,45 +1023,45 @@ void() check_afflicted_gibs = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("enemies/afflicted_gibs.txt", FILE_READ);
 	readtext = fgets(readfrik);
-	aff_gib1 = stov(readtext);	// health
+	aff_gib1 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib2 = stov(readtext);	// health
+	aff_gib2 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib3 = stov(readtext);	// health
+	aff_gib3 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib4 = stov(readtext);	// health
+	aff_gib4 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib5 = stov(readtext);	// health
+	aff_gib5 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib6 = stov(readtext);	// health
+	aff_gib6 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib7 = stov(readtext);	// health
+	aff_gib7 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib8 = stov(readtext);	// health
+	aff_gib8 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib9 = stov(readtext);	// health
+	aff_gib9 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib10 = stov(readtext);	// health
+	aff_gib10 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib11 = stov(readtext);	// health
+	aff_gib11 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib12 = stov(readtext);	// health
+	aff_gib12 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib13 = stov(readtext);	// health
+	aff_gib13 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib14 = stov(readtext);	// health
+	aff_gib14 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib15 = stov(readtext);	// health
+	aff_gib15 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib16 = stov(readtext);	// health
+	aff_gib16 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib17 = stov(readtext);	// health
+	aff_gib17 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib18 = stov(readtext);	// health
+	aff_gib18 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib19 = stov(readtext);	// health
+	aff_gib19 = stov(readtext);
 	readtext = fgets(readfrik);
-	aff_gib20 = stov(readtext);	// health
+	aff_gib20 = stov(readtext);
 
 	fclose(readfrik);
 };
@@ -1113,6 +1202,7 @@ float exec_health;
 float exec_damage;
 float exec_chargedamage;
 float exec_radius;
+float exec_chargetime;
 
 void() check_exec_vel = { local float readfrik;
 	local string readtext;
@@ -1127,6 +1217,8 @@ void() check_exec_vel = { local float readfrik;
 	exec_chargedamage = stof(readtext);
 	readtext = fgets(readfrik);
 	exec_radius = stof(readtext);
+	readtext = fgets(readfrik);
+	exec_chargetime = stof(readtext);
 	readtext = fgets(readfrik);
 	exec_vwalk1 = stof(readtext);
 	readtext = fgets(readfrik);
@@ -1510,45 +1602,45 @@ void() check_invader_gibs = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("enemies/invader_gibs.txt", FILE_READ);
 	readtext = fgets(readfrik);
-	inv_gib1 = stov(readtext);	// health
+	inv_gib1 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib2 = stov(readtext);	// health
+	inv_gib2 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib3 = stov(readtext);	// health
+	inv_gib3 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib4 = stov(readtext);	// health
+	inv_gib4 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib5 = stov(readtext);	// health
+	inv_gib5 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib6 = stov(readtext);	// health
+	inv_gib6 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib7 = stov(readtext);	// health
+	inv_gib7 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib8 = stov(readtext);	// health
+	inv_gib8 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib9 = stov(readtext);	// health
+	inv_gib9 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib10 = stov(readtext);	// health
+	inv_gib10 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib11 = stov(readtext);	// health
+	inv_gib11 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib12 = stov(readtext);	// health
+	inv_gib12 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib13 = stov(readtext);	// health
+	inv_gib13 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib14 = stov(readtext);	// health
+	inv_gib14 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib15 = stov(readtext);	// health
+	inv_gib15 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib16 = stov(readtext);	// health
+	inv_gib16 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib17 = stov(readtext);	// health
+	inv_gib17 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib18 = stov(readtext);	// health
+	inv_gib18 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib19 = stov(readtext);	// health
+	inv_gib19 = stov(readtext);
 	readtext = fgets(readfrik);
-	inv_gib20 = stov(readtext);	// health
+	inv_gib20 = stov(readtext);
 
 	fclose(readfrik);
 };
@@ -1578,10 +1670,24 @@ float wretch_mid;
 float wretch_near;
 float wretch_projvel;
 float wretch_rtp;	//roll to pain
+float wretch_dtg;	//roll to pain
+float wretch_rtsh; 
 float wretch_zzc;
 float wretch_zzd;
 float wretch_zzmd;
 float wretch_itadr;
+float wretch_sht; 
+float wretch_shv; 
+float wretch_shvb; 
+float wretch_shsps;
+//float wretch_shg;	// spining head gravity
+//vector wretch_shkv;	// kick velocity
+vector wretch_shbbox;
+vector wretch_shbboxn;
+float wretch_explo_damage; 
+float wretch_explo_damage_player; 
+float wretch_explo_radius; 
+float wretch_pushfactor; 
 
 void() check_wretch = { local float readfrik;
 	local string readtext;
@@ -1633,6 +1739,10 @@ void() check_wretch = { local float readfrik;
 	readtext = fgets(readfrik);
 	wretch_rtp = stof(readtext);
 	readtext = fgets(readfrik);
+	wretch_dtg = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_rtsh = stof(readtext);
+	readtext = fgets(readfrik);
 	wretch_zzc = stof(readtext);
 	readtext = fgets(readfrik);
 	wretch_zzd = stof(readtext);
@@ -1640,10 +1750,113 @@ void() check_wretch = { local float readfrik;
 	wretch_zzmd = stof(readtext);
 	readtext = fgets(readfrik);
 	wretch_itadr = stof(readtext);
-
+	readtext = fgets(readfrik);
+	wretch_sht = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_shv = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_shvb = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_shsps = stof(readtext);// spning head shoots per second
+	readtext = fgets(readfrik);
+	wretch_shg = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_shkv = stov(readtext);
+	readtext = fgets(readfrik);
+	wretch_shbbox = stov(readtext);
+	readtext = fgets(readfrik);
+	wretch_shbboxn = stov(readtext);
+	readtext = fgets(readfrik);
+	wretch_explo_damage = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_explo_damage_player = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_explo_radius = stof(readtext);
+	readtext = fgets(readfrik);
+	wretch_pushfactor = stof(readtext);
 	fclose(readfrik);
 };
+vector wre_gib1;
+vector wre_gib2;
+vector wre_gib3;
+vector wre_gib4;
+vector wre_gib5;
+vector wre_gib6;
+vector wre_gib7;
+vector wre_gib8;
+vector wre_gib9;
+vector wre_gib10;
+vector wre_gib11;
+vector wre_gib12;
+vector wre_gib13;
+vector wre_gib14;
+vector wre_gib15;
+vector wre_gib16;
+vector wre_gib17;
+vector wre_gib18;
+vector wre_gib19;
+vector wre_gib20;
+vector wre_gib21;
+vector wre_gib22;
+vector wre_gib23;
+vector wre_gib24;
+vector wre_gib25;
 
+void() check_wretch_gibs = { local float readfrik;
+	local string readtext;
+	readfrik = fopen_wrath("enemies/wretch_gibs.txt", FILE_READ);
+	readtext = fgets(readfrik);
+	wre_gib1 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib2 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib3 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib4 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib5 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib6 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib7 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib8 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib9 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib10 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib11 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib12 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib13 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib14 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib15 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib16 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib17 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib18 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib19 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib20 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib21 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib22 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib23 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib24 = stov(readtext);
+	readtext = fgets(readfrik);
+	wre_gib25 = stov(readtext);
+	fclose(readfrik);
+};
 /////////////////////////////////////////
 
 float incisor_health;
@@ -1772,6 +1985,7 @@ float stricken_dexplosiondamage;
 float stricken_dexplosiondamagemonsters;
 float stricken_walkradius;
 float stricken_damagetomonsters;
+float stricken_pushfactor;
 
 void() check_stricken = { local float readfrik;
 	local string readtext;
@@ -1832,6 +2046,8 @@ void() check_stricken = { local float readfrik;
 	stricken_walkradius = stof(readtext);	//   
 	readtext = fgets(readfrik);
 	stricken_damagetomonsters = stof(readtext);	//  
+	readtext = fgets(readfrik);
+	stricken_pushfactor = stof(readtext);	//  
 
 	fclose(readfrik);
 };
@@ -1861,45 +2077,45 @@ void() check_stricken_gibs = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("enemies/stricken_gibs.txt", FILE_READ);
 	readtext = fgets(readfrik);
-	str_gib1 = stov(readtext);	// health
+	str_gib1 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib2 = stov(readtext);	// health
+	str_gib2 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib3 = stov(readtext);	// health
+	str_gib3 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib4 = stov(readtext);	// health
+	str_gib4 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib5 = stov(readtext);	// health
+	str_gib5 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib6 = stov(readtext);	// health
+	str_gib6 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib7 = stov(readtext);	// health
+	str_gib7 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib8 = stov(readtext);	// health
+	str_gib8 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib9 = stov(readtext);	// health
+	str_gib9 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib10 = stov(readtext);	// health
+	str_gib10 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib11 = stov(readtext);	// health
+	str_gib11 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib12 = stov(readtext);	// health
+	str_gib12 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib13 = stov(readtext);	// health
+	str_gib13 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib14 = stov(readtext);	// health
+	str_gib14 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib15 = stov(readtext);	// health
+	str_gib15 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib16 = stov(readtext);	// health
+	str_gib16 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib17 = stov(readtext);	// health
+	str_gib17 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib18 = stov(readtext);	// health
+	str_gib18 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib19 = stov(readtext);	// health
+	str_gib19 = stov(readtext);
 	readtext = fgets(readfrik);
-	str_gib20 = stov(readtext);	// health
+	str_gib20 = stov(readtext);
 
 	fclose(readfrik);
 };
@@ -1929,6 +2145,7 @@ float heretic_zzc;
 float heretic_zzd;
 float heretic_zzmd;
 float her_radius;
+float her_chargetime;
 void() check_heretic = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("enemies/heretic.txt", FILE_READ);
@@ -1978,6 +2195,8 @@ void() check_heretic = { local float readfrik;
 	heretic_zzmd = stof(readtext);
 	readtext = fgets(readfrik);
 	her_radius = stof(readtext);
+	readtext = fgets(readfrik);
+	her_chargetime = stof(readtext);
 
 	fclose(readfrik);
 };
@@ -2007,45 +2226,45 @@ void() check_heretic_gibs = { local float readfrik;
 	local string readtext;
 	readfrik = fopen_wrath("enemies/heretic_gibs.txt", FILE_READ);
 	readtext = fgets(readfrik);
-	her_gib1 = stov(readtext);	// health
+	her_gib1 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib2 = stov(readtext);	// health
+	her_gib2 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib3 = stov(readtext);	// health
+	her_gib3 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib4 = stov(readtext);	// health
+	her_gib4 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib5 = stov(readtext);	// health
+	her_gib5 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib6 = stov(readtext);	// health
+	her_gib6 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib7 = stov(readtext);	// health
+	her_gib7 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib8 = stov(readtext);	// health
+	her_gib8 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib9 = stov(readtext);	// health
+	her_gib9 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib10 = stov(readtext);	// health
+	her_gib10 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib11 = stov(readtext);	// health
+	her_gib11 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib12 = stov(readtext);	// health
+	her_gib12 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib13 = stov(readtext);	// health
+	her_gib13 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib14 = stov(readtext);	// health
+	her_gib14 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib15 = stov(readtext);	// health
+	her_gib15 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib16 = stov(readtext);	// health
+	her_gib16 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib17 = stov(readtext);	// health
+	her_gib17 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib18 = stov(readtext);	// health
+	her_gib18 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib19 = stov(readtext);	// health
+	her_gib19 = stov(readtext);
 	readtext = fgets(readfrik);
-	her_gib20 = stov(readtext);	// health
+	her_gib20 = stov(readtext);
 
 	fclose(readfrik);
 };
@@ -2081,6 +2300,7 @@ float widow_zzd;
 float widow_zzmd;
 float widow_itadr;
 
+.float zigzag_time;
 .float zigzaging;
 .float zigzagdeviance;
 .float wknd;
@@ -2165,7 +2385,7 @@ void() check_enemies_frik = { check_op_vel();
 	check_wd_vel();
 	check_exec_vel();
 	check_damg_pain();
-	check_dummy();
+	//check_dummy();
 	check_invader();
 	check_wretch();
 	check_incisor();
@@ -2173,6 +2393,7 @@ void() check_enemies_frik = { check_op_vel();
 	check_heretic_gibs();
 	check_invader_gibs();
 	check_stricken_gibs();
+	check_wretch_gibs();
 	check_afflicted_gibs();
 	check_heretic();
 	check_fallen2();

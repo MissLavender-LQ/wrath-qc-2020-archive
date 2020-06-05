@@ -1,7 +1,6 @@
 .float fcnt;
 .float oldcnt;
 void(float cdmg, float aoe) Cyxplode;
-void(float m) BecomeExplosion;
 void() reload_retcher;
 
 float() somecustomizefunction = { local entity pl;
@@ -318,7 +317,7 @@ void(float rtag) W_Fireretcher = { local vector dir, rorg, tagorg;
 	setorigin(newmis, tagorg);
 	setmodel(newmis, "models/projectiles/proj_cyst.md3");
 	newmis.classname = "spleet";
-	newmis.velocity = normalize(self.cursor_trace_endpos - newmis.origin) *retcher_proj_vel;
+	newmis.velocity = normalize(cursor_trace_endpos_fixed (self) - newmis.origin) *retcher_proj_vel;
 	newmis.velocity_z += retcher_proj_velz;
 	newmis.angles = vectoangles(newmis.velocity);
 	newmis.touch = cyst_touch;
@@ -327,18 +326,20 @@ void(float rtag) W_Fireretcher = { local vector dir, rorg, tagorg;
 	newmis.effects = EF_NOSHADOW;
 	self.ammo_retcher -= 1;
 
-	local string snd;
 	if (rtag == 1)
 	{
-		snd = strcat("weapons/retcher/fire1_", ftos(floor(random() *3) + 1), ".ogg");
-		sound(self, CHAN_WEAPON, snd, 1, ATTN_NORM);
+		//snd = strcat("weapons/retcher/fire1_", ftos(floor(random() *5) + 1), ".ogg");
+		//sound(self, CHAN_WEAPON, snd, 1, ATTN_NORM);
+		
+		weapon_sound("weapons/retcher/fire1_", 5);
 		newmis.cnt = 1;
 		//setsize (newmis, '0 0 0', '0 0 0');
 	}
 	else
 	{
-		snd = strcat("weapons/retcher/fire2_", ftos(floor(random() *3) + 1), ".ogg");
-		sound(self, CHAN_WEAPON, snd, 1, ATTN_NORM);
+		//snd = strcat("weapons/retcher/fire2_", ftos(floor(random() *5) + 1), ".ogg");
+		//sound(self, CHAN_WEAPON, snd, 1, ATTN_NORM);
+		weapon_sound("weapons/retcher/fire2_", 5);
 		newmis.cnt = 2;
 		newmis.bouncefactor = 0.05;
 	}

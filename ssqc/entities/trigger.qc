@@ -406,11 +406,13 @@ void() teleporter = { precache_model("models/objects/teleporters/teleporter.md3"
 		self.touch = teleport_touch;
 };
 
-
+.float timeangles3;
 void() trigger_monsterjump_touch = { if (other.flags &(FL_MONSTER | FL_FLY | FL_SWIM) != FL_MONSTER)
 		return;
+	other.timeangles3 = time + 3;
 	if (other.nojump == 1)
 		return;
+
 
 	// set XY even if not on ground, so the jump will clear lips
 	other.velocity_x = self.movedir_x *self.speed;
@@ -436,10 +438,23 @@ void() trigger_monsterjump = { if (!self.speed)
 
 void() trigger_fly_touch = { if (other.classname != "player")
 		return;
+	if(other.radial_time > time)
+	{
+	other.Aegis_time = 0;  other.LifeSiphon_time = 0;  other.DrownerApp_time = 0;  other.Tether_time = 0;
+	other.radial_time = 0;
+	return;	
+	}
+
 	if ((other.timefly - time) < 8)
 	{
-		//sound (other, CHAN_AUTO, "misc/Sigil_Flight_Activate.ogg",1 ,ATTN_NONE);
+		sound (other, CHAN_AUTO, "items/sigils/sigil_flight_start.ogg",1 ,1);
 		te_customflash(other.origin, 256, 1, '0.3 0.7 1');
+		string flash_command_a = strcat ("bf ",ftos(flash_color_x)," ",ftos(flash_color_y)," ");
+		string flash_command_b = strcat (ftos(flash_color_z)," ",ftos(flash_alpha)," ",ftos(flash_fade),"\n");
+		string flash_command =  strcat (flash_command_a,flash_command_b);
+		stuffcmd (other, flash_command);
+		other.takenflytime = self.timefly;
+		other.radialactive = 20;
 		other.timefly = time + self.timefly;
 		other.flightflag = 1;
 		Hud_message(29, other.origin, other);
@@ -456,20 +471,34 @@ void() sigil = { if (!self.duration)
 	self.touch = trigger_fly_touch;
 };
 
-void() trigger_fly = { if (!self.timefly)
+void() trigger_fly = 
+{	
+	self.noise = "objects/pylon_loop.ogg";
+		precache_sound(self.noise);
+	if (!self.timefly)
 		self.timefly = 10;
 	self.touch = trigger_fly_touch;
 	self.solid = SOLID_TRIGGER;
 	setmodel(self, self.model);
+	vector center = (self.absmax + self.absmin) / 2;  
+	ambientsound(center, self.noise, 1, 256/768);
 	self.modelindex = 0;
 	self.model = string_null;
 };
 
 void() trigger_shrine_touch = { if (other.classname != "player")
 		return;
+	
+	
+	local entity oself;
+	oself = self;
+	self = other;
+	nowater_type();
+	self = oself;
+	message_garbage_collector ();
+	
 	write_shrine(0);
 	te_customflash(other.origin, 256, 3, '0.3 1 0.7');
-	Hud_message(26, other.origin, other);
 
 	read_currentprofileslot();
 	copy_save_maps(0);
@@ -491,10 +520,14 @@ void() trigger_shrine_touch = { if (other.classname != "player")
 	other.shrine = 1;
 	if (other.shrine_model_client == 0)
 		other.Shrine_time = time + 0.25;
+	write_shrine_user(1);
 	sound(other, CHAN_AUTO, "objects/shrine.ogg", 1, ATTN_NONE);
 	other.health = 100;
 	remove(self);
-};
+	message_garbage_collector ();
+	
+	Hud_message_delay(26, self.origin, self);
+	};
 
 void() trigger_shrine = { self.touch = trigger_shrine_touch;
 	self.solid = SOLID_TRIGGER;
@@ -574,25 +607,92 @@ void() trigger_secret = { precache_sound("misc/secret.ogg");
 	self.model = string_null;
 	total_secrets++;
 };
+.string classtype;
 
 void() stricken_preattack1;
 .float turret;
-
-
-
-
-void() trigger_turret_touch = { if (other.classname != "monster_stricken")
+.float temp_turret;
+void()determine_subangle;
+.float subangle;
+.vector subangles;
+.float minorangle;
+.float angle_deviance;
+.float turret_time;
+.float turretable;
+.float turret_enemy_visible;
+void()invader_preattack;
+void()afflicted_atk1;
+void()oppressor_attacka1;
+void() wretch_attacka1;
+.float trigger_angle_use;			
+void() trigger_turret_touch = { 
+	if (!(other.flags & FL_MONSTER))
+	return;
+	if(!other.turretable)
+	return;
+	if(!other.trigger_angle_use)
 		return;
+	
+	if(other.turret_time > time)	
+		return;
+		if(other.warped_time > time)	
+		return;	
+	if(self.turret_enemy_visible)
+	{
+	local entity oself;
+	oself = self;
+	self = other;
+	if (!(visible(self.enemy)))
+	return;
+	self = oself;	
+	}	
+
+
+	if((!other.takedamage) && (other.classentity == "monsters"))
+	other.takedamage = DAMAGE_AIM;
+
+	if((self.target)||(self.turret_enemy_visible))
+	{
+		if(self.target)
+		{
+		other.minorangle =( (-1 * self.angle_deviance) + 180 )* (2/360);
+		determine_subangle();
+		other.subangle = self.enemy.angles_y;
+		other.subangles_y = other.subangle;
+		}
+		else
+		other.minorangle = -1;
+		other.temp_turret = 1;
+	}	
+	
 	if (other.turret != 1)
 	{
+		other.turret_time = time + 2.5;	
 		other.turret = 1;
+		if(self.turret_enemy_visible)
+		other.turret_enemy_visible = 1;
+		if(other.classname == "monster_stricken")
 		other.th_run = stricken_preattack1;
+		if(other.classname == "monster_invader")
+		other.th_run = invader_preattack;
+		if(self.classname == "monster_afflicted")
+		other.th_run = afflicted_atk1;
+		if(self.classname == "monster_wretch")
+		other.th_run = wretch_attacka1;
+		if(self.classname == "monster_oppressor")
+		other.th_run = oppressor_attacka1;
 		other.think = other.th_missile;
 		other.nextthink = time;
 	}
 };
 
 void() trigger_turret = { self.touch = trigger_turret_touch;
+	if(!self.angle_deviance)
+	self.angle_deviance = 90;
+	
+	if(self.angle_deviance > 180)
+		self.angle_deviance =180;
+	self.angle_deviance = self.angle_deviance * 2;
 	self.solid = SOLID_TRIGGER;
 	setmodel(self, self.model);
 	self.modelindex = 0;

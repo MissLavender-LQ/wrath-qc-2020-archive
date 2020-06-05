@@ -12,6 +12,10 @@ void() v_melee_idle = { if (self.playerdeadtime > time)
 		self.pick_melee = 0;
 	}
 
+
+	if(self.totallungetime > time)
+	self.totallungetime = 0;
+
 	self.realoding = 0;
 	self.melee_charging = 0;
 	self.vweaponstate = 0;
@@ -67,10 +71,10 @@ void() w_melee_release_damage = { self.lungetime = time + 0.1;
 			if (self.vweaponskin != 1)
 				self.vweaponskin = 1;
 			self.melee_skin = 1;
-		}
 
 		if (trace_ent.bloody == 1)
 			SpawnBlood(org, '0 0 0', 20, 1, 0);
+		}
 		local float lunge_damage;
 		lunge_damage = (self.melee_ammount *30);
 
@@ -78,14 +82,20 @@ void() w_melee_release_damage = { self.lungetime = time + 0.1;
 		{
 			if (trace_ent.heavymonster != 1)
 			{
+
+				if ((trace_ent.flags &FL_MONSTER))
+				{
+				if(trace_ent.flags & FL_ONGROUND)
 				trace_ent.flags = trace_ent.flags - FL_ONGROUND;
 				//trace_ent.movetype = MOVETYPE_BOUNCE; 
 				trace_ent.velocity = v_forward *100 *(self.melee_ammount / 10);
 				trace_ent.velocity_z = 20 + (random() *30);
+				}
 			}
 		}
 		else
 		{
+			if ((trace_ent.flags &FL_MONSTER))
 			trace_ent.solid = SOLID_TRIGGER;
 			lunge_damage += trace_ent.health;
 		}
@@ -158,20 +168,23 @@ void() w_melee_release = { if (!self.melee_kill_uber)
 
 };
 .vector prejumpvelocity;
-void() w_melee_prerelease =
+void() w_melee_postprerelease =
 {
-
+	self.totallungetime = time;
 	if(self.melee_released >= 1)
 		self.melee_released = 2;
 	else
 		self.melee_released = 1;			
 	local float secondary_jump;
-	self.melee_jump_time = time + 0.2;
 	self.vweaponframe = 26;
 	if((!(self.flags & FL_ONGROUND)) && (self.melee_released == 2))
 		secondary_jump = 1;
 	else
 		secondary_jump = 0;
+	
+	if(self.lungefree > time)
+		secondary_jump = 0;
+
 
 	if((self.flags & FL_ONGROUND))
 	{
@@ -180,7 +193,7 @@ void() w_melee_prerelease =
 	}
 	else
 		self.velocity_z += 96;
-	
+	self.onground_time = 0;
 	if((self.movetype != MOVETYPE_FLY)&& ( secondary_jump == 0) )
 	{
 		local float modifier_melee_amount;	
@@ -232,6 +245,13 @@ void() w_melee_prerelease =
 	self.think = w_melee_release;
 	self.nextthink = time + 0.05;
 };
+
+void() w_melee_prerelease =
+{
+	self.think = w_melee_postprerelease;
+	self.nextthink = time + 0.05;
+}
+/*
 void() w_melee_prerelease2 = 
 { 
 	if (self.melee_released >= 1)
@@ -303,8 +323,10 @@ void() w_melee_prerelease2 =
 	self.think = w_melee_release;
 	self.nextthink = time + 0.05;
 };
-
-void() w_melee_charge2 = { if (self.button3)
+*/
+void() w_melee_charge2 = 
+{ 
+	if (self.button3)
 	{
 		if (!self.melee_lunge)
 			self.melee_lunge = 1;
@@ -337,7 +359,9 @@ void() w_melee_charge2 = { if (self.button3)
 	}
 };
 
-void() w_melee_charge = { if (!self.melee_kill_uber)
+void() w_melee_charge = 
+{ 
+	if (!self.melee_kill_uber)
 	{
 		self.vweaponglowmod_x = 0.01;
 		self.vweaponglowmod_y = 0.01;
@@ -600,11 +624,11 @@ void() v_blood_think = { if ((self.owner.melee_skin == 1) && (self.alpha == -1))
 void() v_blade_think = { self.skin = self.owner.melee_skin;
 	self.glowmod = self.owner.vweaponglowmod;
 	self.alpha = 1;
-	//	if(self.owner.weapon != IT_MELEE)
-	//	self.think = SUB_Remove;
-	//	else
+	if(self.owner.weapon != IT_MELEE)
+		self.think = SUB_Remove;
+		else
 	self.think = v_blade_think;
-	self.nextthink = time + 0.025;
+	self.nextthink = time + 0.05;
 
 };
 

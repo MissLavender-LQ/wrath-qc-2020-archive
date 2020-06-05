@@ -173,8 +173,12 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	buttions_locs_y += 42 * vy_rel;
 
 	////////// MOUSE SENSITIVITY
-	draw_fbuttion(buttions_locs, "Mouse Sensitivity");
-	buttions_locs_x += 256 * vx_rel;
+	buttions_locs_x -= 36 * vx_rel;
+	draw_fbuttionsmall(buttions_locs, "Mouse Sensitivity",0);
+	buttions_locs_x += 96 * vx_rel;
+	float y_pos = buttions_locs_y; 
+	float x_pos = buttions_locs_x; 
+	
 	draw_buttion(buttions_locs, "<", 101);
 	buttions_locs_x += 290 * vx_rel;
 	draw_buttion(buttions_locs, ">", 102);
@@ -191,12 +195,43 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	//drawfill(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
 	drawfilldraggeable(barpos, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 2,101, 102, 256 / 100);
 	string msen;msen = substring(ftos(senm),0,3);draw_fbuttion2(barpos + fixed_vector('-128.5 -24 0'), msen);
-
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
 
+	////////
+	////////// MOUSE MOUSE SENSITIVY
+	vector buttions_locs_a, barpos2_a;
+	buttions_locs_a_y = y_pos; 
+	buttions_locs_a_x = x_pos; 
+	buttions_locs_a_x += 426* vx_rel; 
+	draw_fbuttionsmall(buttions_locs_a, "Menu Mouse Sensitivity",0);
+	buttions_locs_a_x -= 156* vx_rel; 
+	buttions_locs_a_x += 286 * vx_rel;
+	draw_buttion(buttions_locs_a, "<", 114);
+	buttions_locs_a_x += 290 * vx_rel;
+	
+	
+	buttions_locs_a_x -= 132* vx_rel; 
+	draw_buttion(buttions_locs_a, ">", 115);
+	buttions_locs_a_x += 132* vx_rel; 
+	
+	buttions_locs_a_y += 16 * vy_rel;
+	buttions_locs_a_x -= 145 * vx_rel;
+	drawfill(buttions_locs_a, fixed_vector('128 4 0'), '0.5 0.5 0.35', 0.7, 0);
+	macel = cvar("saved5");
+	local vector barpos2_a;
+	barpos2_a = buttions_locs_a - fixed_vector('28 0 0');
+	barpos2_a_y -= 8 * vy_rel;
+	barpos2_a_x += (macel *128 + 25.5) *vx_rel;
+	//drawfill(barpos2_a, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
+	drawfilldraggeable(barpos2_a, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 3,114, 115, 256 / 100);
+	string smacel;smacel = substring(ftos(macel),0,3);draw_fbuttion2(barpos2_a + fixed_vector('-128.5 -24 0'), smacel);
+
+	
 	////////// MOUSE ACCELERATION
-	draw_fbuttion(buttions_locs, "Mouse Acceleration");
+	buttions_locs_x += 156* vx_rel; 
+	draw_fbuttionsmall(buttions_locs, "Mouse Acceleration",0);
+	buttions_locs_x -= 156* vx_rel; 
 	buttions_locs_x += 256 * vx_rel;
 	draw_buttion(buttions_locs, "<", 103);
 	buttions_locs_x += 290 * vx_rel;
@@ -210,14 +245,16 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	barpos2_y -= 8 * vy_rel;
 	barpos2_x += (acel *25.5 + 25.5) *vx_rel;
 	//drawfill(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0);
-	drawfilldraggeable(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 3,103, 104, 256 / 100);
+	drawfilldraggeable(barpos2, fixed_vector('4 16 0'), '0.75 0.75 0.5', 1, 0, 14,103, 104, 256 / 100);
 	string macel;macel = substring(ftos(acel),0,3);draw_fbuttion2(barpos2 + fixed_vector('-128.5 -24 0'), macel);
 
 	buttions_locs_x -= 401 * vx_rel;	// back to the x pos
 	buttions_locs_y += 28 * vy_rel;
 
 	////////// MOUSE SMOOTHING
-	draw_fbuttion(buttions_locs, "Mouse Smoothing");
+	buttions_locs_x += 156; 
+	draw_fbuttionsmall(buttions_locs, "Mouse Smoothing",0);
+	buttions_locs_x -= 156; 
 	buttions_locs_x += 320 * vx_rel;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	float checked;
@@ -232,7 +269,9 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	buttions_locs_y += 28 * vy_rel;
 
 	////////// MOUSE INVERT
-	draw_fbuttion(buttions_locs, "Invert Mouse");
+	buttions_locs_x += 156; 
+	draw_fbuttionsmall(buttions_locs, "Invert Mouse",0);
+	buttions_locs_x -= 156; 
 	buttions_locs_x += 320 * vx_rel;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	float checked2;
@@ -404,7 +443,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 		fw_key15 = " ";
 	draw_buttion(buttions_locs, fw_key15, 513);
 	buttions_locs += fixed_vector('-128 33 0');
-/*	////////////
+	////////////
 	draw_fbuttionsmall(buttions_locs, "Slag Cannon", 514);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 6", 0));
@@ -414,7 +453,7 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 		fw_key16 = " ";
 	draw_buttion(buttions_locs, fw_key16, 514);
 	buttions_locs += fixed_vector('-128 33 0');
-	////////////
+/*	////////////
 	draw_fbuttionsmall(buttions_locs, "Artifact Inventory",515);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("impulse 7",0));
@@ -474,9 +513,25 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	else
 		fw_key22 = " ";
 	draw_buttion(buttions_locs, fw_key22, 520);
-		buttions_locs += fixed_vector('-128 33 0');
+		//buttions_locs += fixed_vector('-128 33 0');
 	////////////	
-	draw_fbuttionsmall(buttions_locs, "Walk", 526);
+
+	buttions_locs_y = buttion_y;
+	buttions_locs_x += (170 *vx_rel);
+
+
+	string walkrunstring;
+	float checked_alwaysrun = cvar("cl_alwaysrun");
+	if(checked_alwaysrun == 1)
+	walkrunstring = "Walk";
+	if(checked_alwaysrun != 1)
+	walkrunstring = "Run";
+	float checked_togglerun = cvar("cl_togglerun");
+	if(checked_togglerun == 1)
+	walkrunstring = "Run / Walk";
+
+
+	draw_fbuttionsmall(buttions_locs, walkrunstring, 526);
 	buttions_locs_x += 128 * vx_rel;
 	tokenize(findkeysforcommand("+button7", 0));
 	if (argv(0) != "-1")
@@ -484,10 +539,8 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 	else
 		fw_key28 = " ";
 	draw_buttion(buttions_locs, fw_key28, 526);
-	//buttions_locs += fixed_vector('-128 33 0');
+	buttions_locs += fixed_vector('-128 33 0');
 	////////////
-	buttions_locs_y = buttion_y;
-	buttions_locs_x += (170 *vx_rel);
 
 	draw_fbuttionsmall(buttions_locs, "Swim Up", 521);
 	buttions_locs_x += 128 * vx_rel;
@@ -548,6 +601,16 @@ void() menu_type_options_controls = { local vector size, buttions_locs;
 		fw_key28 = " ";
 	draw_buttion(buttions_locs, fw_key28, 527);
 	buttions_locs += fixed_vector('-128 33 0');
+	////////////
+	draw_fbuttionsmall(buttions_locs, "Load Menu", 528);
+	buttions_locs_x += 128 * vx_rel;
+	tokenize(findkeysforcommand("impulse 89", 0));
+	if (argv(0) != "-1")
+		string fw_key29 = keynumtostring(stof(argv(0)));
+	else
+		fw_key29 = " ";
+	draw_buttion(buttions_locs, fw_key29, 528);
+	buttions_locs += fixed_vector('-128 33 0');
 };
 
 void(float alternative) menu_type_confirmbind = { local vector buttions_locs;
@@ -591,6 +654,7 @@ void(float alternative) menu_type_confirmbind = { local vector buttions_locs;
 	if (gkcommand == 26) localkey = "next weapon";
 	if (gkcommand == 27) localkey = "walk";
 	if (gkcommand == 28) localkey = "use soul tether";
+	if (gkcommand == 29) localkey = "load menu";
 
 	buttions_locs_y -= 24 * vy_rel;
 	draw_fbuttion3(buttions_locs, localkey);
@@ -633,6 +697,7 @@ void(float alternative) menu_type_confirmbind = { local vector buttions_locs;
 	if (gkcommand == 26) localkey = "\"impulse 56\"";
 	if (gkcommand == 27) localkey = "+button7";
 	if (gkcommand == 28) localkey = "\"impulse 81\"";
+	if (gkcommand == 29) localkey = "\"impulse 89\"";
 
 	tokenize((findkeysforcommand(localkey, 0)));
 
@@ -662,7 +727,7 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	float checked;
 	string mark;
-	checked = cvar("cl_rollangle");
+	checked = cvar("saved7");
 	if (checked == 2)
 		mark = "x";
 	else
@@ -743,6 +808,53 @@ void() menu_type_options_gameplay = { local vector size, buttions_locs;
 	else
 		mark6 = "x";
 	draw_buttion(buttions_locs, mark6, 112);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+
+
+	////////// SCREEN FLASH
+	draw_fbuttion(buttions_locs, "Flash for Pickups");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked7;
+	string mark7;
+	checked7 = cvar("saved6");
+	if (checked7 == 0)
+		mark7 = " ";
+	else
+		mark7 = "x";
+	draw_buttion(buttions_locs, mark7, 116);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+
+	////////// ALWAYS RUN
+	draw_fbuttion(buttions_locs, "Always Run");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked8;
+	string mark8;
+	checked8 = cvar("cl_alwaysrun");
+	if (checked8 == 0)
+		mark8 = " ";
+	else
+		mark8 = "x";
+	draw_buttion(buttions_locs, mark8, 117);
+	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_y += 34 * vy_rel;
+
+
+	////////// TOGGLE WALK RUN
+	draw_fbuttion(buttions_locs, "Toggle Run");
+	buttions_locs_x += 320 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked9;
+	string mark9;
+	checked9 = cvar("cl_togglerun");
+	if (checked9 == 0)
+		mark9 = " ";
+	else
+		mark9 = "x";
+	draw_buttion(buttions_locs, mark9, 118);
 	buttions_locs_x -= 320 * vx_rel;
 	buttions_locs_y += 34 * vy_rel;
 	
@@ -828,14 +940,14 @@ void() menu_type_confirmresolution = { local vector buttions_locs;
 	drawfill(buttions_locs + fixed_vector('-256 -32 0'), fixed_vector('464 128 0'), '0.2 0.2 0.23', 0.7, 0);
 	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
 	buttions_locs_x -= 148 * vx_rel;
-	draw_buttion(buttions_locs, "CONFIRM RESOLUTION", 275);
+	draw_buttion(buttions_locs, "CONFIRM RESOLUTION", 278);
 
 	buttions_locs_x += 148 * vx_rel;
 	buttions_locs_y += 48 * vy_rel;
 	drawfill(buttions_locs + fixed_vector('-200 4 0'), fixed_vector('380 32 0'), '0.1 0.1 0.1', 0.7, 0);
 
 	buttions_locs_x -= 148 * vx_rel;
-	draw_buttion(buttions_locs, "CANCEL", 276);
+	draw_buttion(buttions_locs, "CANCEL", 279);
 };
 
 void() menu_type_confirmfullscreen = { local vector buttions_locs;
@@ -988,7 +1100,14 @@ void() menu_type_options_resolution = { local vector size, buttions_locs;
 	buttions_locs_y += 32 * vy_rel;
 	draw_buttion(buttions_locs, "5120* 2160", 274);
 	buttions_locs_y += 32 * vy_rel;
+	
+	draw_fbuttion(buttions_locs, "1.9:1");
 	buttions_locs_y += 32 * vy_rel;
+	draw_buttion(buttions_locs, "4096 * 2160", 275);
+
+
+	
+	buttions_locs_y += 96 * vy_rel;
 
 	buttions_locs_x -= 250* vx_rel;
 	
@@ -1012,7 +1131,9 @@ void() menu_type_options_resolution = { local vector size, buttions_locs;
 
 };
 
-void() menu_type_options_video = { local vector size, buttions_locs;
+void() menu_type_options_video = 
+{
+	local vector size, buttions_locs;
 	size_x = vid_x;
 	size_y = vid_y;
 
@@ -1023,11 +1144,13 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 		drawpic('0 0 0', "gfx/menu/background.tga", vid_x *'1 0 0' + vid_y *'0 1 0', '0.65 0.65 0.65', 1, 0);
 
 	draw_fbuttion3(buttions_locs, "VIDEO OPTIONS");
-	buttions_locs_x -= 360 * vx_rel;
-	buttions_locs_y = 64;
+	buttions_locs_x -= 390 * vx_rel;
+
+	buttions_locs_y = 64 * vy_rel;
 	////////// V_SYNC
 	draw_fbuttion(buttions_locs, "V-Sync");
-	buttions_locs_x += 320 * vx_rel;
+
+	buttions_locs_x += 196 * vx_rel;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	float checked;
 	string mark;
@@ -1037,7 +1160,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	else
 		mark = " ";
 	draw_buttion(buttions_locs, mark, 290);
-	buttions_locs_x -= 320 * vx_rel;
+	buttions_locs_x -= 196 * vx_rel;
 
 	////////// BRIGHTNESS
 	buttions_locs_y += 32 * vy_rel;
@@ -1189,6 +1312,85 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	draw_buttion(buttions_locs, mark6, 704);
 
 	buttions_locs_x -= 322 * vx_rel;	// back to the x pos	
+
+
+	
+	////////// PIXEL SCALING
+	buttions_locs_x -= 10 * vx_rel;	//
+	buttions_locs_y += 48 * vy_rel;
+	draw_fbuttion(buttions_locs, "max fps");
+
+	float checkedfps;
+	string fpsmark2, fpsmark3, fpsmark4, fpsmark5, fpsmark6, fpsmark7;
+	string maxfps;
+
+	checkedfps= cvar("cl_maxfps");
+	if (checkedfps== 60)
+	{
+		fpsmark2 = "x";
+		maxfps = "60";
+	}
+	else
+		fpsmark2 = " ";
+	if (checkedfps== 120)
+	{
+		fpsmark3 = "x";
+		maxfps = "120";
+	}
+	else
+		fpsmark3 = " ";
+	if (checkedfps== 144)
+	{
+		fpsmark4 = "x";
+		maxfps = "144";
+	}
+	else
+		fpsmark4 = " ";
+	if (checkedfps== 240)
+	{
+		fpsmark5 = "x";
+		maxfps = "240";
+	}
+	else
+		fpsmark5 = " ";
+	if (checkedfps== 500)
+	{
+		fpsmark6 = "x";
+		maxfps = "500";
+	}
+	else
+		fpsmark6 = " ";
+	if ((checkedfps== 0) ||(checkedfps> 500))
+	{
+		fpsmark7 = "x";
+		maxfps = "unlimited";
+	}
+	else
+		fpsmark7 = " ";
+	buttions_locs_x += 196 * vx_rel;	//
+	buttions_locs_y -= 18 * vy_rel;	//
+	draw_fbuttion2(buttions_locs, maxfps);
+	buttions_locs_x -= 32 * vx_rel;
+	buttions_locs_y += 18 * vy_rel;	//
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark2, 710);
+	buttions_locs_x += 42 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark3, 711);
+	buttions_locs_x += 42 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark4, 712);
+	buttions_locs_x += 42 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark5, 713);
+	buttions_locs_x += 42 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark6, 714);
+	buttions_locs_x += 42 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, fpsmark7, 715);
+
+	buttions_locs_x -= 406 * vx_rel;	// back to the x pos		
 	//////// ANISOTROPY FILTERING	
 	buttions_locs_x += 32 * vx_rel;	//
 	buttions_locs_y += 48 * vy_rel;
@@ -1251,7 +1453,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	buttions_locs_x += 32 * vx_rel;	//
 	buttions_locs_y += 48 * vy_rel;
 
-	draw_fbuttion(buttions_locs, "Anti-aliasing MSAA");
+	draw_fbuttion(buttions_locs, "MSAA");
 	float checked4;
 	string antialias_mark2, antialias_mark3, antialias_mark4, antialias_mark5;
 	string antialiasing;
@@ -1303,26 +1505,125 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
 	draw_buttion(buttions_locs, antialias_mark5, 310);
 	buttions_locs_x -= 322 * vx_rel;	// back to the x pos	
-	////////// Anti-aliasing FXAA
-	buttions_locs_x += 32 * vx_rel;	//
+
+	////////// FORCED REFRESH RATE
+
+	buttions_locs_x = (vid_x / 2) - (128 *vx_rel);
+	buttions_locs_x += 128 * vx_rel;
+	buttions_locs_y = 64 * vy_rel;
+
+	draw_fbuttion(buttions_locs, "Forced Refresh Rate");
+
+	buttions_locs_x += 196 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checked;
+	string mark;
+	checked = cvar("vid_forcerefreshrate");
+	if (checked == 1)
+		mark = "x";
+	else
+		mark = " ";
+	draw_buttion(buttions_locs, mark, 280);
+	buttions_locs_x -= 226 * vx_rel;
+
+
+
 	buttions_locs_y += 48 * vy_rel;
 
-	draw_fbuttion(buttions_locs, "Anti-aliasing FXAA");
-	buttions_locs_x += 290 * vx_rel;
-	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
-	float checked5;
-	string antialias_mark6;
-	checked5 = cvar("r_fxaa");
-	if (checked5 == 1)
-		antialias_mark6 = "x";
-	else
-		antialias_mark6 = " ";
-	draw_buttion(buttions_locs, antialias_mark6, 314);
-	//	buttions_locs_x -= 352* vx_rel;	
+	////////// REFRESH RATE
 
-	////////// Anti-aliasing FXAA
-	buttions_locs_x += 196 * vx_rel;
-	buttions_locs_y = 96 * vy_rel;
+	draw_fbuttion(buttions_locs, "Refresh Rate");
+
+	float checkedrefreshrate;
+	string refreshratemark2, refreshratemark3, refreshratemark4, refreshratemark5, refreshratemark6, refreshratemark7, refreshratemark8;
+	string refreshrate;
+
+	checkedrefreshrate= cvar("vid_refreshrate");
+	if (checkedrefreshrate== 50)
+	{
+		refreshratemark2 = "x";
+		refreshrate= "50";
+	}
+	else
+		refreshratemark2 = " ";
+	if (checkedrefreshrate== 59)
+	{
+		refreshratemark3 = "x";
+		refreshrate= "59";
+	}
+	else
+		refreshratemark3 = " ";
+	if (checkedrefreshrate== 60)
+	{
+		refreshratemark4 = "x";
+		refreshrate= "60";
+	}
+	else
+		refreshratemark4 = " ";
+	if (checkedrefreshrate== 75)
+	{
+		refreshratemark5 = "x";
+		refreshrate= "75";
+	}
+	else
+		refreshratemark5 = " ";
+	if (checkedrefreshrate== 120)
+	{
+		refreshratemark6 = "x";
+		refreshrate= "120";
+	}
+	else
+		refreshratemark6 = " ";
+	if (checkedrefreshrate== 144)
+	{
+		refreshratemark7 = "x";
+		refreshrate= "144";
+	}
+	else
+		refreshratemark7 = " ";
+	if (checkedrefreshrate== 240)
+	{
+		refreshratemark8 = "x";
+		refreshrate= "240";
+	}
+	else
+		refreshratemark8 = " ";
+	buttions_locs_x += 148 * vx_rel;	//
+	buttions_locs_y -= 18 * vy_rel;	//
+	draw_fbuttion2(buttions_locs, refreshrate);
+	buttions_locs_x -= 32 * vx_rel;
+	buttions_locs_y += 18 * vy_rel;	//
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark2, 281);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark3, 282);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark4, 283);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark5, 284);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark6, 285);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark7, 286);
+	buttions_locs_x += 38 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	draw_buttion(buttions_locs, refreshratemark8, 287);
+
+	buttions_locs_x -= 286 * vx_rel;	// back to the x pos		
+
+
+	buttions_locs_y += 48 * vy_rel;
+	buttions_locs_y += 48 * vy_rel;
+	buttions_locs_y += 48 * vy_rel;
+
+	////////// TEXTURE FILTER
+
+
 	float texturemodef;
 	string texturemode;
 	string text_mark2, text_mark3, text_mark4;
@@ -1337,6 +1638,7 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 		texturemode = "Linear";
 
 	draw_fbuttion(buttions_locs, "Texture Filter");
+	float checked5;
 	checked5 = cvar("saved2");
 	if (checked5 < 1)
 	{
@@ -1392,6 +1694,25 @@ void() menu_type_options_video = { local vector size, buttions_locs;
 	draw_buttion(buttions_locs, mipmap_mark, 318);
 	buttions_locs_x -= 256* vx_rel;
 	*/
+	
+	////////// Anti-aliasing FXAA
+	buttions_locs_y += 48 * vy_rel;
+	buttions_locs_x += 10 * vx_rel;
+
+	draw_fbuttion(buttions_locs, "Anti-aliasing FXAA");
+	buttions_locs_x += 244 * vx_rel;
+	drawfill(buttions_locs + fixed_vector('118 10 0'), fixed_vector('20 20 0'), '0.35 0.35 0.35', 0.7, 0);
+	float checkedfxaa;
+	string antialias_mark6;
+	checkedfxaa = cvar("r_fxaa");
+	if (checkedfxaa == 1)
+		antialias_mark6 = "x";
+	else
+		antialias_mark6 = " ";
+	draw_buttion(buttions_locs, antialias_mark6, 314);
+
+	buttions_locs_x -= 256* vx_rel;	
+	
 	////////// Animation Interpolation
 	buttions_locs_y += 48 * vy_rel;
 	buttions_locs_x += 10 * vx_rel;

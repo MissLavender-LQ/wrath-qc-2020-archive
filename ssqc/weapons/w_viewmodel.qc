@@ -87,7 +87,7 @@ void() raise_vmodel = { self.weapon = IT_VIEWMODEL;
 	self.vweapon.origin_x = self.vvweapon_x;
 	self.vweapon.origin_y = self.vvweapon_y;
 	self.vweapon.origin_z = self.vvweapon_z;
-	self.vweapon.angles = '0 0 0';
+	self.vweapon.angles = self.vvweaponangles;
 	self.vweapon.origin_z = self.vvweapon_z;
 	self.attack_finished = time + 0.05;
 	W_SetWeapon();

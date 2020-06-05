@@ -176,6 +176,27 @@ void() invader_sattack;
 
 void() invader_waiting =[$inv_idle1, invader_waiting2]
 {
+	float enemy_is_visible = visible(self.enemy);
+	if ((self.friendly_monster == 1) && (self.turret))
+	{
+		if(!self.enemy)
+		{
+			next_enemy();
+		}
+		else
+		{
+			if(!enemy_is_visible)
+			{	
+				next_enemy();
+			}
+			else
+			{
+			if((self.enemy.classname == "player") && (self.player_temp_enemy < time)) 
+				next_enemy();
+			}	
+		}		
+	}	
+
 	if (visible(self.enemy))
 	{
 		self.think = invader_preattack;
@@ -267,6 +288,10 @@ void() invader_waiting9 =[$inv_idle9, invader_waiting10]
 };
 void() invader_waiting10 =[$inv_idle10, invader_waiting11]
 {
+	if((!(self.enemy)) && (self.goalentity))
+		self.enemy = self.goalentity;
+	if((!self.enemy.health) || (!self.enemy)) next_enemy();
+
 	if (visible(self.enemy))
 	{
 		self.think = invader_preattack;
@@ -367,6 +392,7 @@ void() invader_waiting19 =[$inv_idle19, invader_waiting20]
 };
 void() invader_waiting20 =[$inv_idle20, invader_waiting]
 {
+	if((!(self.enemy)) && (self.goalentity))self.enemy = self.goalentity;
 	if (visible(self.enemy))
 	{
 		self.think = invader_preattack;
@@ -432,7 +458,11 @@ self.colormod = ' 1.25 1 1';
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void() inv_check_melee = { enemy_range = range(self.enemy);
+void() inv_check_melee = 
+{ 
+	if (!(visible(self.enemy)))
+	return;
+	enemy_range = range(self.enemy);
 	if (enemy_range == RANGE_MELEE)
 		self.think = invader_sattack;
 	self.nextthink = time + 0.1;
@@ -447,7 +477,7 @@ void() invader_run =[$inv_run1, invader_run2]
 	if (r < 0.5)
 		monstersound5("enemies/invader/chatter", 5, CHAN_VOICE);
 
-	if (visible(self.enemy))
+	if (visible(self.enemy) && (self.enemy.health >0))
 		self.invader_search_time = time + 10;
 
 };
@@ -501,22 +531,16 @@ void() invader_run10 =[$inv_run10, invader_run]
 	if (self.zigzaging == 0)
 	{
 		r = random() *100;
-		if (invader_zzc >= r)
+		if (invader_zzc  >= r)
 		{
-			local float zzmultiplier;
-			zzmultiplier = ((invader_zzd* random()) + invader_zzmd);
-			if (zzmultiplier > invader_zzd)
-				zzmultiplier = invader_zzd;
-			local float rr = random();
-			if (rr > 0.5)
-				self.zigzagdeviance = zzmultiplier;
-			else
-				self.zigzagdeviance = zzmultiplier *-1;
+			float zzmultiplier = random(invader_zzmd,invader_zzd) * crandom3();
+			self.zigzagdeviance = zzmultiplier;
 			self.zigzaging = 1;
 		}
 	}
 	else
 		self.zigzaging = 0;
+		
 
 	ai_runwalk(invader_rs);
 
@@ -596,7 +620,7 @@ void()	invader_run1	=[	$inv_run1,	invader_run1	]
 		else
 		self.zigzaging = 0;
 
-		if((visible(self.enemy)))
+		if (visible(self.enemy) && (self.enemy.health >0))
 		{
 			enemy_range = range(self.enemy);
 			if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
@@ -696,7 +720,7 @@ void(vector org, vector dir, float order, entity ownerproj) launch_projectile_in
 	shotgun_proj.solid = SOLID_TRIGGER;
 	shotgun_proj.count = 1;
 	shotgun_proj.angles = vectoangles(dir);
-	shotgun_proj.alreadytoucher = order;	// counter of touchs
+	shotgun_proj.classentity = "projectiles";
 	shotgun_proj.touch = shotgun_proj_touch2;
 	shotgun_proj.classname = "projectile";
 	shotgun_proj.traileffectnum = particleeffectnum("shottrail");
@@ -795,13 +819,14 @@ void() invader_attack9 =[$inv_attack9, invader_attack10]
 {
 	ai_face();
 };
+void()invader_preattack10;
 void() invader_attack10 =[$inv_attack10, invader_attack]
 {
 	ai_face();
 
 	if (self.turret)
 	{
-		if (visible(self.enemy))
+		if (visible(self.enemy) && (self.enemy.health >0))
 			self.think = invader_attack;
 		else
 			self.think = invader_run;
@@ -810,7 +835,7 @@ void() invader_attack10 =[$inv_attack10, invader_attack]
 	{
 		if (self.skin != 2)
 		{
-			if (visible(self.enemy))
+			if (visible(self.enemy) && (self.enemy.health >0))
 			{
 				enemy_range = range(self.enemy);
 				if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
@@ -832,15 +857,33 @@ void() invader_attack10 =[$inv_attack10, invader_attack]
 				self.think = invader_attacktorun;
 
 		}
+		
+		else
+		{
+			if (visible(self.enemy) && (self.enemy.health >0))
+				self.think = invader_attack;
+			else
+			{
+				if (self.friendly_monster == 1)
+					next_enemy();
+				if (visible(self.enemy) && (self.enemy.health >0))
+					self.think = invader_attack;
+				else
+					self.think = invader_preattack10;
+			}
+			self.nextthink = time + 0.1;
+		}
 	}
 
 	self.nextthink = time + 0.1;
 };
 
 /*
-void()	invader_preattack	=[	$inv_runtoattack1,	invader_preattack3	] {ai_runwalk(invader_rs);};
-void()	invader_preattack2	=[	$inv_runtoattack2,	invader_preattack3	] {ai_runwalk(invader_rs);};
-void()	invader_preattack3	=[	$inv_runtoattack3,	invader_preattack5	] {ai_runwalk(invader_rs);};
+void()	invader_preattack	=[	$inv_runtoattack1,	invader_preattack3	] {
+
+if(!self.turret)ai_runwalk(invader_rs);};
+void()	invader_preattack2	=[	$inv_runtoattack2,	invader_preattack3	] {if(!self.turret)ai_runwalk(invader_rs);};
+void()	invader_preattack3	=[	$inv_runtoattack3,	invader_preattack5	] {if(!self.turret)ai_runwalk(invader_rs);};
 void()	invader_preattack4	=[	$inv_runtoattack4,	invader_preattack5	] {ai_face();};
 void()	invader_preattack5	=[	$inv_runtoattack5,	invader_preattack7	] {ai_face();};
 void()	invader_preattack6	=[	$inv_runtoattack6,	invader_preattack7	] {ai_face();};
@@ -851,14 +894,17 @@ void()	invader_preattack10	=[	$inv_runtoattack10,	invader_attack	] {ai_face();};
 */
 void() invader_preattack =[$inv_runtoattack1, invader_preattack2]
 {
+	ai_face();
 	ai_runwalk(invader_rs);
 };
 void() invader_preattack2 =[$inv_runtoattack2, invader_preattack3]
 {
+	ai_face();
 	ai_runwalk(invader_rs);
 };
 void() invader_preattack3 =[$inv_runtoattack3, invader_preattack4]
 {
+	ai_face();
 	ai_runwalk(invader_rs);
 	monstersound3("enemies/invader/step", 5, CHAN_BODY);
 };
@@ -889,6 +935,22 @@ void() invader_preattack9 =[$inv_runtoattack9, invader_preattack10]
 void() invader_preattack10 =[$inv_runtoattack10, invader_attack]
 {
 	ai_face();
+	if (self.skin == 2) 
+	{
+		if (visible(self.enemy) && (self.enemy.health >0))
+			self.think = invader_attack;
+		else
+		{	
+			if (self.friendly_monster == 1)
+				next_enemy();
+			if (visible(self.enemy) && (self.enemy.health >0))
+				self.think = invader_attack;
+			else
+				self.think = invader_preattack10;
+		}
+		self.nextthink = time + 0.1;
+	}
+
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////melee attack
 
@@ -968,7 +1030,7 @@ void() invader_blindechase10 =[$inv_blindchase10, invader_blindechase]
 {
 	ai_runwalk(invader_rs);
 	ai_face();
-	if ((visible(self.enemy)))
+	if (visible(self.enemy) && (self.enemy.health >0))
 	{
 		enemy_range = range(self.enemy);
 		if (enemy_range == RANGE_MELEE)
@@ -1015,7 +1077,30 @@ void() invader_sattack9 =[$inv_sattack9, invader_sattack10]
 void() invader_sattack10 =[$inv_sattack10, invader_sattack]
 {
 	ai_face();
-	if (visible(self.enemy))
+	
+	float enemy_is_visible = visible(self.enemy);
+	if ((self.friendly_monster == 1) && (self.turret))
+	{
+		if(!self.enemy)
+		{
+			next_enemy();
+		}
+		else
+		{
+			if(!enemy_is_visible)
+			{	
+				next_enemy();
+			}
+			else
+			{
+			if((self.enemy.classname == "player") && (self.player_temp_enemy < time)) 
+				next_enemy();
+			}	
+		}		
+	}	
+		
+	
+	if (enemy_is_visible && (self.enemy.health >0))
 	{
 		enemy_range = range(self.enemy);
 		if ((enemy_range == RANGE_FAR) || (enemy_range == RANGE_MID))
@@ -1091,7 +1176,7 @@ void() invader_postpain = { ai_face();
 	{
 		if (invader_pth >= r)
 		{
-			if (visible(self.enemy))
+			if (visible(self.enemy) && (self.enemy.health >0))
 			{
 				enemy_range = range(self.enemy);
 				if (enemy_range == RANGE_FAR)
@@ -1115,7 +1200,7 @@ void() invader_postpain = { ai_face();
 	}
 	else
 	{
-		if (visible(self.enemy))
+		if (visible(self.enemy) && (self.enemy.health >0))
 			self.think = invader_preattack;
 		else
 			self.think = invader_run; //waiting;
@@ -1236,12 +1321,37 @@ void(entity enemy, float dmg) invader_pain = {	//if(self.pain_finished > time)
 			self.think = invader_painc;
 		}
 	}
-
+	self.sustained_damage = 0;
 	self.nextthink = time;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+void()invader_gibdead;
 
+void(entity e) Spawn_Corpse = 
+{
+
+/*
+local entity corpse;
+corpse = spawn();
+copyentity(e,corpse);
+corpse.solid = SOLID_CORPSE;
+corpse.flags = 0;
+corpse.movetype = 0;
+corpse.th_stand = null;
+corpse.th_walk = null;
+corpse.th_run = null;
+corpse.th_missile = null;
+corpse.think = SUB_Null;
+corpse.th_melee = null;
+corpse.th_pain = nullpain;
+corpse.health = 10;
+corpse.takedamage = 1;
+corpse.th_die = invader_gibdead;
+e.effects = EF_NODRAW;
+remove(e);
+*/
+};
 void() invader_diea =[$inv_deatha1, invader_diea2] {};
 void() invader_diea2 =[$inv_deatha2, invader_diea3] {};
 void() invader_diea3 =[$inv_deatha3, invader_diea4] {};
@@ -1254,7 +1364,10 @@ void() invader_diea6 =[$inv_deatha6, invader_diea7] {};
 void() invader_diea7 =[$inv_deatha7, invader_diea8] {};
 void() invader_diea8 =[$inv_deatha8, invader_diea9] {};
 void() invader_diea9 =[$inv_deatha9, invader_diea10] {};
-void() invader_diea10 =[$inv_deatha10, invader_diea10] {};
+void() invader_diea10 =[$inv_deatha10, invader_diea10] {
+self.corpse_angles_x = -90;
+Spawn_Corpse(self);
+};
 
 void() invader_dieb =[$inv_deathb1, invader_dieb2] {};
 void() invader_dieb2 =[$inv_deathb2, invader_dieb3] {};
@@ -1268,7 +1381,10 @@ void() invader_dieb6 =[$inv_deathb6, invader_dieb7] {};
 void() invader_dieb7 =[$inv_deathb7, invader_dieb8] {};
 void() invader_dieb8 =[$inv_deathb8, invader_dieb9] {};
 void() invader_dieb9 =[$inv_deathb9, invader_dieb10] {};
-void() invader_dieb10 =[$inv_deathb10, invader_dieb10] {};
+void() invader_dieb10 =[$inv_deathb10, invader_dieb10] {Spawn_Corpse(self);
+self.corpse_angles_x = 90;
+
+};
 
 void() invader_diec =[$inv_deathc1, invader_diec2] {};
 void() invader_diec2 =[$inv_deathc2, invader_diec3] {};
@@ -1282,7 +1398,9 @@ void() invader_diec6 =[$inv_deathc6, invader_diec7] {};
 void() invader_diec7 =[$inv_deathc7, invader_diec8] {};
 void() invader_diec8 =[$inv_deathc8, invader_diec9] {};
 void() invader_diec9 =[$inv_deathc9, invader_diec10] {};
-void() invader_diec10 =[$inv_deathc10, invader_diec10] {};
+void() invader_diec10 =[$inv_deathc10, invader_diec10] {Spawn_Corpse(self);
+self.corpse_angles_x = 90;
+};
 
 void() invader_died =[$inv_deathd1, invader_died2] {};
 void() invader_died2 =[$inv_deathd2, invader_died3] {};
@@ -1306,7 +1424,11 @@ void() invader_died16 =[$inv_deathd16, invader_died17] {};
 void() invader_died17 =[$inv_deathd17, invader_died18] {};
 void() invader_died18 =[$inv_deathd18, invader_died19] {};
 void() invader_died19 =[$inv_deathd19, invader_died20] {};
-void() invader_died20 =[$inv_deathd20, invader_died20] {};
+void() invader_died20 =[$inv_deathd20, invader_died20] {
+//self.solid 
+self.corpse_angles_x = 90;
+Spawn_Corpse(self);
+};
 
 void() invader_gibdead = { local string tagname;local float tagindex;local vector tagorg;
 	if (!self.headless)
@@ -1365,7 +1487,7 @@ void() invader_death = {	//	if(self.pain_finished > time)
 	monstersound4("enemies/invader/die", 5, CHAN_VOICE);
 	if (self.health < invader_gdv)
 	{
-		decal_monster(self.origin + '0 0 12');
+		decal_monster_gib(rorigin(self) + '0 0 12');
 		//void(float effectnum, vector org, vector vel, float howmany) pointparticles = #337;	// same as in CSQC
 
 		//void(vector mincorner, vector maxcorner, float explosionspeed, float howmany) te_bloodshower = #406;
@@ -1559,6 +1681,7 @@ void() monster_invader = { precache_model("models/enemies/invader/invader.md3");
 		self.th_run = invader_run;
 	else
 		self.th_run = invader_preattack;
+	self.turretable = 1;
 	self.th_missile = invader_preattack;
 	//self.touch =invader_touch;
 	self.th_melee = invader_sattack;

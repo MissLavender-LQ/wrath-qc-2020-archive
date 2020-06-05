@@ -13,6 +13,7 @@ enum
 	MAT_DIRT,
 	MAT_GRAVEL,
 	MAT_GRATE,
+	MAT_ICE,
 	MAT_METAL,
 	MAT_MUD,
 	MAT_PUDDLE,
@@ -135,6 +136,26 @@ float(entity e) GetFootMaterial = { local float surfnum;
 					{
 						fclose(f);
 						return MAT_GRATE;
+					}
+				}
+
+				ln = fgets(f);
+			}
+		}
+
+		if (f >= 0) fclose(f);
+
+		f = fopen("materials/ice.txt", FILE_READ);
+		if (f != -1)
+		{
+			ln = fgets(f);
+			while (ln != string_null)
+			{
+				{
+					if (ln == s)
+					{
+						fclose(f);
+						return MAT_ICE;
 					}
 				}
 
@@ -339,6 +360,10 @@ void(float isheavy) playerlandsound = { if (self.landsoundtime > time)
 		{
 			landingsound = strcat("player/landings/land_grass", r, ".ogg");
 		}
+		else if (material == MAT_ICE)
+		{
+			landingsound = strcat("player/landings/land_ice", r, ".ogg");
+		}
 		else if (material == MAT_METAL)
 		{
 			landingsound = strcat("player/landings/land_metal", r, ".ogg");
@@ -437,6 +462,11 @@ void() playerfootstepsound = { local string r;
 		check_volume("materials/grate.txt");
 		footstepsound = strcat("player/footsteps/grate", r, ".ogg");
 	}
+	else if (material == MAT_ICE)
+	{
+		check_volume("materials/ice.txt");
+		footstepsound = strcat("player/footsteps/ice", r, ".ogg");
+	}
 	else if (material == MAT_METAL)
 	{
 		check_volume("materials/metal.txt");
@@ -477,12 +507,12 @@ void() playerfootstepsound = { local string r;
 	if (pvol > 1)
 		pvol = 1;
 	if (self.waterlevel < 1)
-		sound7(self, CHAN_AUTO, footstepsound, pvol, ATTN_NORM, 80 + random() *30, 1);
+		sound7(self, CHAN_AUTO, footstepsound, pvol, ATTN_NORM, 80 + random() *30, 0);
 	if (self.waterlevel)
 	{
 		footstepsound = strcat("player/footsteps/puddle", r, ".ogg");
 		if (self.waterlevel < 2)
-			sound7(self, CHAN_AUTO, footstepsound, pvol, ATTN_NORM, 80 + random() *30, 1);
+			sound7(self, CHAN_AUTO, footstepsound, pvol, ATTN_NORM, 80 + random() *30, 0);
 		makevectors(self.angles);
 		local vector wsorg;
 		if (!self.water_splash_origin)
@@ -506,7 +536,7 @@ void() playerjumpsound = { local string jumpsound, r;
 	ft = floor(random() *4 + 1);
 	r = ftos(floor(ft));
 	jumpsound = strcat("player/jumps/jump", r, ".ogg");
-	sound7(self, CHAN_AUTO, jumpsound, 1, ATTN_NORM, 80 + random() *30, 1);
+	sound7(self, CHAN_AUTO, jumpsound, 1, ATTN_NORM, 80 + random() *30, 0);
 };
 void() PlayerFootstep = { if (!(self.flags &FL_ONGROUND))
 	{

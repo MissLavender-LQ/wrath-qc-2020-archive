@@ -39,6 +39,9 @@ void() write_tether = { read_currentprofileslot();
 	if (profilename)
 		strunzone(profilename);
 };
+
+
+ 
 void() check_tether = { read_currentprofileslot();
 	local string campaignloc;
 	campaignloc = strcat("profiles/", profilename, "/tether.txt");
@@ -48,10 +51,23 @@ void() check_tether = { read_currentprofileslot();
 	readtext = fgets(readparms);	//read the text
 	tether = stof(readtext);
 	fclose(readparms);
-	float tetherp;
-	tetherp = floor(getstatf(STAT_TETHER));
-	if (tetherp <= 0)
-		tether = 0;
+	//float tetherp;
+	//tetherp = floor(getstatf(STAT_TETHER));
+	//if (tetherp <= 0)
+	//	tether = 0;
+	if (profilename)
+		strunzone(profilename);
+};
+float shrine_user;
+void() check_shrine_user = { read_currentprofileslot();
+	local string campaignloc;
+	campaignloc = strcat("profiles/", profilename, "/shrine_user.txt");
+	local float readparms;
+	local string readtext;
+	readparms = fopen(campaignloc, FILE_READ);	//open what file to use (THIS TIME IN READ MODE)
+	readtext = fgets(readparms);	//read the text
+	shrine_user = stof(readtext);
+	fclose(readparms);
 	if (profilename)
 		strunzone(profilename);
 };
@@ -72,7 +88,7 @@ void() Death_Menu = { vector omp;
 
 	local vector dmsgpos2;
 	dmsgpos2_x = dmsgpos_x + ((vid_width - 960) / 2);
-	dmsgpos2_y = dmsgpos_y;
+	dmsgpos2_y = dmsgpos_y * vy_rel;
 
 	if (!DMselected)
 		DImageButton(dmsgpos2, "gfx/deathmenu/deathmenuA.tga", dmenualpha, 1, '1 0 0', '256 144 0');
@@ -343,8 +359,11 @@ void() Ammo_Hud = { float c_w, c_a, digits, cws;
 	//	float v_sfps = 60 / ((rint (1/ (fclframetime + 0.1))));
 
 	float fclframetime = gettime(2);
+	if(!fclframetime)
+	fclframetime = 0.002;
+	
 	float vfpsmultiplier;
-	vfpsmultiplier = (1 + ((300 - (1 / gettime(2))) / 220));
+	vfpsmultiplier = (1 + ((300 - (1 / fclframetime)) / 220));
 	float vfps = 60 + 30 * vfpsmultiplier;
 	if (1 / fclframetime > 100)
 		vfps = 60;
@@ -449,465 +468,19 @@ float blalpha;
 float stalphaflag;
 float stalpha;
 float bbar;
+float old_artifact_count;
 
-void() Hud = { vector postimage;
-	string time0, time1, time2, time3, time4;
-	postimage = '240 -480 0';
-	time0 = ftos(1 + ((500 - (1 / gettime(2))) / 220));
-	time1 = ftos(gettime(1));
-	time2 = ftos(1 / gettime(2));
-	time3 = ftos(gettime(3));
-	time4 = ftos(frametime);
-	//DString (postimage,(time0), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
-	//DString (postimage,(time1), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
-	//DString (postimage,(time2), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
-	//DString (postimage,(time3), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
-	//DString (postimage,(time4), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
-	local float health, c_drmr, c_armr, kitems, digits, pulsehealth, fphicon, fphicona, fphiconb;
-	health = getstati(STAT_HEALTH);
-
+void() Hud_Armor =
+{
+	local float digits, pulsehealth, fphicona, fphiconb;
 	string pic3, pic2, pic1, digit1, digit2, digit3;
-	string picofnammo, drmr, armr, picofnarmor, picofndarmor;
+	string drmr, armr, picofnarmor, picofndarmor;
 
-	string health_n;
-	if (health > 0)
-	{
-		health_n = ftos(floor(health));
-		pulsehealth = floor(getstatf(STAT_PULSEICON));
-		if (pulsehealth & 1)
-		{
-			fphicon = floor(phicon);
-			if (fphicon <= 1) picofnammo = "gfx/hud/healthp1_";
-			if (fphicon == 2) picofnammo = "gfx/hud/healthp2_";
-			if (fphicon == 3) picofnammo = "gfx/hud/healthp3_";
-			if (fphicon == 4) picofnammo = "gfx/hud/healthp4_";
-			if (fphicon == 5) picofnammo = "gfx/hud/healthp5_";
-			if (fphicon == 6) picofnammo = "gfx/hud/healthp6_";
-			if (fphicon == 7) picofnammo = "gfx/hud/healthp7_";
-			if (fphicon == 8) picofnammo = "gfx/hud/healthp8_";
-			if (fphicon == 9) picofnammo = "gfx/hud/healthp9_";
-			if (fphicon >= 10)
-			{
-				picofnammo = "gfx/hud/health";
-				localcmd("impulse 200\n");
-			}
-		}
-		else
-			picofnammo = "gfx/hud/health";
-
-		vector healthrelsep, health_relpos;
-
-		health_relpos = health_pos;
-		healthrelsep = healthsep;
-
-		if (health >= 100)
-			health = 100;
-		if (health >= 1)
-			digits = 1;
-		if (health >= 10)
-			digits = 2;
-		if (health >= 100)
-			digits = 3;
-		if (digits == 1)
-		{
-			pic3 = strcat(picofnammo, health_n, ".tga");
-
-			DImage(health_relpos + healthrelsep + healthrelsep, pic3, 1, health_scale, '1 1 1', '28 36 0');
-		}
-		else if (digits == 2)
-		{
-			digit3 = substring(health_n, 1, 1);
-			digit2 = substring(health_n, 0, 1);
-			pic3 = strcat(picofnammo, digit3, ".tga");
-			pic2 = strcat(picofnammo, digit2, ".tga");
-			DImage(health_relpos + healthrelsep, pic3, 1, health_scale, '1 1 1', '28 36 0');
-			DImage(health_relpos + healthrelsep + healthrelsep, pic2, 1, health_scale, '1 1 1', '28 36 0');
-		}
-		else if (digits == 3)
-		{
-			digit3 = substring(health_n, 2, 1);
-			digit2 = substring(health_n, 1, 1);
-			digit1 = substring(health_n, 0, 1);
-			pic3 = strcat(picofnammo, digit3, ".tga");
-			pic2 = strcat(picofnammo, digit2, ".tga");
-			pic1 = strcat(picofnammo, digit1, ".tga");
-			DImage(health_relpos, pic3, 1, health_scale, '1 1 1', '28 36 0');
-			DImage(health_relpos + healthrelsep, pic2, 1, health_scale, '1 1 1', '28 36 0');
-			DImage(health_relpos + healthrelsep + healthrelsep, pic1, 1, health_scale, '1 1 1', '28 36 0');
-			//
-		}
-	}
-
-	c_armr = floor(getstatf(STAT_RARM));
-	c_drmr = floor(getstatf(STAT_DARM));
-	//	c_drmr =rint(c_drmr);
-	kitems = getstati(STAT_ITEMS);
-	vector vkeysep, realkeypos;
-	vkeysep_x = keysep;
-
-	realkeypos = keypos;
-	realkeypos_y += (540 - vid_height);
-	realkeypos_x -= (960 - vid_width);
-
-	float sl_slotkeys;
-	sl_slotkeys = rint(getstatf(STAT_SLOT_KEYS));
-	realkeypos_y += 48;
-	local string slotdigits, slotdigitscent, slotdigitsdozen, slotdigitsunit;
-	local float slotcents, slotdozens, slotunits;
-	if (sl_slotkeys)
-	{
-		vector slot_realkeypos, slot_realkeypos2, slot_realkeypos3;
-
-		slotdigits = ftos(sl_slotkeys);
-		slotdigitsdozen = substring(slotdigits, 1, 2);
-		slotdigitsunit = substring(slotdigits, 2, 3);
-		slotdozens = stof(slotdigitsdozen);
-		slotunits = stof(slotdigitsunit);
-
-		slot_realkeypos = realkeypos;
-		if ((slotdozens) && (!slotunits))
-		{
-			slot_realkeypos = realkeypos;
-			slot_realkeypos2 = realkeypos + vkeysep;
-		}
-
-		if ((slotdozens) && (slotunits))
-		{
-			slot_realkeypos = realkeypos;
-			slot_realkeypos2 = realkeypos + vkeysep;
-			slot_realkeypos3 = realkeypos + vkeysep + vkeysep;
-		}
-
-		if ((sl_slotkeys >= 100) && (sl_slotkeys < 200))
-			DImage2(slot_realkeypos, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((sl_slotkeys >= 200) && (sl_slotkeys < 300))
-			DImage2(slot_realkeypos, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (sl_slotkeys >= 300)
-			DImage2(slot_realkeypos, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-		if ((slotdozens >= 10) && (slotdozens < 20))
-			DImage2(slot_realkeypos2, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotdozens >= 20) && (slotdozens < 30))
-			DImage2(slot_realkeypos2, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (slotdozens >= 30)
-			DImage2(slot_realkeypos2, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-		if ((slotunits >= 1) && (slotunits < 2))
-			DImage2(slot_realkeypos3, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotunits >= 2) && (slotunits < 3))
-			DImage2(slot_realkeypos3, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (slotunits >= 3)
-			DImage2(slot_realkeypos3, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-	}
-
-	//drawstring('0 0 0', ftos(sl_slotkeys), '8 8 0', '3 3 3', 1);     	// Draw the "slotkeyused"
-
-	realkeypos_y += 48;
-	if (kitems & IT_KEY4)
-		DImage2(realkeypos, "gfx/hud/coffer_key.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-	realkeypos_y -= 96;
-
-	float sl_slotrelics;
-	sl_slotrelics = rint(getstatf(STAT_SLOT_RELICS));
-
-	if (sl_slotrelics)
-	{
-		vector slot_realrelicpos, slot_realrelicpos2, slot_realrelicpos3, slot_realrelicpos4;
-
-		slotdigits = ftos(sl_slotrelics);
-		slotdigitscent = substring(slotdigits, 1, 3);
-		slotdigitsdozen = substring(slotdigits, 2, 3);
-		slotdigitsunit = substring(slotdigits, 3, 4);
-		slotcents = stof(slotdigitscent);
-		slotdozens = stof(slotdigitsdozen);
-		slotunits = stof(slotdigitsunit);
-
-		slot_realrelicpos = realkeypos;
-
-		if ((slotcents) && (!slotdozens) && (!slotunits))
-		{
-			slot_realrelicpos = realkeypos;
-			slot_realrelicpos2 = realkeypos + vkeysep;
-		}
-
-		if ((slotcents) && (slotdozens) && (!slotunits))
-		{
-			slot_realrelicpos = realkeypos;
-			slot_realrelicpos2 = realkeypos + vkeysep;
-			slot_realrelicpos3 = realkeypos + vkeysep + vkeysep;
-		}
-
-		if ((slotcents) && (slotdozens) && (slotunits))
-		{
-			slot_realrelicpos = realkeypos;
-			slot_realrelicpos2 = realkeypos + vkeysep;
-			slot_realrelicpos3 = realkeypos + vkeysep + vkeysep;
-			slot_realrelicpos4 = realkeypos + vkeysep + vkeysep + vkeysep;
-		}
-
-		if ((sl_slotrelics >= 1000) && (sl_slotrelics < 2000))
-			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((sl_slotrelics >= 2000) && (sl_slotrelics < 3000))
-			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((sl_slotrelics >= 3000) && (sl_slotrelics < 4000))
-			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (sl_slotrelics >= 4000)
-			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-		if ((slotcents >= 100) && (slotcents < 200))
-			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotcents >= 200) && (slotcents < 300))
-			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotcents >= 300) && (slotcents < 400))
-			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (slotcents >= 400)
-			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-		if ((slotdozens >= 10) && (slotdozens < 20))
-			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotdozens >= 20) && (slotdozens < 30))
-			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotdozens >= 30) && (slotdozens < 40))
-			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (slotdozens >= 40)
-			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-		if ((slotunits >= 1) && (slotunits < 2))
-			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotunits >= 2) && (slotunits < 3))
-			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if ((slotunits >= 3) && (slotunits < 4))
-			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-		if (slotunits >= 4)
-			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
-
-	}
-
-	string ring_artifact, ring_artifact2, ring_artifact3, timer_artifact;
-	string ring_tether, ring_tether2, ring_tether3;
-	//DImage(artr1,"gfx/hud/rings.tga",1,artr2,'1 1 1','160 60 0');
-	local float radialactive, radialtime, tether_time,tetheractive;
-	radialactive = getstatf(STAT_RADIALACTIVE);
-	tetheractive = getstatf(STAT_RD_ST);
-	
-	radialtime = getstatf(STAT_ARTIFACTTIME);
-	tether_time = getstatf(STAT_TETHERTIME);
-	vector spos;
-	spos_x = artr1_x + 9 + artic_x;
-	spos_y = artr1_y + 5 + artic_y;
-	
-	ring_tether = "gfx/hud/cooldown/soul_tether_hud.tga";
-	ring_tether2 = "gfx/hud/cooldown/soul_tether_pulseA.tga";
-	ring_tether3 = "gfx/hud/cooldown/soul_tether_pulseB.tga";
-	DImage(spos, ring_tether, 1, artns, '1 1 1', '64 64 0');
-
-		if(tetheractive < 10)
-		{		
-			string ns1 = strcat("gfx/artifactmenu/artifact_num", ftos(tetheractive), ".tga");
-			DImage2(spos + artn, ns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
-		}
-		else
-		{
-			string ns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 1, 1), ".tga");
-			string ns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 0, 1), ".tga");
-
-			spos -= '4 0 0';
-			DImage2(spos + artn, ns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
-			DImage2(spos + artn + '6 0 0', ns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
-			spos += '4 0 0';
-		}
-	if(tether_time > 0)
-	{
-		local float stntimer, st_ralpha;
-		stntimer = tether_time;
-		if (stntimer == 136)
-			stalphaflag = 1;
-		if (stntimer >= 137)
-		{
-			if (stntimer == 137)
-			{
-				stalphaflag = 1;
-				st_ralpha = 1;
-			}
-			if (stntimer == 138)
-				st_ralpha = 1;
-			if (stntimer == 139)
-			{
-				stalphaflag = -1;
-				st_ralpha = 0;
-			}
-			if (stntimer == 140)
-				st_ralpha = 0;
-			if (stntimer == 141)
-				st_ralpha = 0;
-			if (stntimer == 142)
-			{
-				st_ralpha = 0;
-				stalphaflag = 0;
-			}
-			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
-			if ((stntimer >= 137) && (stntimer <= 138))
-				DImage(spos, ring_tether2, stalpha, artns, '1 1 1', '64 64 0');
-			if (stntimer >= 139)
-				DImage(spos, ring_tether3, stalpha, artns, '1 1 1', '64 64 0');
-			//drawstring ('0 0 0', ftos(stntimer),'12 12 0', '1 1 1', 1, 0);
-		}
-		else
-		{
-			st_ralpha = 1;
-			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
-		}
-	}
-	if (radialactive >= 1)
-	{
-		if (radialactive == 1) ring_artifact = "gfx/hud/cooldown/artifactA_hud.tga";
-		if (radialactive == 2) ring_artifact = "gfx/hud/cooldown/artifactB_hud.tga";
-		if (radialactive == 3) ring_artifact = "gfx/hud/cooldown/artifactC_hud.tga";
-		if (radialactive == 4) ring_artifact = "gfx/hud/cooldown/artifactD_hud.tga";
-		if (radialactive == 5) ring_artifact = "gfx/hud/cooldown/artifactE_hud.tga";
-		if (radialactive == 6) ring_artifact = "gfx/hud/cooldown/artifactF_hud.tga";
-		if (radialactive == 7) ring_artifact = "gfx/hud/cooldown/artifactG_hud.tga";
-		if (radialactive == 8) ring_artifact = "gfx/hud/cooldown/artifactH_hud.tga";
-		if (radialactive == 9) ring_artifact = "gfx/hud/cooldown/artifactI_hud.tga";
-		if (radialactive == 10) ring_artifact = "gfx/hud/cooldown/artifactJ_hud.tga";
-		if (radialactive == 1) ring_artifact2 = "gfx/hud/cooldown/artifactA_pulseA.tga";
-		if (radialactive == 2) ring_artifact2 = "gfx/hud/cooldown/artifactB_pulseA.tga";
-		if (radialactive == 3) ring_artifact2 = "gfx/hud/cooldown/artifactC_pulseA.tga";
-		if (radialactive == 4) ring_artifact2 = "gfx/hud/cooldown/artifactD_pulseA.tga";
-		if (radialactive == 5) ring_artifact2 = "gfx/hud/cooldown/artifactE_pulseA.tga";
-		if (radialactive == 6) ring_artifact2 = "gfx/hud/cooldown/artifactF_pulseA.tga";
-		if (radialactive == 7) ring_artifact2 = "gfx/hud/cooldown/artifactG_pulseA.tga";
-		if (radialactive == 8) ring_artifact2 = "gfx/hud/cooldown/artifactH_pulseA.tga";
-		if (radialactive == 9) ring_artifact2 = "gfx/hud/cooldown/artifactI_pulseA.tga";
-		if (radialactive == 10) ring_artifact2 = "gfx/hud/cooldown/artifactJ_pulseA.tga";
-		if (radialactive == 1) ring_artifact3 = "gfx/hud/cooldown/artifactA_pulseB.tga";
-		if (radialactive == 2) ring_artifact3 = "gfx/hud/cooldown/artifactB_pulseB.tga";
-		if (radialactive == 3) ring_artifact3 = "gfx/hud/cooldown/artifactC_pulseB.tga";
-		if (radialactive == 4) ring_artifact3 = "gfx/hud/cooldown/artifactD_pulseB.tga";
-		if (radialactive == 5) ring_artifact3 = "gfx/hud/cooldown/artifactE_pulseB.tga";
-		if (radialactive == 6) ring_artifact3 = "gfx/hud/cooldown/artifactF_pulseB.tga";
-		if (radialactive == 7) ring_artifact3 = "gfx/hud/cooldown/artifactG_pulseB.tga";
-		if (radialactive == 8) ring_artifact3 = "gfx/hud/cooldown/artifactH_pulseB.tga";
-		if (radialactive == 9) ring_artifact3 = "gfx/hud/cooldown/artifactI_pulseB.tga";
-		if (radialactive == 10) ring_artifact3 = "gfx/hud/cooldown/artifactJ_pulseB.tga";
-		//spos_x = spos_x;
-		spos_x = arti_pos_x + 9 + artic_x;
-		spos_y = arti_pos_y + 5 + artic_y;
-		if (radialtime > 0)
-		{
-			local float ntimer, artalpha;
-			ntimer = radialtime;
-			local string nametimer;
-			nametimer = ftos(ntimer);
-			timer_artifact = strcat("gfx/hud/cooldown/cd", nametimer, ".tga");
-			if (ntimer == 136)
-				blalphaflag = 1;
-			if (ntimer >= 137)
-			{
-				timer_artifact = "gfx/hud/cooldown/cd136.tga";
-				if (ntimer == 137)
-				{
-					blalphaflag = 1;
-					artalpha = 1;
-				}
-
-				if (ntimer == 138)
-				{
-					artalpha = 1;
-					//blalpha = 1;
-				}
-
-				if (ntimer == 139)
-				{
-					blalphaflag = -1;
-					artalpha = 0;
-				}
-
-				if (ntimer == 140)
-				{
-					artalpha = 0;
-				}
-
-				if (ntimer == 141)
-				{
-					artalpha = 0;
-				}
-
-				if (ntimer == 142)
-				{
-					artalpha = 0;
-					blalphaflag = 0;
-				}
-
-				DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 1);
-				DImage(spos, ring_artifact, artalpha, artics, '1 1 1', '64 64 0');
-
-				if ((ntimer >= 137) && (ntimer <= 138))
-				{
-					DImage(spos, ring_artifact2, blalpha, artics, '1 1 1', '64 64 0');
-				}
-
-				if (ntimer >= 139)
-				{
-					DImage(spos, ring_artifact3, blalpha, artics, '1 1 1', '64 64 0');
-					if (radialactive != 5)
-					{
-						DImage(spos, "gfx/hud/cooldown/cd_pulse.tga", blalpha, artics, '1 1 1', '64 64 0');
-					}
-				}
-			}
-			else
-			{
-				artalpha = 1;
-				if (radialactive != 5)
-				{
-					DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 1);
-				}
-
-				DImage(spos, ring_artifact, artalpha, artics, '1 1 1', '64 64 0');
-			}
-		}
-		else
-			DImage(spos, ring_artifact, 1, artics, '1 1 1', '64 64 0');
-
-		if (radialactive  >= 1)
-		{	
-			float artifact_count;
-
-			if (radialactive == 1)artifact_count  = 0;
-			if (radialactive == 2)artifact_count = getstatf(STAT_RD_DA);
-			if (radialactive == 3)artifact_count = 0;
-			if (radialactive == 4)artifact_count = 0;
-			if (radialactive == 5)artifact_count = 0;
-			if (radialactive == 6)artifact_count = getstatf(STAT_RD_LS);
-			if (radialactive == 7)artifact_count = 0;
-			if (radialactive == 8)artifact_count = getstatf(STAT_RD_AE);
-			if (radialactive == 9)artifact_count = 0;
-			if (radialactive == 10)artifact_count = 0;
-
-			if(artifact_count < 10)
-			{		
-				string rns1 = strcat("gfx/artifactmenu/artifact_num", ftos(artifact_count), ".tga");
-				DImage2(spos + artin, rns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
-			}
-			else
-			{
-				string rns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 1, 1), ".tga");
-				string rns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 0, 1), ".tga");
-
-				spos -= '4 0 0';
-				DImage2(spos + artin, rns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
-				DImage2(spos + artin + '6 0 0', rns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
-			}
-		}	
-
-	}
-
+	float c_armr = floor(getstatf(STAT_RARM));
+	float c_drmr = floor(getstatf(STAT_DARM));
 	if (c_armr > 0)
 	{
-		armr = ftos(floor(c_armr));
+		string armr = ftos(floor(c_armr));
 		if (pulsehealth & 1024)
 		{
 			fphicona = floor(arphicon);
@@ -1022,6 +595,538 @@ void() Hud = { vector postimage;
 			//
 		}
 	}
+ };
+void() Hud = { vector postimage;
+	string time0, time1, time2, time3, time4;
+	postimage = '240 -480 0';
+	
+	float gettime2;
+	gettime2 = gettime(2);
+	if(!gettime2)
+	gettime2 = 0.002;
+	
+	time0 = ftos(1 + ((500 - (1 / gettime2)) / 220));
+	time1 = ftos(gettime(1));
+	time2 = ftos(1 / gettime2);
+	time3 = ftos(gettime(3));
+	time4 = ftos(frametime);
+	//DString (postimage,(time0), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
+	//DString (postimage,(time1), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
+	//DString (postimage,(time2), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
+	//DString (postimage,(time3), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
+	//DString (postimage,(time4), 1, 1, '1 1 1',' 14 14 0');postimage += '0 20 0';
+	local float health, kitems, digits, pulsehealth, fphicon;
+	health = getstati(STAT_HEALTH);
+
+	string pic3, pic2, pic1, digit1, digit2, digit3;
+	string picofnammo;
+
+	string health_n;
+	if (health > 0)
+	{
+		health_n = ftos(floor(health));
+		pulsehealth = floor(getstatf(STAT_PULSEICON));
+		if (pulsehealth & 1)
+		{
+			fphicon = floor(phicon);
+			if (fphicon <= 1) picofnammo = "gfx/hud/healthp1_";
+			if (fphicon == 2) picofnammo = "gfx/hud/healthp2_";
+			if (fphicon == 3) picofnammo = "gfx/hud/healthp3_";
+			if (fphicon == 4) picofnammo = "gfx/hud/healthp4_";
+			if (fphicon == 5) picofnammo = "gfx/hud/healthp5_";
+			if (fphicon == 6) picofnammo = "gfx/hud/healthp6_";
+			if (fphicon == 7) picofnammo = "gfx/hud/healthp7_";
+			if (fphicon == 8) picofnammo = "gfx/hud/healthp8_";
+			if (fphicon == 9) picofnammo = "gfx/hud/healthp9_";
+			if (fphicon >= 10)
+			{
+				picofnammo = "gfx/hud/health";
+				localcmd("impulse 200\n");
+			}
+		}
+		else
+			picofnammo = "gfx/hud/health";
+
+		vector healthrelsep, health_relpos;
+
+		health_relpos = health_pos;
+		healthrelsep = healthsep;
+
+		if (health >= 100)
+			health = 100;
+		if (health >= 1)
+			digits = 1;
+		if (health >= 10)
+			digits = 2;
+		if (health >= 100)
+			digits = 3;
+		if (digits == 1)
+		{
+			pic3 = strcat(picofnammo, health_n, ".tga");
+
+			DImage(health_relpos + healthrelsep + healthrelsep, pic3, 1, health_scale, '1 1 1', '28 36 0');
+		}
+		else if (digits == 2)
+		{
+			digit3 = substring(health_n, 1, 1);
+			digit2 = substring(health_n, 0, 1);
+			pic3 = strcat(picofnammo, digit3, ".tga");
+			pic2 = strcat(picofnammo, digit2, ".tga");
+			DImage(health_relpos + healthrelsep, pic3, 1, health_scale, '1 1 1', '28 36 0');
+			DImage(health_relpos + healthrelsep + healthrelsep, pic2, 1, health_scale, '1 1 1', '28 36 0');
+		}
+		else if (digits == 3)
+		{
+			digit3 = substring(health_n, 2, 1);
+			digit2 = substring(health_n, 1, 1);
+			digit1 = substring(health_n, 0, 1);
+			pic3 = strcat(picofnammo, digit3, ".tga");
+			pic2 = strcat(picofnammo, digit2, ".tga");
+			pic1 = strcat(picofnammo, digit1, ".tga");
+			DImage(health_relpos, pic3, 1, health_scale, '1 1 1', '28 36 0');
+			DImage(health_relpos + healthrelsep, pic2, 1, health_scale, '1 1 1', '28 36 0');
+			DImage(health_relpos + healthrelsep + healthrelsep, pic1, 1, health_scale, '1 1 1', '28 36 0');
+			//
+		}
+	}
+
+
+	//	c_drmr =rint(c_drmr);
+	kitems = getstati(STAT_ITEMS);
+	vector vkeysep, realkeypos;
+	vkeysep_x = keysep;
+
+	realkeypos = keypos;
+	realkeypos_y += (540 - vid_height);
+	realkeypos_x -= (960 - vid_width);
+
+	float sl_slotkeys;
+	sl_slotkeys = rint(getstatf(STAT_SLOT_KEYS));
+	realkeypos_y += 48;
+	local string slotdigits, slotdigitsthous, slotdigitscent, slotdigitsdozen, slotdigitsunit;
+	local float slotthous,slotcents, slotdozens, slotunits;
+	if (sl_slotkeys)
+	{
+		vector slot_realkeypos, slot_realkeypos2, slot_realkeypos3;
+
+		slotdigits = ftos(sl_slotkeys);
+		slotdigitsdozen = substring(slotdigits, 1, 2);
+		slotdigitsunit = substring(slotdigits, 2, 3);
+		slotdozens = stof(slotdigitsdozen);
+		slotunits = stof(slotdigitsunit);
+
+		slot_realkeypos = realkeypos;
+		if ((slotdozens) && (!slotunits))
+		{
+			slot_realkeypos = realkeypos;
+			slot_realkeypos2 = realkeypos + vkeysep;
+		}
+
+		if ((slotdozens) && (slotunits))
+		{
+			slot_realkeypos = realkeypos;
+			slot_realkeypos2 = realkeypos + vkeysep;
+			slot_realkeypos3 = realkeypos + vkeysep + vkeysep;
+		}
+
+		if ((sl_slotkeys >= 100) && (sl_slotkeys < 200))
+			DImage2(slot_realkeypos, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((sl_slotkeys >= 200) && (sl_slotkeys < 300))
+			DImage2(slot_realkeypos, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (sl_slotkeys >= 300)
+			DImage2(slot_realkeypos, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotdozens >= 10) && (slotdozens < 20))
+			DImage2(slot_realkeypos2, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotdozens >= 20) && (slotdozens < 30))
+			DImage2(slot_realkeypos2, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotdozens >= 30)
+			DImage2(slot_realkeypos2, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotunits >= 1) && (slotunits < 2))
+			DImage2(slot_realkeypos3, "gfx/hud/glyph_red.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotunits >= 2) && (slotunits < 3))
+			DImage2(slot_realkeypos3, "gfx/hud/glyph_blue.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotunits >= 3)
+			DImage2(slot_realkeypos3, "gfx/hud/glyph_yellow.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+	}
+
+	//drawstring('0 0 0', ftos(sl_slotkeys), '8 8 0', '3 3 3', 1);     	// Draw the "slotkeyused"
+
+	realkeypos_y += 48;
+	if (kitems & IT_COFFERKEY1)
+		DImage2(realkeypos, "gfx/hud/coffer_key.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+	if (kitems & IT_COFFERKEY2)
+		DImage2(realkeypos + vkeysep, "gfx/hud/coffer_key.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+	if (kitems & IT_COFFERKEY3)
+		DImage2(realkeypos + vkeysep + vkeysep, "gfx/hud/coffer_key.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+	realkeypos_y -= 96;
+
+	float sl_slotrelics;
+	sl_slotrelics = rint(getstatf(STAT_SLOT_RELICS));
+
+	if (sl_slotrelics)
+	{
+		vector slot_realrelicpos, slot_realrelicpos2, slot_realrelicpos3, slot_realrelicpos4,slot_realrelicpos5;
+
+		slotdigits = ftos(sl_slotrelics);
+		slotdigitsthous = substring(slotdigits, 1, 4);
+		slotdigitscent = substring(slotdigits, 2, 3);
+		slotdigitsdozen = substring(slotdigits, 3, 2);
+		slotdigitsunit = substring(slotdigits, 4, 1);
+		slotthous = stof(slotdigitsthous);
+		slotcents = stof(slotdigitscent);
+		slotdozens = stof(slotdigitsdozen);
+		slotunits = stof(slotdigitsunit);
+
+		slot_realrelicpos = realkeypos;
+/*		if ((slotthous) && (!slotcents) && (!slotdozens) && (!slotunits))
+		{
+			slot_realrelicpos = realkeypos;
+		}*/
+		if ((slotthous) && (!slotcents) && (!slotdozens) && (!slotunits))
+		{
+			slot_realrelicpos = realkeypos;
+			slot_realrelicpos2 = realkeypos + vkeysep;
+		}
+
+		if ((slotthous) && (slotcents) && (!slotdozens) && (!slotunits))
+		{
+			slot_realrelicpos = realkeypos;
+			slot_realrelicpos2 = realkeypos + vkeysep;
+			slot_realrelicpos3 = realkeypos + (vkeysep *2);
+		}
+
+		if ((slotthous) && (slotcents) && (slotdozens) && (!slotunits))
+		{
+			slot_realrelicpos = realkeypos;
+			slot_realrelicpos2 = realkeypos + vkeysep;
+			slot_realrelicpos3 = realkeypos + (vkeysep *2);
+			slot_realrelicpos4 = realkeypos + (vkeysep *3);
+		}
+
+		if ((slotthous) &&(slotcents) && (slotdozens) && (slotunits))
+		{
+			slot_realrelicpos = realkeypos;
+			slot_realrelicpos2 = realkeypos + vkeysep;
+			slot_realrelicpos3 = realkeypos + (vkeysep *2);
+			slot_realrelicpos4 = realkeypos + (vkeysep *3);
+			slot_realrelicpos5 = realkeypos + (vkeysep *4);
+		}
+		//drawstring('30 0 0', strcat (slotdigits," ",ftos (slotthous)," ",ftos (slotcents)," ",ftos (slotdozens)," ",ftos (slotunits)), '8 8 0', '12 12 0', 1, 0);     	// Draw the "cursor"
+	
+
+		if ((sl_slotrelics >= 10000) && (sl_slotrelics < 20000))
+			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((sl_slotrelics >= 20000) && (sl_slotrelics < 30000))
+			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((sl_slotrelics >= 30000) && (sl_slotrelics < 40000))
+			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((sl_slotrelics >= 40000) && (sl_slotrelics < 50000))
+			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (sl_slotrelics >= 50000)
+			DImage2(slot_realrelicpos, "gfx/hud/relic_e1m5.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotthous >= 1000) && (slotthous < 2000))
+			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotthous >= 2000) && (slotthous < 3000))
+			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotthous >= 3000) && (slotthous < 4000))
+			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotthous >= 4000) && (slotthous < 5000))
+			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotthous >= 5000)
+			DImage2(slot_realrelicpos2, "gfx/hud/relic_e1m5.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotcents >= 100) && (slotcents < 200))
+			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotcents >= 200) && (slotcents < 300))
+			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotcents >= 300) && (slotcents < 400))
+			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotcents >= 400) && (slotcents < 500))
+			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotcents >= 500)
+			DImage2(slot_realrelicpos3, "gfx/hud/relic_e1m5.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotdozens >= 10) && (slotdozens < 20))
+			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotdozens >= 20) && (slotdozens < 30))
+			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotdozens >= 30) && (slotdozens < 40))
+			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotdozens >= 40) && (slotdozens < 50))
+			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotdozens >= 50)
+			DImage2(slot_realrelicpos4, "gfx/hud/relic_e1m5.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+		if ((slotunits >= 1) && (slotunits < 2))
+			DImage2(slot_realrelicpos5, "gfx/hud/relic_e1m1.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotunits >= 2) && (slotunits < 3))
+			DImage2(slot_realrelicpos5, "gfx/hud/relic_e1m2.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotunits >= 3) && (slotunits < 4))
+			DImage2(slot_realrelicpos5, "gfx/hud/relic_e1m3.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if ((slotunits >= 4) && (slotunits < 5))
+			DImage2(slot_realrelicpos5, "gfx/hud/relic_e1m4.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+		if (slotunits >= 5)
+			DImage2(slot_realrelicpos5, "gfx/hud/relic_e1m5.tga", 1, keyscale, '1 1 1', '16 16 0', keyflag);
+
+	}
+
+	string ring_artifact, ring_artifact2, ring_artifact3, timer_artifact;
+	string ring_tether, ring_tether2, ring_tether3;
+	//DImage(artr1,"gfx/hud/rings.tga",1,artr2,'1 1 1','160 60 0');
+	local float radialactive, radialtime, tether_time,tetheractive;
+	radialactive = getstatf(STAT_RADIALACTIVE);
+	tetheractive = getstatf(STAT_RD_ST);
+	
+	radialtime = getstatf(STAT_ARTIFACTTIME);
+	tether_time = getstatf(STAT_TETHERTIME);
+	vector spos;
+	spos_x = artr1_x + 9 + artic_x;
+	spos_y = artr1_y + 5 + artic_y;
+	
+	ring_tether = "gfx/hud/cooldown/soul_tether_hud.tga";
+	ring_tether2 = "gfx/hud/cooldown/soul_tether_pulseA.tga";
+	ring_tether3 = "gfx/hud/cooldown/soul_tether_pulseB.tga";
+	DImage(spos, ring_tether, 1, artns, '1 1 1', '64 64 0');
+
+		if(tetheractive < 10)
+		{		
+			string ns1 = strcat("gfx/artifactmenu/artifact_num", ftos(tetheractive), ".tga");
+			DImage2(spos + artn, ns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
+		}
+		else
+		{
+			string ns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 1, 1), ".tga");
+			string ns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(tetheractive), 0, 1), ".tga");
+
+			spos -= '4 0 0';
+			DImage2(spos + artn, ns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			DImage2(spos + artn + '6 0 0', ns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			spos += '4 0 0';
+		}
+	if(tether_time > 0)
+	{
+		local float stntimer, st_ralpha;
+		stntimer = tether_time;
+		if (stntimer == 136)
+			stalphaflag = 1;
+		if (stntimer >= 137)
+		{
+			if (stntimer == 137)
+			{
+				stalphaflag = 1;
+				st_ralpha = 1;
+			}
+			if (stntimer == 138)
+				st_ralpha = 1;
+			if (stntimer == 139)
+			{
+				stalphaflag = -1;
+				st_ralpha = 0;
+			}
+			if (stntimer == 140)
+				st_ralpha = 0;
+			if (stntimer == 141)
+				st_ralpha = 0;
+			if (stntimer == 142)
+			{
+				st_ralpha = 0;
+				stalphaflag = 0;
+			}
+			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
+			if ((stntimer >= 137) && (stntimer <= 138))
+				DImage(spos, ring_tether2, stalpha, artns, '1 1 1', '64 64 0');
+			if (stntimer >= 139)
+				DImage(spos, ring_tether3, stalpha, artns, '1 1 1', '64 64 0');
+			//drawstring ('0 0 0', ftos(stntimer),'12 12 0', '1 1 1', 1, 0);
+		}
+		else
+		{
+			st_ralpha = 1;
+			DImage(spos, ring_tether, st_ralpha, artns, '1 1 1', '64 64 0');
+		}
+	}
+	if (radialactive >= 1)
+	{
+		if (radialactive == 1) ring_artifact = "gfx/hud/cooldown/artifactA_hud.tga";
+		if (radialactive == 2) ring_artifact = "gfx/hud/cooldown/artifactB_hud.tga";
+		if (radialactive == 3) ring_artifact = "gfx/hud/cooldown/artifactC_hud.tga";
+		if (radialactive == 4) ring_artifact = "gfx/hud/cooldown/artifactD_hud.tga";
+		if (radialactive == 5) ring_artifact = "gfx/hud/cooldown/artifactE_hud.tga";
+		if (radialactive == 6) ring_artifact = "gfx/hud/cooldown/artifactF_hud.tga";
+		if (radialactive == 7) ring_artifact = "gfx/hud/cooldown/artifactG_hud.tga";
+		if (radialactive == 8) ring_artifact = "gfx/hud/cooldown/artifactH_hud.tga";
+		if (radialactive == 9) ring_artifact = "gfx/hud/cooldown/artifactI_hud.tga";
+		if (radialactive == 10) ring_artifact = "gfx/hud/cooldown/artifactJ_hud.tga";
+		if (radialactive == 1) ring_artifact2 = "gfx/hud/cooldown/artifactA_pulseA.tga";
+		if (radialactive == 2) ring_artifact2 = "gfx/hud/cooldown/artifactB_pulseA.tga";
+		if (radialactive == 3) ring_artifact2 = "gfx/hud/cooldown/artifactC_pulseA.tga";
+		if (radialactive == 4) ring_artifact2 = "gfx/hud/cooldown/artifactD_pulseA.tga";
+		if (radialactive == 5) ring_artifact2 = "gfx/hud/cooldown/artifactE_pulseA.tga";
+		if (radialactive == 6) ring_artifact2 = "gfx/hud/cooldown/artifactF_pulseA.tga";
+		if (radialactive == 7) ring_artifact2 = "gfx/hud/cooldown/artifactG_pulseA.tga";
+		if (radialactive == 8) ring_artifact2 = "gfx/hud/cooldown/artifactH_pulseA.tga";
+		if (radialactive == 9) ring_artifact2 = "gfx/hud/cooldown/artifactI_pulseA.tga";
+		if (radialactive == 10) ring_artifact2 = "gfx/hud/cooldown/artifactJ_pulseA.tga";
+		if (radialactive == 1) ring_artifact3 = "gfx/hud/cooldown/artifactA_pulseB.tga";
+		if (radialactive == 2) ring_artifact3 = "gfx/hud/cooldown/artifactB_pulseB.tga";
+		if (radialactive == 3) ring_artifact3 = "gfx/hud/cooldown/artifactC_pulseB.tga";
+		if (radialactive == 4) ring_artifact3 = "gfx/hud/cooldown/artifactD_pulseB.tga";
+		if (radialactive == 5) ring_artifact3 = "gfx/hud/cooldown/artifactE_pulseB.tga";
+		if (radialactive == 6) ring_artifact3 = "gfx/hud/cooldown/artifactF_pulseB.tga";
+		if (radialactive == 7) ring_artifact3 = "gfx/hud/cooldown/artifactG_pulseB.tga";
+		if (radialactive == 8) ring_artifact3 = "gfx/hud/cooldown/artifactH_pulseB.tga";
+		if (radialactive == 9) ring_artifact3 = "gfx/hud/cooldown/artifactI_pulseB.tga";
+		if (radialactive == 10) ring_artifact3 = "gfx/hud/cooldown/artifactJ_pulseB.tga";
+
+		if (radialactive == 20) ring_artifact = "gfx/hud/cooldown/sigil_flight_hud.tga";
+		if (radialactive == 20) ring_artifact2 = "gfx/hud/cooldown/sigil_flight_pulseA.tga";
+		if (radialactive == 20) ring_artifact3 = "gfx/hud/cooldown/sigil_flight_pulseB.tga";
+
+		//spos_x = spos_x;
+		spos_x = arti_pos_x + 9 + artic_x;
+		spos_y = arti_pos_y + 5 + artic_y;
+		float artifact_count;
+
+		if (radialactive == 1)artifact_count  = 0;
+		if (radialactive == 2)artifact_count = getstatf(STAT_RD_DA);
+		if (radialactive == 3)artifact_count = 0;
+		if (radialactive == 4)artifact_count = getstatf(STAT_RD_CA);
+		if (radialactive == 5)artifact_count = 0;
+		if (radialactive == 6)artifact_count = getstatf(STAT_RD_LS);
+		if (radialactive == 7)artifact_count = 0;
+		if (radialactive == 8)artifact_count = getstatf(STAT_RD_AE);
+		if (radialactive == 9)artifact_count = 0;
+		if (radialactive == 10)artifact_count = 0;
+
+		if (radialtime > 0)
+		{
+			local float ntimer, artalpha;
+			ntimer = radialtime;
+			local string nametimer;
+			nametimer = ftos(ntimer);
+			timer_artifact = strcat("gfx/hud/cooldown/cd", nametimer, ".tga");
+			local float da_alpha;
+			if (ntimer <= 134)
+			da_alpha = 1;
+			if (ntimer == 134)
+					da_alpha = 0.9;
+			if (ntimer == 135)
+					da_alpha = 0.8;
+			if (ntimer == 136)
+			{	
+				blalphaflag = 1;
+					da_alpha = 0.7;
+			 }
+			if (ntimer >= 137)
+			{
+				timer_artifact = "gfx/hud/cooldown/cd136.tga";
+				if (ntimer == 137)
+				{
+					blalphaflag = 1;
+					da_alpha = 0.6;
+					artalpha = 1;
+				}
+
+				if (ntimer == 138)
+				{
+					artalpha = 0.5;
+					da_alpha = 0.5;
+					//blalpha = 1;
+				}
+				if ((ntimer >= 139)&& (artifact_count > 0))	
+					DImage(spos, ring_artifact, 1, artics, '1 1 1', '64 64 0');
+
+				if (ntimer == 139)
+				{
+					da_alpha = 0.4;
+					blalphaflag = -1;
+					artalpha = 0;
+				}
+
+				if (ntimer == 140)
+				{
+					da_alpha = 0.3;
+					artalpha = 0;
+				}
+
+				if (ntimer == 141)
+				{
+					da_alpha = 0.2;
+					artalpha = 0;
+				}
+
+				if (ntimer == 142)
+				{
+					da_alpha = 0.1;
+					artalpha = 0;
+					blalphaflag = 0;
+				}
+
+				DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 0);
+				DImage(spos, ring_artifact, artalpha, artics, '1 1 1', '64 64 0');
+
+				if ((ntimer >= 137) && (ntimer <= 138))
+				{
+					DImage(spos, ring_artifact2, blalpha, artics, '1 1 1', '64 64 0');
+				}
+
+				if (ntimer >= 139)
+				{
+					DImage(spos, ring_artifact3, blalpha, artics, '1 1 1', '64 64 0');
+					if (radialactive != 5)
+					{
+						DImage(spos, "gfx/hud/cooldown/cd_pulse.tga", blalpha, artics, '1 1 1', '64 64 0');
+					}
+				}
+
+
+			}
+			else
+			{
+				artalpha = 1;
+				if (radialactive != 5)
+				{
+					DImage2(spos, timer_artifact, artalpha, artics, '1 1 1', '64 64 0', 0);
+				}
+
+				DImage(spos, ring_artifact, artalpha, artics, '1 1 1', '64 64 0');
+			}
+			if (radialactive == 2)
+			drawpic('0 0 0', "models/artifacts/active/drowners_apparatus_active.tga", vid_width *'1 0 0' + vid_height *'0 1 0', '1 1 1', da_alpha, 0);
+		}
+		else
+			{
+			DImage(spos, ring_artifact, 1, artics, '1 1 1', '64 64 0');
+			old_artifact_count = artifact_count;
+			}
+		if ((radialactive  >= 1))
+		{	
+
+			if(artifact_count <= 0)
+			return;
+			if(artifact_count < 10)
+			{		
+				string rns1 = strcat("gfx/artifactmenu/artifact_num", ftos(artifact_count), ".tga");
+				DImage2(spos + artin, rns1, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			}
+			else
+			{
+				string rns2 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 1, 1), ".tga");
+				string rns3 = strcat("gfx/artifactmenu/artifact_num", substring( ftos(artifact_count), 0, 1), ".tga");
+
+				spos -= '4 0 0';
+				DImage2(spos + artin, rns3, 1, artrns, '1 1 1', '8 8 0', radialflag);
+				DImage2(spos + artin + '6 0 0', rns2, 1, artrns, '1 1 1', '8 8 0', radialflag);
+			}
+		}	
+
+	}
+
 };
 
 float dmues;
@@ -1031,7 +1136,6 @@ float theter_alreadychecked;
 float vshift_alreadychecked;
 
 float aspectratiomode;
-
 void CSQC_UpdateView(float b, float c)
 {
 	static float oldtime;
@@ -1159,8 +1263,10 @@ void CSQC_UpdateView(float b, float c)
 	}
 
 	//////////////////	
-
+	//float sorete = getproperty(VF_FOG_DENSITY);
+	//drawstring('0 0 0', ftos(sorete), '20 20 0', '1 1 1', 1, 0);
 	rmenu = getstatf(STAT_RMENU);
+	inventory_active = rmenu;
 	wdscreen = getstatf(STAT_WRATHDEBUGSCREEN);
 	if (wdscreen == 1)
 	{
@@ -1176,33 +1282,41 @@ void CSQC_UpdateView(float b, float c)
 	}
 
 	float fclframetime = gettime(2);
+	if(!fclframetime)
+	fclframetime = 0.002;
+
 	float vfpsmultiplier;
 	if(fclframetime > 0)
-	vfpsmultiplier = (1 + ((300 - (1 / gettime(2))) / 220));
+	vfpsmultiplier = (1 + ((300 - (1 / fclframetime)) / 220));
 	else
 	vfpsmultiplier = 1;
 	float vfps = 60 + 30 * vfpsmultiplier;
+	
+	if(fclframetime > 0)
+	{
 	if (1 / fclframetime > 100)
 		vfps = 60;
-
+	}
 	//	drawstring('0 0 0', ftos (fclframetime), '8 8 0', '12 12 0', 1, 0);     	// Draw the "cursor"
 
 	float v_sfps = vfps / ((rint(1 / (fclframetime + 0.1))));
 
 	local float shrinew;
 	shrinew = floor(getstatf(STAT_SHRINE));
-	if ((shrinepresent <= 0) && (shrinew > 0))
-		shrinepresent = 1;
-
+	
 	local float f, dm;
 	f = getstati(STAT_HEALTH);
 	dm = floor(getstatf(STAT_DEADMENU));
-	if ((f <= 0) && (dm == 1))
+	if (/*(f <= 0) && */(dm == 1))
 	{
 		if (theter_alreadychecked != 1)
 		{
 			write_tether();
 			check_tether();
+			check_shrine_user();
+			
+			if((shrinepresent <= 0) && (shrine_user >  0))
+			shrinepresent = 1;
 			mm2 = 0;
 			setcursormode(1);
 			localcmd("crosshair 0\n");
@@ -1216,13 +1330,18 @@ void CSQC_UpdateView(float b, float c)
 			theter_alreadychecked = 1;
 		}
 
+		if(f < 0)
+		{
 		if (dmenualpha < 1)
 			dmenualpha += v_sfps / 1200;
 		else
 			dmenualpha = 1;
-		if (vshift_alreadychecked != 1)
+		}
+		else
+			dmenualpha = 1;
+		if (vshift_alreadychecked != 1) 
 		{
-			if (dmenualpha == 1)
+			if ((dmenualpha == 1) && (f < 0))
 				localcmd("v_cshift\n");
 			vshift_alreadychecked = 1;
 		}
@@ -1231,6 +1350,19 @@ void CSQC_UpdateView(float b, float c)
 	}
 	else
 	{
+	
+		if (dmenualpha > 0)
+			dmenualpha = 0;
+			
+		if (vshift_alreadychecked == 1)
+		vshift_alreadychecked = 0;
+		if (theter_alreadychecked == 1)
+		{
+			theter_alreadychecked = 0;
+			setcursormode(0);
+			localcmd("crosshair 1\n");
+			localcmd("scratch3 0\n");
+		}
 		float showjournal;
 		showjournal = getstatf(STAT_JOURNAL);
 		if (showjournal == 2)
@@ -1248,6 +1380,9 @@ void CSQC_UpdateView(float b, float c)
 
 		if ((rmenu == 1))
 		{
+		
+			if(slot_timer > 0)
+			slot_timer -= clframetime * 5;
 			if (rmenualpha < 1)
 				rmenualpha += clframetime * 5;
 		}
@@ -1433,6 +1568,10 @@ void CSQC_UpdateView(float b, float c)
 					journal_page_maps = 2;
 				if (mapname == "maps/e1m2.bsp")
 					journal_page_maps = 3;
+				if (mapname == "maps/e1m4.bsp") // fix this when e1m3 is released
+					journal_page_maps = 4;
+				if (mapname == "maps/e1m5.bsp") // fix this when e1m3 is released
+					journal_page_maps = 5;
 			}
 		}
 		else if (showjournal == 2)
@@ -1468,8 +1607,9 @@ void CSQC_UpdateView(float b, float c)
 		if (hidehud == 0)
 		{
 			ArtifactMenu();
-			Hud();
 			Ammo_Hud();
+			Hud_Armor();
+			Hud();
 			e = self;
 			for (self = world;
 				(self = nextent(self));)

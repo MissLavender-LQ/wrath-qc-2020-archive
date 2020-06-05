@@ -19,48 +19,65 @@ void() func_water_use = { if (self.water_movflag == 1)
 
 //============================================================================
 .float deep;
+.float liquidtouch_timing;
+.float lavatime;
 void() liquid_touch = { local float test;
 	local float c;
-	if (other.classname == "decal")
-		remove(other);
-
-	if (other.health <= 0)
-		return;
-
-	if (!(other.flags &FL_CLIENT))
+	if((other.classname != "player"))
 	{
-		// Handle some special cases (always set think1 as death function!)
-		if (other.classname == "drip")
-		{
-			setorigin(other, other.origin + '0 0 6');
-			self = other;
-			self.think1();
-			return;
-		}
 
-		if (other.movetype == MOVETYPE_NONE ||
-			other.movetype == MOVETYPE_PUSH ||
-			other.movetype == MOVETYPE_NOCLIP)	// MOVETYPE_WALK is always FL_CLIENT so don't worry about it
-			return;
-
-		if (other.fwatershifttime < time && other.watertype)
-		{
-			other.watertype = self.fakewatertype;
-			other.waterlevel = 1;
-		}
-
-		// C code will go nuts with the splash sound if we don't time out while in func_water
-		other.fwatershifttime = time + 0.1;
+		if(time < other.liquidtouch_timing )	
 		return;
-	}
+		if (other.classname == "decal")
+			remove(other);
+		if((other.wrathflags & FL_GIB))
+		{
+		other.time_toalpha = 0;
+		if(other.velocity_z != -5)
+		{
+		other.velocity_z = 0;
+		other.velocity_y = other.velocity_y * 0.25;
+		other.velocity_x = other.velocity_x * 0.25;
+		}
+		other.liquidtouch_timing = time + 100;
+		other.glowmod = '0 0 0';
+		return;
+		}
+		if (other.health <= 0)
+			return;
 
+		if ((self.flags & FL_MONSTER) && (self.fakewatertype == CONTENT_LAVA))
+		{
+			/*if (other.movetype == MOVETYPE_NONE ||
+				other.movetype == MOVETYPE_PUSH ||
+				other.movetype == MOVETYPE_NOCLIP)	// MOVETYPE_WALK is always FL_CLIENT so don't worry about it
+				return;
+
+			if (other.fwatershifttime < time && other.watertype)
+			{
+				other.watertype = self.fakewatertype;
+				other.waterlevel = 1;
+			}
+				other.liquidtouch_timing = time + 0.2;
+
+			// C code will go nuts with the splash sound if we don't time out while in func_water*/
+			other.fwatershifttime = time + 0.1;
+			other.lavatime = time + 0.1;
+			return;
+		}
+		if (!(other.flags &FL_CLIENT))
+			return;
+	}	
+	if((other.classname == "player"))
+	{
 	other.watertype_time = time + 0.05;
-
 	test = other.origin_z + other.mins_z + 1;
 	if ((test <= self.absmax_z && test >= self.absmin_z) || (other.zerogtime > time))
 	{
 		other.fakewatertype = self.fakewatertype;
 		other.waterlevel = 1;
+		//if (other.watertype != other.fakewatertype)
+		//	other.watertype = other.fakewatertype;
 
 		// Test Torso
 		test = other.origin_z + (other.mins_z + other.maxs_z) *0.5;
@@ -92,15 +109,64 @@ void() liquid_touch = { local float test;
 		if (self.drag) other.velocity = other.velocity + self.velocity *(self.drag *frametime) *c;
 		if (self.mangle != '0 0 0') other.velocity = other.velocity + self.mangle *frametime *(c / 3);
 	}
+	}
+	
 };
 
-void() func_water = { if (self.noise != string_null)
+
+void(vector org, string noise, float vol, float attn) ambientsound2 =
+{
+
+/*local entity sor;
+sor = spawn();
+setmodel (sor, "erwr");
+sor. origin = org;*/
+ambientsound(org, noise, vol, attn);
+
+}
+
+void(entity e) spawn_lava_sounds = 
+{
+	self.noise = "env/liquids/lava_loop.ogg";
+	self.volume = 1;
+	precache_sound (self.noise);
+
+	float x_res = self.absmax_x - self.absmin_x;
+	float y_res = self.absmax_y - self.absmin_y;
+
+	vector center = (self.absmax + self.absmin) / 2;  
+	float attn = 256 / ((y_res + x_res) / 3);
+	ambientsound2(center, self.noise, self.volume, attn);
+
+	vector center_xa = center; center_xa_x +=  (x_res) / 3;
+	attn = 256 / ((x_res) / 4);
+	ambientsound2(center_xa, self.noise, self.volume, attn);
+
+	vector center_xb = center; center_xb_x -=  (x_res) / 3;
+	attn = 256 / ((x_res) / 4);
+	ambientsound2(center_xb, self.noise, self.volume, attn);
+
+	vector center_ya = center; center_ya_y +=  (y_res) / 3;
+	attn = 256 / ((y_res) / 4);
+	ambientsound2(center_ya, self.noise, self.volume, attn);
+
+	vector center_yb = center; center_yb_y -=  (y_res) / 3;
+	attn = 256 / ((y_res) / 4);
+	ambientsound2(center_yb, self.noise, self.volume, attn);
+
+};
+
+void() func_water = 
+{ 
+	if (self.noise != string_null)
 		precache_sound(self.noise);
 	if (self.noise1 != string_null)
 		precache_sound(self.noise1);
 	if (self.noise2 != string_null)
 		precache_sound(self.noise2);
-
+		
+	if(!self.watertype)	
+	self.watertype = -3;
 	self.solid = SOLID_TRIGGER;
 	self.movetype = MOVETYPE_NOCLIP;
 	setmodel(self, self.model);
@@ -109,13 +175,20 @@ void() func_water = { if (self.noise != string_null)
 	self.rel_origin = self.origin;
 
 	self.classname = "fliquid";
-	self.dphitcontentsmask = self.watertype;
 	self.touch = liquid_touch;
+
+	if (self.watertype < -5 || self.watertype > -3)
+		self.watertype = CONTENT_WATER;
+	if (self.watertype == CONTENT_LAVA)
+	spawn_lava_sounds(self);
+
 	self.fakewatertype = self.watertype;
-
-	if (self.fakewatertype < -5 || self.fakewatertype > -3)
-		self.fakewatertype = CONTENT_WATER;
-
+		if (self.fakewatertype == CONTENT_WATER)
+		self.dphitcontentsmask =DPCONTENTS_WATER; 
+		if (self.fakewatertype == CONTENT_SLIME)
+		self.dphitcontentsmask = DPCONTENTS_SLIME;
+		if (self.fakewatertype == CONTENT_LAVA)
+		self.dphitcontentsmask = DPCONTENTS_LAVA; 
 	if (self.cshift == string_null)
 	{
 		if (self.fakewatertype == CONTENT_WATER)

@@ -360,7 +360,7 @@ float	FL_PARTIALGROUND		= 1024;	// not all corners are valid
 float	FL_WATERJUMP			= 2048;	// player jumping out of water
 float	FL_JUMPRELEASED			= 4096;	// for jump debouncing
 //float	FL_WALKEDOFF				= 8192; // walking on edge
-
+float FL_IGNOREINPUT = 8192;			// ignore player movement input
 
 
 // edict.movetype values
